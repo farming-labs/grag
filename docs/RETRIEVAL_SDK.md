@@ -1,0 +1,166 @@
+# Retrieval SDK
+
+Use the retrieval SDK when you want one production-shaped object for dashboards, docs search, support assistants, or API routes.
+
+The older primitives still exist:
+
+- `retrieve(query)` for raw graph hits.
+- `search(query)` for direct text-unit search.
+- `answerLocal(query)` and `answerGlobal(query)` for explicit GraphRAG engines.
+
+For app code, start with `ask` and `searchGraph`.
+
+## Dashboard API Route
+
+```ts
+import { createGraphRagService, type GraphRagStore } from "@farming-labs/grag";
+import { OpenAiChatModel, OpenAiEmbeddingModel } from "@farming-labs/grag/openai";
+
+export async function POST(request: Request, store: GraphRagStore) {
+  const { query } = await request.json();
+  const grag = createGraphRagService({
+    store,
+    model: new OpenAiChatModel(),
+    embeddingModel: new OpenAiEmbeddingModel()
+  });
+
+  const result = await grag.ask(query, {
+    limit: 12,
+    responseStyle: "short answer, then bullets, always cite sources"
+  });
+
+  return Response.json(result);
+}
+```
+
+`grag.ask` returns:
+
+```ts
+{
+  answer: string;
+  mode: "model" | "extractive";
+  hits: GraphRagSearchHit[];
+  citations: GraphRagCitation[];
+  context: string;
+  graph: {
+    entityIds: string[];
+    relationshipIds: string[];
+    textUnitIds: string[];
+    communityIds: string[];
+  };
+  stats: {
+    graphHitCount: number;
+    textHitCount: number;
+    mergedHitCount: number;
+    citationCount: number;
+    snapshot: {
+      documents: number;
+      textUnits: number;
+      entities: number;
+      relationships: number;
+      communities: number;
+      communityReports: number;
+      embeddings: number;
+    };
+  };
+  timings: {
+    loadSnapshotMs: number;
+    graphSearchMs: number;
+    textSearchMs: number;
+    totalMs: number;
+  };
+}
+```
+
+This shape is intentionally UI-friendly:
+
+- `answer` is what you render in a chat panel.
+- `citations` are source cards.
+- `hits` are ranked evidence rows.
+- `context` is the exact prompt context.
+- `graph` tells Studio or your dashboard which nodes and edges to highlight.
+- `stats` and `timings` are safe to send to observability.
+
+## Search Without Answer Generation
+
+Use `searchGraph` when the dashboard should render evidence and let the user decide.
+
+```ts
+const result = await grag.searchGraph("where is storage configured?", {
+  limit: 10,
+  includeTextSearch: true
+});
+
+return {
+  hits: result.hits,
+  citations: result.citations,
+  graph: result.graph
+};
+```
+
+Each hit includes:
+
+- `kind`: `entity`, `relationship`, `text_unit`, or `community_report`.
+- `channels`: `graph`, `lexical`, or `vector`.
+- `sourcePaths`: file paths, URLs, table ids, or source ids.
+- `citationIds`: stable ids such as `S1`.
+- `entityIds` and `relationshipIds` for graph highlighting.
+
+## Works Without A Model
+
+`ask` can run without an LLM. In that case it returns an extractive answer made from the top graph evidence:
+
+```ts
+const grag = createGraphRagService({ store });
+const result = await grag.ask("what changed in auth?");
+
+console.log(result.mode); // "extractive"
+console.log(result.answer); // cited evidence bullets
+```
+
+If your product requires model synthesis, force that contract:
+
+```ts
+await grag.ask("what changed in auth?", {
+  requireModel: true
+});
+```
+
+## Direct Retriever Object
+
+If you do not want the service facade:
+
+```ts
+import { createGraphRagRetriever } from "@farming-labs/grag";
+
+const retriever = createGraphRagRetriever({ store, model, embeddingModel });
+const result = await retriever.search("storage migrations");
+```
+
+## Studio HTTP Endpoints
+
+When Studio serves a snapshot, it now exposes dashboard-ready JSON endpoints for the served graph:
+
+```bash
+curl "http://127.0.0.1:3333/search.json?query=storage%20retrieval"
+curl "http://127.0.0.1:3333/ask.json?query=how%20does%20studio%20work"
+```
+
+POST works too:
+
+```bash
+curl -X POST "http://127.0.0.1:3333/ask.json" \
+  -H "content-type: application/json" \
+  -d '{"query":"how does repo graph generation work?","limit":8}'
+```
+
+Studio answers are extractive by default because the Studio server should not assume a provider. In your app, pass an `OpenAiChatModel`, `AnthropicChatModel`, or your own `ChatModel`.
+
+## Production Notes
+
+- Keep the dashboard dependent on `GraphRagStore`, not a specific database.
+- Use `SqlGraphRagStore` or `OrmGraphRagStore` for persisted retrieval.
+- Add embeddings when lexical search is not enough; the SDK will mark hits as `vector`.
+- Store source paths or source ids on documents and text units so citations are useful.
+- Log `stats`, `timings`, `query`, and selected `citationIds` for retrieval evals.
+- Keep a small eval set of questions, expected source paths, and acceptable answers.

@@ -1,0 +1,78 @@
+# Microsoft GraphRAG Replication Plan
+
+This package is aiming for a TypeScript implementation path that follows the Microsoft GraphRAG architecture while using `@farming-labs/orm` and relational databases as first-class storage.
+
+## What Microsoft GraphRAG Does
+
+The standard GraphRAG pipeline turns source documents into a graph-backed RAG index:
+
+1. Load documents.
+2. Chunk documents into text units.
+3. Extract entities, relationships, and optional claims from each text unit.
+4. Merge and summarize repeated entities and relationships.
+5. Detect hierarchical communities over the graph.
+6. Generate LLM-written community reports.
+7. Embed text units, entity descriptions, and community report content.
+8. Query the completed index with local, global, DRIFT, or basic search.
+
+## What Exists In This Package Now
+
+- GraphRAG knowledge model types.
+- `GraphRagStore` storage contract.
+- Memory store.
+- Direct Kysely SQL store.
+- `@farming-labs/orm` schema and store adapter.
+- Relational row ingestion.
+- Text chunking.
+- Basic lexical/vector search.
+- Local search context construction.
+- Global map-reduce search.
+- Standard pipeline skeleton with provider interfaces.
+
+## What Still Needs To Be Built
+
+### LLM Graph Extraction
+
+Implement a `GraphExtractor` backed by an LLM. It should prompt for entities and relationships per text unit, validate JSON output, retry malformed responses, and write merged entities/relationships to the store.
+
+### Claim Extraction
+
+Implement a `ClaimExtractor` for optional time-bound claims. This should be configurable because Microsoft notes claim extraction usually needs prompt tuning.
+
+### Entity And Relationship Summarization
+
+After extraction, repeated entity/relationship descriptions need to be summarized into concise canonical descriptions.
+
+### Community Detection
+
+Implement a `CommunityDetector`. For full parity, this should support Leiden-style hierarchical community detection. A simpler first implementation can use connected components or Louvain-compatible libraries.
+
+### Community Reports
+
+Implement a `CommunityReporter` that builds a prompt from community entities, relationships, claims, and text-unit references, then produces report fields such as summary, findings, rank, and full content.
+
+### Embedding Stores
+
+The current storage model can persist embedding vectors portably. Advanced versions should add database-specific vector indexes such as Postgres `pgvector`, LanceDB, Azure AI Search, or Cosmos DB.
+
+### DRIFT Search
+
+DRIFT needs a more advanced query loop: start from community knowledge, generate follow-up questions, perform local retrieval, and iteratively refine the answer.
+
+## Why This Is Useful
+
+- Better global answers than plain vector RAG for broad questions.
+- Better provenance because answers trace back to entities, text units, and source documents.
+- Better relational-database fit because graph artifacts are normalized tables.
+- Better enterprise control because storage, LLM providers, embeddings, and indexing are swappable.
+- Better incremental indexing potential because source rows can be tracked and reprocessed.
+
+## Recommended Build Order
+
+1. Finish OpenAI-compatible graph extraction.
+2. Add entity/relationship summarization.
+3. Add a simple community detector.
+4. Add community report generation.
+5. Add `pgvector` embedding search.
+6. Add query router across basic, local, global, and later DRIFT.
+7. Add incremental relational sync.

@@ -1,0 +1,104 @@
+# Architecture
+
+## Mental Model
+
+GraphRAG adds a knowledge graph between raw text and answer generation.
+
+1. Source data becomes `GraphRagDocument`.
+2. Documents are split into `TextUnit` chunks.
+3. Extraction creates `Entity`, `Relationship`, and `Covariate` records.
+4. Clustering creates `Community` records.
+5. Summarization creates `CommunityReport` records.
+6. Query engines use graph-local context or community summaries to answer questions.
+
+Microsoft GraphRAG’s Python implementation stores final indexing artifacts in table-shaped outputs. This package keeps that table-first shape but exposes TypeScript types and relational storage.
+
+## Package Layers
+
+`src/model.ts`
+
+Defines Zod schemas and TypeScript types for the GraphRAG artifacts. These names are TypeScript-friendly but map closely to GraphRAG concepts:
+
+- `GraphRagDocument`
+- `TextUnit`
+- `Entity`
+- `Relationship`
+- `Covariate`
+- `Community`
+- `CommunityReport`
+- `EmbeddingRecord`
+
+`src/storage`
+
+Defines `GraphRagStore`, the persistence contract used by query engines. `MemoryGraphRagStore` is useful for tests and local experiments.
+
+`src/sql`
+
+Defines a normalized relational schema and `SqlGraphRagStore`. The store accepts a Kysely database instance, so the caller controls the actual driver, connection pool, and deployment environment.
+
+`src/orm`
+
+Defines `graphRagOrmSchema` using `@farming-labs/orm`, exposes ORM migration SQL rendering, and provides `OrmGraphRagStore`. This lets the same GraphRAG storage contract run over Farming Labs ORM drivers such as memory, Kysely, direct SQL, Drizzle, Prisma, and others.
+
+`src/ingest`
+
+Contains helpers for relational row ingestion and text chunking. These are deliberately deterministic so the same source table row maps to the same document ID.
+
+`src/query`
+
+Contains the first query primitives:
+
+- basic text-unit search
+- local graph-context construction
+- global community-report map/reduce search
+
+## Relational Database Strategy
+
+The core tables store durable artifacts:
+
+- `grag_documents`
+- `grag_text_units`
+- `grag_entities`
+- `grag_relationships`
+- `grag_covariates`
+- `grag_communities`
+- `grag_community_reports`
+- `grag_embeddings`
+
+Join tables preserve graph membership and source lineage:
+
+- document to text units
+- text units to entities, relationships, covariates
+- entities to communities and text units
+- relationships to text units
+- communities to entities, relationships, text units, covariates
+
+This makes relational databases a real backend for GraphRAG instead of only a source. The package avoids hard foreign-key requirements in the first schema so users can load partial GraphRAG artifacts, import externally generated graphs, and support incremental indexing.
+
+The ORM schema intentionally uses the same `grag_*` table names as the direct SQL adapter. That means teams can choose either the low-level `SqlGraphRagStore` or the higher-level `OrmGraphRagStore` depending on how much they want Farming Labs ORM to own.
+
+## Where LLMs Fit
+
+This package does not force a provider. It defines:
+
+- `ChatModel`
+- `EmbeddingModel`
+
+You can implement those interfaces with OpenAI, Azure OpenAI, local models, or any other provider. That keeps storage and orchestration independent from model choice.
+
+## Near-Term Development Plan
+
+1. Add a GraphRAG output importer for parquet/CSV exports.
+2. Add extraction interfaces: `EntityExtractor`, `RelationshipExtractor`, `CommunityReporter`.
+3. Add provider examples for OpenAI and Azure OpenAI.
+4. Add Postgres `pgvector` support while keeping the portable JSON-vector fallback.
+5. Add incremental sync helpers for relational tables using watermarks.
+6. Add integration tests against SQLite and Postgres.
+7. Add end-to-end `@farming-labs/orm-kysely` and `@farming-labs/orm-sql` examples.
+
+## References
+
+- https://github.com/microsoft/graphrag
+- https://microsoft.github.io/graphrag/query/overview/
+- https://microsoft.github.io/graphrag/query/global_search/
+- https://microsoft.github.io/graphrag/query/local_search/
