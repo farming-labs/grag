@@ -35,21 +35,21 @@ export type {
 
 export const source = {
   repo(config: Omit<RepoSourceConfig, "type">): RepoSourceConfig {
-    return { type: "repo", ...config };
+    return { ...config, type: "repo" };
   },
 
   document(config: Omit<DocumentSourceConfig, "type">): DocumentSourceConfig {
-    return { type: "document", ...config };
+    return { ...config, type: "document" };
   },
 
   database<Row extends RelationalRow>(
     config: Omit<DatabaseSourceConfig<Row>, "type">
   ): DatabaseSourceConfig<Row> {
-    return { type: "database", ...config };
+    return { ...config, type: "database" };
   },
 
   url(config: Omit<UrlSourceConfig, "type">): UrlSourceConfig {
-    return { type: "url", ...config };
+    return { ...config, type: "url" };
   },
 
   custom(config: CustomSourceConfig): CustomSourceConfig {
