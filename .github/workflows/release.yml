@@ -1,0 +1,118 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dist_tag:
+        description: npm dist-tag to publish.
+        type: choice
+        required: true
+        default: latest
+        options:
+          - latest
+          - beta
+          - next
+      dry_run:
+        description: Run all release checks without publishing.
+        type: boolean
+        required: true
+        default: true
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: npm-release
+  cancel-in-progress: false
+
+env:
+  PACKAGE_DIR: packages/grag
+  PACKAGE_NAME: "@farming-labs/grag"
+
+jobs:
+  publish:
+    name: Publish npm package
+    runs-on: ubuntu-latest
+    environment: npm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify release ref
+        run: |
+          set -euo pipefail
+
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "Manual npm releases must run from main."
+            exit 1
+          fi
+
+          if [ "$GITHUB_EVENT_NAME" = "release" ]; then
+            git fetch origin main
+
+            if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+              echo "Release commit $GITHUB_SHA is not contained in origin/main."
+              exit 1
+            fi
+          fi
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.9.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Use npm 11 for trusted publishing
+        run: npm install -g npm@11
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm check
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build package
+        run: pnpm build:package
+
+      - name: Verify npm package contents
+        run: npm pack --dry-run
+        working-directory: ${{ env.PACKAGE_DIR }}
+
+      - name: Publish to npm
+        env:
+          NPM_CONFIG_PROVENANCE: "true"
+          NPM_DIST_TAG: ${{ inputs.dist_tag || 'latest' }}
+          NPM_DRY_RUN: ${{ inputs.dry_run || 'false' }}
+        run: |
+          set -euo pipefail
+
+          cd "$PACKAGE_DIR"
+
+          package_version="$(node --input-type=module -e "import fs from 'node:fs'; console.log(JSON.parse(fs.readFileSync('package.json', 'utf8')).version)")"
+          dist_tag="${NPM_DIST_TAG:-latest}"
+
+          if [ "$NPM_DRY_RUN" = "true" ]; then
+            npm publish --dry-run --access public --tag "$dist_tag"
+            exit 0
+          fi
+
+          if npm view "$PACKAGE_NAME@$package_version" version >/dev/null 2>&1; then
+            echo "$PACKAGE_NAME@$package_version is already published."
+            exit 1
+          fi
+
+          npm publish --access public --tag "$dist_tag" --provenance
