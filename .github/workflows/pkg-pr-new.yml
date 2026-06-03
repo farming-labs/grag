@@ -1,0 +1,57 @@
+name: Package Preview
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+    paths:
+      - ".github/workflows/pkg-pr-new.yml"
+      - "package.json"
+      - "packages/grag/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+  push:
+    branches-ignore: [main]
+    tags-ignore: ["**"]
+    paths:
+      - ".github/workflows/pkg-pr-new.yml"
+      - "package.json"
+      - "packages/grag/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pkg-pr-new-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish-preview:
+    name: Publish pkg.pr.new preview
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.9.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build package
+        run: pnpm build:package
+
+      - name: Publish preview package
+        run: pnpm dlx pkg-pr-new publish --comment=update --packageManager=pnpm "./packages/grag"

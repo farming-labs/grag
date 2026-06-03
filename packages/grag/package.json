@@ -10,6 +10,9 @@
     "directory": "packages/grag"
   },
   "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "grag": "./dist/cli.js"
   },
@@ -43,6 +46,7 @@
     "build": "tsup && node scripts/build-studio.mjs",
     "build:studio": "node scripts/build-studio.mjs",
     "check": "tsc --noEmit",
+    "pack:dry-run": "npm pack --dry-run",
     "test": "vitest run"
   },
   "keywords": [
