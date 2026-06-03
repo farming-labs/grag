@@ -1,0 +1,86 @@
+{
+  "name": "@farming-labs/grag",
+  "version": "0.1.0",
+  "description": "TypeScript GraphRAG primitives with relational database storage.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/farming-labs/grag.git",
+    "directory": "packages/grag"
+  },
+  "sideEffects": false,
+  "bin": {
+    "grag": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./orm": {
+      "types": "./dist/orm/index.d.ts",
+      "import": "./dist/orm/index.js"
+    },
+    "./openai": {
+      "types": "./dist/openai/index.d.ts",
+      "import": "./dist/openai/index.js"
+    },
+    "./anthropic": {
+      "types": "./dist/anthropic/index.d.ts",
+      "import": "./dist/anthropic/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup && node scripts/build-studio.mjs",
+    "build:studio": "node scripts/build-studio.mjs",
+    "check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "graphrag",
+    "rag",
+    "knowledge-graph",
+    "graph-rag",
+    "retrieval",
+    "kysely",
+    "typescript"
+  ],
+  "dependencies": {
+    "kysely": "^0.28.17",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@farming-labs/orm": "^0.0.62",
+    "@types/node": "^22.15.3",
+    "esbuild": "^0.27.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.8"
+  },
+  "peerDependencies": {
+    "@farming-labs/orm": ">=0.0.61"
+  },
+  "peerDependenciesMeta": {
+    "@farming-labs/orm": {
+      "optional": true
+    },
+    "better-sqlite3": {
+      "optional": true
+    },
+    "mysql2": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    }
+  }
+}
