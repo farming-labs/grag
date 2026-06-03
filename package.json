@@ -13,8 +13,19 @@
     "dev": "pnpm --filter @farming-labs/grag-docs dev",
     "docs:dev": "pnpm --filter @farming-labs/grag-docs dev",
     "pack:package": "pnpm build:package && pnpm --filter @farming-labs/grag pack:dry-run",
+    "publish:beta": "pnpm --filter @farming-labs/grag publish --access public --tag beta --no-git-checks",
+    "publish:dry-run": "pnpm --filter @farming-labs/grag publish --dry-run --access public --tag next --no-git-checks",
+    "publish:latest": "pnpm --filter @farming-labs/grag publish --access public --tag latest --no-git-checks",
+    "publish:next": "pnpm --filter @farming-labs/grag publish --access public --tag next --no-git-checks",
+    "release": "bumpp packages/grag/package.json",
+    "release:beta": "bumpp --preid beta packages/grag/package.json",
     "release:dry-run": "pnpm check && pnpm test && pnpm build:package && pnpm --filter @farming-labs/grag pack:dry-run",
+    "release:latest": "bumpp packages/grag/package.json && pnpm publish:latest",
+    "release:next": "bumpp --preid next packages/grag/package.json",
     "security:audit": "pnpm audit --audit-level=high",
     "test": "pnpm --filter @farming-labs/grag test"
+  },
+  "devDependencies": {
+    "bumpp": "^11.1.0"
   }
 }
