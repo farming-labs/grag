@@ -59,6 +59,33 @@ console.log(answer.answer);
 console.log(answer.citations);
 ```
 
+## Database Source Adapter
+
+Use `source.database` when your app should own the SQL query and GRAG should handle row-to-document conversion, row provenance, chunking, and retrieval citations:
+
+```ts
+import { DataSourceLoader, source } from "@farming-labs/grag";
+
+const loader = new DataSourceLoader([
+  source.database({
+    label: "Production support tickets",
+    tableName: "support_tickets",
+    loadRows: () =>
+      db.selectFrom("support_tickets")
+        .selectAll()
+        .where("status", "!=", "spam")
+        .execute(),
+    idColumn: "id",
+    titleColumn: "subject",
+    textColumn: "body",
+    attributeColumns: ["customer", "priority", "status", "created_at"]
+  })
+]);
+
+const { documents, textUnits } = await loader.load();
+await store.upsertGraph({ documents, textUnits });
+```
+
 ## SQL Storage
 
 ```ts

@@ -76,6 +76,47 @@ return {
 };
 ```
 
+## Loading Multiple Sources Into One Graph
+
+You can build one GraphRAG store from more than one source type. For example, a
+repo plus local design docs:
+
+```ts
+import {
+  DataSourceLoader,
+  MemoryGraphRagStore,
+  createGraphRagService,
+  source
+} from "@farming-labs/grag";
+
+const loader = new DataSourceLoader([
+  source.repo({
+    url: "https://github.com/farming-labs/grag",
+    maxFiles: 80,
+    label: "grag repo"
+  }),
+  source.document({
+    files: ["./docs/design.md"],
+    label: "design notes"
+  })
+]);
+
+const { documents, textUnits } = await loader.load();
+
+const store = new MemoryGraphRagStore();
+await store.upsertGraph({ documents, textUnits });
+
+const grag = createGraphRagService({ store });
+const answer = await grag.ask("How does the retrieval layer work?", {
+  limit: 12
+});
+```
+
+Today, source selection happens when you load and index the graph rather than as
+an `ask()` option. The resulting retrieval output still keeps source paths and
+citations, so answers can be grounded across multiple sources without losing
+where the evidence came from.
+
 ## Postgres Path
 
 If you want Postgres now, the most direct production path is the SQL/Kysely store.
