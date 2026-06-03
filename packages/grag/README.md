@@ -228,13 +228,13 @@ See [docs/REPO_DEMO.md](docs/REPO_DEMO.md) for the full flow.
 ## Development
 
 ```bash
-npm install
-npm run check
-npm test
-npm run build
+pnpm install
+pnpm --filter @farming-labs/grag check
+pnpm --filter @farming-labs/grag test
+pnpm --filter @farming-labs/grag build
 ```
 
-`npm run build` compiles the SDK, CLI, and Studio assets. No separate Studio dev-server config is required.
+From the monorepo root, `pnpm build` compiles the SDK, CLI, Studio assets, and docs app. No separate Studio dev-server config is required.
 
 ## Roadmap
 
