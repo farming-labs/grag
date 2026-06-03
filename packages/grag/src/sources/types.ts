@@ -86,8 +86,10 @@ export interface DocumentSourceConfig extends DataSourceMeta {
 // ---------------------------------------------------------------------------
 
 export type { RelationalRow };
+export type DatabaseRowsLoader<Row extends RelationalRow = RelationalRow> =
+  () => readonly Row[] | Promise<readonly Row[]>;
 
-export interface DatabaseSourceConfig extends DataSourceMeta {
+export interface DatabaseSourceConfig<Row extends RelationalRow = RelationalRow> extends DataSourceMeta {
   type: "database";
 
   /**
@@ -100,22 +102,39 @@ export interface DatabaseSourceConfig extends DataSourceMeta {
    * Rows already fetched from your DB — you control the query and filtering.
    * Example:  rows: await db.select().from(tickets).where(...)
    */
-  rows: RelationalRow[];
+  rows?: readonly Row[];
+
+  /**
+   * Async row loader for real database clients.
+   * Use this when you want the source to own the query lifecycle:
+   *
+   * ```ts
+   * source.database({
+   *   tableName: "support_tickets",
+   *   loadRows: () => db.selectFrom("support_tickets").selectAll().execute(),
+   *   textColumn: "body"
+   * })
+   * ```
+   */
+  loadRows?: DatabaseRowsLoader<Row>;
 
   /** Column to use as the document id. Default: "id". */
-  idColumn?: string;
+  idColumn?: keyof Row & string;
 
   /** Column to use as the document title. */
-  titleColumn?: string;
+  titleColumn?: keyof Row & string;
+
+  /** Single column whose value becomes the document text. */
+  textColumn?: keyof Row & string;
 
   /**
    * Columns whose values are concatenated into the document text.
    * If omitted, all columns are serialised.
    */
-  textColumns?: string[];
+  textColumns?: readonly (keyof Row & string)[];
 
   /** Extra columns stored as entity attributes. */
-  attributeColumns?: string[];
+  attributeColumns?: readonly (keyof Row & string)[];
 
   /** Document type tag (default: "relational-row"). */
   documentType?: string;
@@ -169,6 +188,6 @@ export interface CustomSourceConfig extends DataSourceMeta {
 export type DataSourceConfig =
   | RepoSourceConfig
   | DocumentSourceConfig
-  | DatabaseSourceConfig
+  | DatabaseSourceConfig<any>
   | UrlSourceConfig
   | CustomSourceConfig;
