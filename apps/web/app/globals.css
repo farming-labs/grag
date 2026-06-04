@@ -670,7 +670,7 @@ body:has(#nd-sidebar) .omni-overlay {
   left: 0 !important;
   right: 0 !important;
   width: auto !important;
-  z-index: 100 !important;
+  z-index: 102 !important;
 }
 
 body:has(#nd-sidebar) .omni-content {
@@ -690,10 +690,10 @@ body:has(#nd-sidebar) .omni-content {
     inset-inline-start: auto !important;
     width: auto !important;
     height: 100dvh !important;
-    z-index: 102 !important;
+    z-index: 20 !important;
   }
 
   body:has(.omni-overlay) #nd-docs-layout aside#nd-sidebar {
-    z-index: 102 !important;
+    z-index: 20 !important;
   }
 }
