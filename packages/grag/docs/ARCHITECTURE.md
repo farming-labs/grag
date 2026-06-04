@@ -95,10 +95,3 @@ You can implement those interfaces with OpenAI, Azure OpenAI, local models, or a
 5. Add incremental sync helpers for relational tables using watermarks.
 6. Add integration tests against SQLite and Postgres.
 7. Add end-to-end `@farming-labs/orm-kysely` and `@farming-labs/orm-sql` examples.
-
-## References
-
-- https://github.com/microsoft/graphrag
-- https://microsoft.github.io/graphrag/query/overview/
-- https://microsoft.github.io/graphrag/query/global_search/
-- https://microsoft.github.io/graphrag/query/local_search/
