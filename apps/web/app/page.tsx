@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, type CSSProperties } from "react";
 import PixelSnow from "./components/pixel-snow";
-import { CheckIcon, CopyIcon } from "lucide-react";
+import { ArrowRightIcon, CheckIcon, CopyIcon } from "lucide-react";
 
 const docsHref = "/docs";
 const startHref = "/docs/getting-started";
@@ -12,8 +12,8 @@ const installCommand = "npm i @farming-labs/grag";
 const chipStyle: CSSProperties = {
   border: "1px solid var(--color-fd-border, rgba(255,255,255,0.14))",
   borderRadius: 0,
-  padding: "0.45rem 0.78rem",
-  fontSize: "0.7rem",
+  padding: "0.3rem 0.6rem",
+  fontSize: "0.6rem",
   letterSpacing: "0.14em",
   fontFamily: "var(--fd-font-mono, var(--font-geist-mono, monospace))",
   textTransform: "uppercase",
@@ -51,12 +51,36 @@ export default function Home() {
 
   return (
     <div
-      className="relative flex min-h-screen flex-col overflow-hidden px-4 supports-[overflow:clip]:overflow-clip"
+      className="relative isolate flex min-h-screen flex-col overflow-hidden px-4 supports-[overflow:clip]:overflow-clip"
       style={{
         background: "var(--color-fd-background, #050506)",
         color: "var(--color-fd-foreground, #f7f7f7)"
       }}
     >
+      <PixelSnow
+        brightness={0.74}
+        density={0.22}
+        direction={126}
+        flakeSize={0.0028}
+        minFlakeSize={1.15}
+        pixelResolution={190}
+        speed={0.16}
+        variant="square"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0 opacity-[0.14]"
+        style={{
+          backgroundImage:
+            "linear-gradient(var(--color-fd-border, rgba(255,255,255,0.16)) 1px, transparent 1px), linear-gradient(90deg, var(--color-fd-border, rgba(255,255,255,0.16)) 1px, transparent 1px)",
+          backgroundSize: "56px 56px"
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -inset-x-24 top-[12%] z-[1] h-[28rem] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.11),rgba(255,255,255,0.045)_34%,transparent_66%)] opacity-80 blur-[56px]"
+      />
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-[1] bg-black/28" />
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 z-0 h-28 border-b border-dashed border-white/10 opacity-80"
@@ -65,30 +89,7 @@ export default function Home() {
             "repeating-linear-gradient(-45deg, color-mix(in srgb, var(--color-fd-border) 10%, transparent), color-mix(in srgb, var(--color-fd-foreground) 10%, transparent) 1px, transparent 1px, transparent 7px)"
         }}
       />
-      <main className="relative mx-auto grid h-[100dvh] w-full max-w-4xl grow place-items-center overflow-hidden px-4 py-5 text-center before:absolute before:-inset-y-14 before:-left-px before:z-10 before:w-px before:bg-white/10 after:absolute after:-inset-y-14 after:-right-px after:z-10 after:w-px after:bg-white/10 sm:px-8">
-        <PixelSnow
-          brightness={0.74}
-          density={0.22}
-          direction={126}
-          flakeSize={0.0028}
-          minFlakeSize={1.15}
-          pixelResolution={190}
-          speed={0.16}
-          variant="square"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.14]"
-          style={{
-            backgroundImage:
-              "linear-gradient(var(--color-fd-border, rgba(255,255,255,0.16)) 1px, transparent 1px), linear-gradient(90deg, var(--color-fd-border, rgba(255,255,255,0.16)) 1px, transparent 1px)",
-            backgroundSize: "56px 56px"
-          }}
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -inset-x-24 top-[12%] z-[1] h-[28rem] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.11),rgba(255,255,255,0.045)_34%,transparent_66%)] opacity-80 blur-[56px]"
-        />
+      <main className="relative z-10 mx-auto grid h-[100dvh] w-full max-w-4xl grow place-items-center overflow-hidden px-4 py-5 text-center before:absolute before:-inset-y-14 before:-left-px before:z-10 before:w-px before:bg-white/10 after:absolute after:-inset-y-14 after:-right-px after:z-10 after:w-px after:bg-white/10 sm:px-8">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-y-0 left-4 z-[1] w-px bg-gradient-to-b from-transparent via-white/10 to-white/10 md:left-8"
@@ -105,18 +106,17 @@ export default function Home() {
           aria-hidden
           className="pointer-events-none absolute inset-y-0 right-8 z-[1] w-px bg-gradient-to-b from-transparent via-white/5 to-white/5 md:right-12"
         />
-        <div aria-hidden className="pointer-events-none absolute inset-0 z-[1] bg-black/28" />
 
         <section className="relative z-20 grid w-full max-w-[900px] justify-items-center gap-5">
           <div className="grid justify-items-center gap-4">
-            <h1
+            <p
               className="m-0 max-w-[820px] text-[2rem] font-normal uppercase leading-[1.08] tracking-tighter sm:text-[2.5rem] lg:text-[3rem]"
               style={{ fontFamily: "var(--font-mono)" }}
             >
               Graph-backed retrieval{" "}
               <br />
               for your own data
-            </h1>
+            </p>
             <p
               className="m-0 max-w-[720px] text-[0.98rem] leading-7 sm:text-[1.02rem] sm:leading-8"
               style={{
@@ -192,11 +192,11 @@ export default function Home() {
               href={docsHref}
               style={{
                 ...buttonBase,
-                border: "1px solid var(--color-fd-border, rgba(255,255,255,0.14))",
+                // border: "1px solid var(--color-fd-border, rgba(255,255,255,0.14))",
                 color: "var(--color-fd-foreground, #fff)"
               }}
             >
-              Read Docs
+              Read Docs <ArrowRightIcon className="w-4 h-4 ml-2" />
             </Link>
           </div>
           <p

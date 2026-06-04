@@ -10,9 +10,9 @@
     "check": "tsc --noEmit"
   },
   "dependencies": {
-    "@farming-labs/docs": "link:../../../docs_/packages/docs",
-    "@farming-labs/next": "link:../../../docs_/packages/next",
-    "@farming-labs/theme": "link:../../../docs_/packages/fumadocs",
+    "@farming-labs/docs": "0.1.143",
+    "@farming-labs/next": "0.1.143",
+    "@farming-labs/theme": "0.1.143",
     "lucide-react": "^1.17.0",
     "next": "^16.0.0",
     "react": "^19.2.4",
@@ -20,7 +20,8 @@
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
     "remark-mdx-frontmatter": "^5.0.0",
-    "three": "^0.184.0"
+    "three": "^0.184.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.1.18",
