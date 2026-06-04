@@ -53,7 +53,7 @@ export default function Home() {
     <div
       className="relative flex min-h-screen flex-col overflow-hidden px-4 supports-[overflow:clip]:overflow-clip"
       style={{
-        background: "var(--color-fd-background, #050506)",
+        // background: "var(--color-fd-background, #050506)",
         color: "var(--color-fd-foreground, #f7f7f7)"
       }}
     >
@@ -109,14 +109,14 @@ export default function Home() {
 
         <section className="relative z-20 grid w-full max-w-[900px] justify-items-center gap-5">
           <div className="grid justify-items-center gap-4">
-            <h1
+            <p
               className="m-0 max-w-[820px] text-[2rem] font-normal uppercase leading-[1.08] tracking-tighter sm:text-[2.5rem] lg:text-[3rem]"
               style={{ fontFamily: "var(--font-mono)" }}
             >
               Graph-backed retrieval{" "}
               <br />
               for your own data
-            </h1>
+            </p>
             <p
               className="m-0 max-w-[720px] text-[0.98rem] leading-7 sm:text-[1.02rem] sm:leading-8"
               style={{
