@@ -11,8 +11,7 @@ const docOrder = [
   "STORAGE_CONFIGURATION.md",
   "STORAGE_AND_RETRIEVAL.md",
   "GITHUB_SAAS.md",
-  "REPO_DEMO.md",
-  "MICROSOFT_GRAPHRAG_REPLICATION.md"
+  "REPO_DEMO.md"
 ];
 
 const packageRoot = resolvePackageRoot();

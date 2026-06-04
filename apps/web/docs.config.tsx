@@ -1,5 +1,17 @@
 import { defineDocs } from "@farming-labs/docs";
 import { threadline, threadlinePageActions } from "@farming-labs/theme/threadline";
+import {
+  BookOpenIcon,
+  DatabaseIcon,
+  FolderGit2Icon,
+  GitBranchIcon,
+  LightbulbIcon,
+  NetworkIcon,
+  RocketIcon,
+  SearchIcon,
+  ServerCogIcon,
+  WaypointsIcon
+} from "lucide-react";
 
 export default defineDocs({
   entry: "docs",
@@ -32,7 +44,12 @@ export default defineDocs({
     }
   }),
   nav: {
-    title: "@farming-labs/grag",
+    title: (
+      <span className="inline-flex items-center gap-2 font-mono uppercase tracking-normal">
+        <NetworkIcon aria-hidden="true" size={14} />
+        @farming-labs/grag
+      </span>
+    ),
     url: "/"
   },
   github: {
@@ -45,6 +62,18 @@ export default defineDocs({
   },
   breadcrumb: {
     enabled: true
+  },
+  icons: {
+    book: <BookOpenIcon size={16} />,
+    rocket: <RocketIcon size={16} />,
+    lightbulb: <LightbulbIcon size={16} />,
+    network: <NetworkIcon size={16} />,
+    service: <ServerCogIcon size={16} />,
+    retrieval: <SearchIcon size={16} />,
+    database: <DatabaseIcon size={16} />,
+    graph: <WaypointsIcon size={16} />,
+    github: <GitBranchIcon size={16} />,
+    repo: <FolderGit2Icon size={16} />
   },
   themeToggle: {
     enabled: false,
@@ -72,9 +101,7 @@ export default defineDocs({
       }
     ]
   },
-  lastUpdated: {
-    position: "below-title"
-  },
+  lastUpdated: false,
   metadata: {
     titleTemplate: "%s | @farming-labs/grag",
     description: "Documentation for the @farming-labs/grag TypeScript GraphRAG package."
