@@ -25,6 +25,21 @@ const geistMonoDocs = Geist_Mono({
   subsets: ["latin"]
 });
 
+const themeScript = `
+(function() {
+  try {
+    var theme = localStorage.getItem("theme");
+    var isDark = theme === "dark" || theme !== "light";
+    document.documentElement.classList.remove("light", "dark");
+    document.documentElement.classList.add(isDark ? "dark" : "light");
+    document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+  } catch (error) {
+    document.documentElement.classList.add("dark");
+    document.documentElement.style.colorScheme = "dark";
+  }
+})();
+`;
+
 export const metadata: Metadata = {
   title: {
     default: "@farming-labs/grag Docs",
@@ -36,12 +51,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
-      className={`dark ${geistSans.variable} ${geistSansDocs.variable} ${geistMono.variable} ${geistMonoDocs.variable}`}
+      className={`${geistSans.variable} ${geistSansDocs.variable} ${geistMono.variable} ${geistMonoDocs.variable}`}
       lang="en"
       suppressHydrationWarning
     >
       <body>
-        <RootProvider theme={{ defaultTheme: "dark", enableSystem: false, forcedTheme: "dark" }}>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <RootProvider theme={{ defaultTheme: "dark", enableSystem: false }}>
           {children}
         </RootProvider>
       </body>

@@ -1,5 +1,6 @@
 import { defineDocs } from "@farming-labs/docs";
 import { threadline, threadlinePageActions } from "@farming-labs/theme/threadline";
+import { SidebarThemeToggle } from "@/app/components/sidebar-theme-toggle";
 import {
   BookOpenIcon,
   DatabaseIcon,
@@ -58,7 +59,28 @@ export default defineDocs({
     directory: "packages/grag/docs"
   },
   sidebar: {
-    flat: true
+    flat: true,
+    footer: (
+      <div
+        className="-mx-4 -mb-4 border-t font-mono uppercase"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(-45deg, color-mix(in srgb, var(--color-fd-border) 24%, transparent), color-mix(in srgb, var(--color-fd-border) 24%, transparent) 1px, transparent 1px, transparent 7px)",
+          borderColor: "var(--color-fd-border)"
+        }}
+      >
+        <div
+          className="flex items-center justify-between gap-3 border-b px-3 py-2"
+          style={{
+            borderColor: "var(--color-fd-border)",
+            color: "var(--color-fd-muted-foreground)"
+          }}
+        >
+          <span className="text-[10px] tracking-normal">Theme</span>
+          <SidebarThemeToggle variant="pill" />
+        </div>
+      </div>
+    )
   },
   breadcrumb: {
     enabled: true
@@ -76,8 +98,7 @@ export default defineDocs({
     repo: <FolderGit2Icon size={16} />
   },
   themeToggle: {
-    enabled: false,
-    default: "dark"
+    enabled: false
   },
   pageActions: {
     ...threadlinePageActions

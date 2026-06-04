@@ -1,4 +1,9 @@
 @import "tailwindcss";
+
+@utility -inset-s-4 {
+  inset-inline-start: calc(var(--spacing) * -4);
+}
+
 @import "@farming-labs/theme/threadline/css";
 
 @media (prefers-reduced-motion: reduce) {
