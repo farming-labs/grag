@@ -1,16 +1,17 @@
 import { defineDocs } from "@farming-labs/docs";
-import { pixelBorder } from "@farming-labs/theme/pixel-border";
+import { threadline, threadlinePageActions } from "@farming-labs/theme/threadline";
 
 export default defineDocs({
   entry: "docs",
-  theme: pixelBorder({
+  theme: threadline({
     ui: {
+      radius: "0px",
       layout: {
-        sidebarWidth: 304,
+        sidebarWidth: 286,
         toc: {
           enabled: true,
           depth: 3,
-          style: "directional"
+          style: "default"
         }
       },
       sidebar: {
@@ -50,14 +51,7 @@ export default defineDocs({
     default: "dark"
   },
   pageActions: {
-    copyMarkdown: {
-      enabled: true
-    },
-    openDocs: {
-      enabled: true,
-      target: "markdown",
-      providers: ["chatgpt", "claude", "cursor"]
-    }
+    ...threadlinePageActions
   },
   search: true,
   ai: {
