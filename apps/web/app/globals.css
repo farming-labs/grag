@@ -634,6 +634,23 @@ h3 {
   background: color-mix(in srgb, var(--color-fd-foreground) 7%, var(--color-fd-card)) !important;
 }
 
+/* Heading anchors are links, not cards. */
+#nd-docs-layout #nd-page :is(h1, h2, h3, h4, h5, h6) > a[data-card],
+#nd-docs-layout #nd-page :is(h1, h2, h3, h4, h5, h6) > a[data-card]:hover {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  padding: 0 !important;
+  text-decoration: none !important;
+}
+
+#nd-docs-layout #nd-page :is(h1, h2, h3, h4, h5, h6) > a[data-card]:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--color-fd-foreground) 55%, transparent);
+  outline-offset: 4px;
+}
+
 /* Final docs table locks: add breathing room and remove threadline rounding. */
 #nd-docs-layout .fd-table-wrapper,
 #nd-docs-layout .fd-docs-content table,
