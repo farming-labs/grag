@@ -1,0 +1,187 @@
+---
+order: 4
+title: "Service Integration"
+description: "Use the service facade when another app needs GraphRAG without owning every primitive."
+---
+# Service Integration
+
+Use this layer when another service needs GraphRAG without owning every table, retrieval primitive, or answer-generation detail.
+
+## One Object To Depend On
+
+```ts
+import { createGraphRagService } from "@farming-labs/grag";
+
+const grag = createGraphRagService({ store });
+```
+
+The service exposes:
+
+- `ingestSnapshot(snapshot)`
+- `ingestTextDocuments(...)`
+- `ingestDocuments(...)`
+- `ingestRows(...)`
+- `retrieve(query)`
+- `search(query)` for direct text-unit search
+- `searchGraph(query)` for dashboard-ready graph evidence
+- `ask(query)` for cited answers, with model synthesis when configured and extractive fallback otherwise
+- `retriever()` for a standalone `GraphRagRetriever`
+- `localContext(query)`
+- `neighborhood(...)`
+- `relatedTextUnits(...)`
+- `answerLocal(query)` when you pass a chat model
+- `answerGlobal(query)` when you pass a chat model
+- `snapshot()`
+- `stats()`
+
+## Repository Indexing
+
+For repo-backed products, build an index once and persist it into the service store:
+
+```ts
+import {
+  createGraphRagService,
+  indexRepository,
+  type GraphRagStore
+} from "@farming-labs/grag";
+
+export async function indexRepositoryForTenant(input: {
+  source: string;
+  ref?: string;
+  token?: string;
+  store: GraphRagStore;
+}) {
+  const indexed = await indexRepository({
+    source: input.source,
+    provider: "auto",
+    remote: {
+      ...(input.ref ? { ref: input.ref } : {}),
+      ...(input.token ? { token: input.token } : {})
+    },
+    scan: {
+      maxFiles: "all"
+    },
+    extraction: {
+      provider: "local"
+    }
+  });
+
+  const grag = createGraphRagService({ store: input.store });
+  await grag.ingestSnapshot(indexed.snapshot);
+
+  return {
+    files: indexed.files.map((file) => file.path),
+    stats: await grag.stats()
+  };
+}
+```
+
+## Storage Is Swappable
+
+Memory for tests:
+
+```ts
+import { createMemoryGraphRagService } from "@farming-labs/grag";
+
+const grag = createMemoryGraphRagService();
+```
+
+Postgres through Kysely:
+
+```ts
+import {
+  SqlGraphRagStore,
+  applyGraphRagMigrations,
+  createGraphRagService
+} from "@farming-labs/grag";
+
+await applyGraphRagMigrations(db, "postgres");
+
+const grag = createGraphRagService({
+  store: new SqlGraphRagStore({ db })
+});
+```
+
+Portable storage through `@farming-labs/orm`:
+
+```ts
+import { createOrm } from "@farming-labs/orm";
+import { createGraphRagService } from "@farming-labs/grag";
+import {
+  OrmGraphRagStore,
+  graphRagOrmSchema
+} from "@farming-labs/grag/orm";
+
+const orm = createOrm({
+  schema: graphRagOrmSchema,
+  driver: postgresDriver
+});
+
+const grag = createGraphRagService({
+  store: new OrmGraphRagStore({ orm })
+});
+```
+
+## Retrieval In Another Service
+
+For a production dashboard or API, prefer `ask` and `searchGraph` because they return one UI-shaped payload:
+
+```ts
+const result = await grag.ask("How does the docs generator use repo metadata?", {
+  limit: 12,
+  responseStyle: "one paragraph, then bullets, with citations"
+});
+
+return {
+  answer: result.answer,
+  citations: result.citations,
+  hits: result.hits,
+  graph: result.graph,
+  stats: result.stats,
+  timings: result.timings
+};
+```
+
+Use `searchGraph` when you only need evidence:
+
+```ts
+const result = await grag.searchGraph("storage migrations", {
+  includeTextSearch: true,
+  limit: 8
+});
+
+return {
+  sources: result.citations,
+  evidence: result.hits,
+  highlight: result.graph
+};
+```
+
+The lower-level retrieval method is still available when you want the raw snapshot retriever:
+
+```ts
+const result = await grag.retrieve("How does the docs generator use repo metadata?", {
+  useBasicSearch: true,
+  limit: 8
+});
+
+return {
+  context: result.context,
+  hits: result.hits,
+  stats: result.stats
+};
+```
+
+For most product screens, `ask` is easier than choosing local or global search up front:
+
+```ts
+const answer = await grag.ask("How do I configure storage?");
+```
+
+The integration boundary becomes:
+
+```text
+repository/documents/rows -> grag.ingestSnapshot or grag.ingestRows -> grag.ask/searchGraph
+```
+
+See [RETRIEVAL_SDK.md](/docs/retrieval-sdk) for the full result shape and HTTP endpoint examples.

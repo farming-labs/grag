@@ -1,0 +1,179 @@
+---
+order: 6
+title: "Storage Configuration"
+description: "Configure memory, Postgres, SQLite, ORM, or custom GraphRAG storage."
+---
+# Storage Configuration
+
+GRAG storage is configured by passing a `GraphRagStore` into `createGraphRagService`.
+
+```ts
+import { createGraphRagService } from "@farming-labs/grag";
+
+const grag = createGraphRagService({ store });
+```
+
+## Which Database Can I Use?
+
+| Storage | Best for | Package surface | Notes |
+| --- | --- | --- | --- |
+| Memory | tests, demos, local prototypes | `MemoryGraphRagStore`, `createMemoryGraphRagService` | No persistence after process exit. |
+| Postgres | production, multi-tenant AI infrastructure | `SqlGraphRagStore` + Kysely | Recommended production default. Add `pgvector` later for native vector indexes. |
+| SQLite | local apps, desktop tools, small teams | `SqlGraphRagStore` + Kysely | Good simple persistent option. |
+| Any `@farming-labs/orm` driver | portable app storage | `OrmGraphRagStore`, `graphRagOrmSchema` | Use when another service already standardizes on Farming Labs ORM. |
+| Custom store | hosted DBs, existing infra, service APIs | implement `GraphRagStore` | Useful for Supabase, Neon, Turso, PlanetScale-style service boundaries, or internal APIs. |
+
+The current SQL migration helper has explicit dialect names for:
+
+- `postgres`
+- `sqlite`
+
+The ORM adapter is the portability layer when you want to reuse the same schema through a Farming Labs ORM driver.
+
+## Memory
+
+Use this in tests and demos:
+
+```ts
+import { createMemoryGraphRagService } from "@farming-labs/grag";
+
+const grag = createMemoryGraphRagService();
+
+await grag.ingestTextDocuments({
+  title: "Storage note",
+  text: "Postgres stores GraphRAG documents, text units, entities, relationships, and communities."
+});
+```
+
+## Postgres With Kysely
+
+Install:
+
+```bash
+npm install @farming-labs/grag kysely pg
+```
+
+Configure:
+
+```ts
+import { Kysely, PostgresDialect } from "kysely";
+import { Pool } from "pg";
+import {
+  applyGraphRagMigrations,
+  createGraphRagService,
+  SqlGraphRagStore,
+  type GraphRagSqlDatabase
+} from "@farming-labs/grag";
+
+const db = new Kysely<GraphRagSqlDatabase>({
+  dialect: new PostgresDialect({
+    pool: new Pool({
+      connectionString: process.env.DATABASE_URL
+    })
+  })
+});
+
+await applyGraphRagMigrations(db, "postgres");
+
+const grag = createGraphRagService({
+  store: new SqlGraphRagStore({ db })
+});
+```
+
+This creates normalized `grag_*` tables plus link tables for related chunks, entities, relationships, communities, claims, reports, and embeddings.
+
+## SQLite With Kysely
+
+Install:
+
+```bash
+npm install @farming-labs/grag kysely better-sqlite3
+```
+
+Configure:
+
+```ts
+import Database from "better-sqlite3";
+import { Kysely, SqliteDialect } from "kysely";
+import {
+  applyGraphRagMigrations,
+  createGraphRagService,
+  SqlGraphRagStore,
+  type GraphRagSqlDatabase
+} from "@farming-labs/grag";
+
+const db = new Kysely<GraphRagSqlDatabase>({
+  dialect: new SqliteDialect({
+    database: new Database("grag.sqlite")
+  })
+});
+
+await applyGraphRagMigrations(db, "sqlite");
+
+const grag = createGraphRagService({
+  store: new SqlGraphRagStore({ db })
+});
+```
+
+SQLite is good for local-first tools, desktop previews, eval runners, and small internal demos.
+
+## Farming Labs ORM
+
+Use this when a service already relies on `@farming-labs/orm` and you want GRAG to share that storage system.
+
+```ts
+import { createOrm } from "@farming-labs/orm";
+import { createGraphRagService } from "@farming-labs/grag";
+import {
+  graphRagOrmSchema,
+  OrmGraphRagStore
+} from "@farming-labs/grag/orm";
+
+const orm = createOrm({
+  schema: graphRagOrmSchema,
+  driver
+});
+
+const grag = createGraphRagService({
+  store: new OrmGraphRagStore({ orm })
+});
+```
+
+The ORM schema maps the same graph tables:
+
+- documents and text units;
+- entities and relationships;
+- covariates/claims;
+- communities and reports;
+- embeddings;
+- join tables for related chunks and graph neighborhoods.
+
+## Custom Store
+
+For a hosted database or internal persistence service, implement `GraphRagStore`.
+
+```ts
+import type { GraphRagStore } from "@farming-labs/grag";
+
+export class MyGraphRagStore implements GraphRagStore {
+  // implement upsertGraph, getSnapshot, listEntities, listTextUnits, etc.
+}
+```
+
+This is the right boundary when your app already has tenancy, authorization, audit logs, or a storage API that GRAG should respect.
+
+## Recommended Defaults
+
+- Use memory for tests.
+- Use SQLite for local persistent demos.
+- Use Postgres for production.
+- Use `@farming-labs/orm` when integrating into a service that already uses that ORM.
+- Use a custom `GraphRagStore` when storage must go through an internal platform API.
+
+For production Postgres, add later:
+
+- `tenant_id`, `source_id`, and `index_run_id` columns or attributes;
+- full-text indexes over text/title/description fields;
+- `pgvector` columns beside `vector_json`;
+- HNSW indexes for text unit, entity, and community report embeddings;
+- retention/versioning for old index runs.

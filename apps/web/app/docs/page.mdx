@@ -1,0 +1,158 @@
+---
+order: 0
+title: "@farming-labs/grag"
+description: "TypeScript GraphRAG primitives for graph-backed retrieval, citations, and relational storage."
+---
+# @farming-labs/grag
+
+TypeScript GraphRAG primitives for apps that want graph-backed retrieval, citations, and relational storage without leaving the TypeScript ecosystem.
+
+## Install
+
+```bash
+npm install @farming-labs/grag kysely
+```
+
+Install the database driver you use separately:
+
+```bash
+npm install pg
+npm install better-sqlite3
+npm install mysql2
+```
+
+## What You Get
+
+- GraphRAG artifact models for documents, chunks, entities, relationships, communities, reports, and embeddings.
+- Memory storage for tests and prototypes.
+- SQL/Kysely storage with migrations for relational databases.
+- Optional `@farming-labs/orm` adapter from `@farming-labs/grag/orm`.
+- Retrieval helpers for lexical search, graph context, local search, global search, citations, and source cards.
+- A CLI Studio for previewing and querying GraphRAG snapshots.
+
+## Quick Start
+
+```ts
+import {
+  MemoryGraphRagStore,
+  chunkDocuments,
+  createGraphRagService,
+  relationalRowsToDocuments
+} from "@farming-labs/grag";
+
+const rows = [
+  { id: 1, customer: "Acme", body: "The billing export failed after migration." },
+  { id: 2, customer: "Globex", body: "Password reset worked." }
+];
+
+const documents = relationalRowsToDocuments({
+  tableName: "support_tickets",
+  rows,
+  idColumn: "id",
+  titleColumn: "customer",
+  textColumn: "body"
+});
+
+const graph = chunkDocuments(documents);
+const store = new MemoryGraphRagStore();
+await store.upsertGraph(graph);
+
+const grag = createGraphRagService({ store });
+const answer = await grag.ask("What failed after the migration?");
+
+console.log(answer.answer);
+console.log(answer.citations);
+```
+
+## Database Source Adapter
+
+Use `source.database` when your app should own the SQL query and GRAG should handle row-to-document conversion, row provenance, chunking, and retrieval citations:
+
+```ts
+import { DataSourceLoader, source } from "@farming-labs/grag";
+
+const loader = new DataSourceLoader([
+  source.database({
+    label: "Production support tickets",
+    tableName: "support_tickets",
+    loadRows: () =>
+      db.selectFrom("support_tickets")
+        .selectAll()
+        .where("status", "!=", "spam")
+        .execute(),
+    idColumn: "id",
+    titleColumn: "subject",
+    textColumn: "body",
+    attributeColumns: ["customer", "priority", "status", "created_at"]
+  })
+]);
+
+const { documents, textUnits } = await loader.load();
+await store.upsertGraph({ documents, textUnits });
+```
+
+## SQL Storage
+
+```ts
+import { Kysely, PostgresDialect } from "kysely";
+import { Pool } from "pg";
+import {
+  SqlGraphRagStore,
+  applyGraphRagMigrations,
+  type GraphRagSqlDatabase
+} from "@farming-labs/grag";
+
+const db = new Kysely<GraphRagSqlDatabase>({
+  dialect: new PostgresDialect({
+    pool: new Pool({ connectionString: process.env.DATABASE_URL })
+  })
+});
+
+await applyGraphRagMigrations(db, "postgres");
+
+const store = new SqlGraphRagStore({ db });
+```
+
+## OpenAI Helpers
+
+```ts
+import { createGraphRagService } from "@farming-labs/grag";
+import { OpenAiChatModel, OpenAiEmbeddingModel } from "@farming-labs/grag/openai";
+
+const grag = createGraphRagService({
+  store,
+  model: new OpenAiChatModel(),
+  embeddingModel: new OpenAiEmbeddingModel()
+});
+
+const result = await grag.ask("How does retrieval work?", {
+  responseStyle: "short answer with citations"
+});
+```
+
+## CLI Studio
+
+```bash
+grag studio ./snapshot.json --port 3333 --open
+grag retrieve ./snapshot.json "How does graph expansion help retrieval?"
+grag repo . --ask "What does this repository do?" --snapshot repo.snapshot.json
+```
+
+## Docs
+
+- [Getting started](/docs/getting-started)
+- [Retrieval SDK](/docs/retrieval-sdk)
+- [Storage configuration](/docs/storage-configuration)
+- [Service integration](/docs/service-integration)
+- [Architecture](/docs/architecture)
+
+## Development
+
+```bash
+pnpm install
+pnpm --filter @farming-labs/grag check
+pnpm --filter @farming-labs/grag test
+pnpm --filter @farming-labs/grag build
+```
+
+From the monorepo root, `pnpm build` compiles the package, CLI Studio assets, and docs app.

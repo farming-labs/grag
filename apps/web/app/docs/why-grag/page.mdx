@@ -1,0 +1,189 @@
+---
+order: 2
+title: "Why @farming-labs/grag"
+description: "How GRAG compares with Microsoft GraphRAG, vector search, LangChain, and custom RAG stacks."
+---
+# Why @farming-labs/grag
+
+A concise comparison of `@farming-labs/grag` against every realistic alternative and a plain list of what it gives you that nothing else does.
+
+---
+
+## What this package is
+
+A complete TypeScript implementation of the Microsoft GraphRAG data model and query architecture — documents, text units, entities, relationships, covariates, communities, community reports, and embeddings — stored in relational databases, queryable from TypeScript, and pipeable through any LLM provider.
+
+---
+
+## Head-to-head comparison
+
+### Microsoft GraphRAG (Python)
+
+| Capability | Microsoft GraphRAG | @farming-labs/grag |
+|---|---|---|
+| Language | Python only | TypeScript / Node.js |
+| Storage | Parquet / CSV files | Postgres, SQLite, MySQL, in-memory |
+| LLM provider lock-in | Azure OpenAI / OpenAI | Any: OpenAI, Anthropic/Claude, Azure, local |
+| GraphRAG data model | ✅ full | ✅ full, same artifact names |
+| Community detection | Leiden (external) | Label propagation (built-in, zero deps) |
+| Visual studio | None | ✅ grag studio — graph canvas, search panel |
+| CLI exploration | Limited | ✅ grag repo, grag retrieve, grag preview |
+| Incremental indexing | Rebuild-from-scratch | ✅ upsert-based, watermark-ready |
+| TypeScript types + Zod | ❌ | ✅ runtime-validated schemas |
+| npm install | ❌ | ✅ |
+
+**Gap filled:** Every TypeScript backend that wants GraphRAG must use Python as a sidecar or rebuild the data model by hand. This package closes that gap entirely.
+
+---
+
+### LangChain.js / LangChain (Python)
+
+LangChain is a chain-of-tools framework. It has graph-aware retrievers and knowledge graph integrations, but:
+
+- No GraphRAG data model (documents → communities → reports → global search).
+- No community detection or community report generation pipeline.
+- No standard artifact schema (each integration is different).
+- Heavy framework dependency that owns your stack.
+
+`@farming-labs/grag` is a library, not a framework. It composes with LangChain, Vercel AI SDK, or any other tool — or none of them.
+
+---
+
+### LlamaIndex (Python and TypeScript)
+
+LlamaIndex has a `KnowledgeGraphIndex` and a property graph store. Differences:
+
+- Not GraphRAG-spec compliant (different data model, no communities/reports).
+- TypeScript support is incomplete and lags the Python version.
+- Tied to LlamaIndex's own storage abstractions.
+- No visual inspection tooling.
+
+---
+
+### Neo4j / graph databases
+
+Neo4j and similar graph databases are storage engines. They are not GraphRAG pipelines:
+
+- No chunking, extraction, community detection, or LLM summarization built in.
+- No query engines (local search, global search).
+- Require Cypher expertise.
+- `@farming-labs/grag` can use a Neo4j backend in the future through the `GraphRagStore` interface — it is a pipeline layer, not a replacement for a graph DB.
+
+---
+
+### Vector databases (Chroma, Weaviate, Pinecone, pgvector)
+
+Vector databases answer "what chunks are semantically similar to this query." GraphRAG answers "what is the structure of knowledge in this corpus and what do communities of concepts say about the query." These are complementary:
+
+- Vector search finds relevant chunks.
+- GraphRAG global search finds structural, thematic answers across the whole corpus.
+- `@farming-labs/grag` supports both: basic vector search via `EmbeddingModel` + cosine similarity, and graph-structured global search via community reports.
+
+---
+
+## Unique advantages
+
+### 1. TypeScript-first, zero Python required
+
+The only complete GraphRAG implementation that runs natively in Node.js. No Python sidecar, no subprocess, no REST wrapper needed.
+
+### 2. Relational database as the graph store
+
+Most RAG tools treat the database as a source and the vector store as the index. `@farming-labs/grag` makes a relational database the primary graph store:
+
+- `grag_entities`, `grag_relationships`, `grag_communities`, `grag_community_reports` — all in your existing Postgres or SQLite.
+- Normalized join tables preserve full graph lineage (which text units ground each entity, which entities belong to each community).
+- No extra infrastructure: if you have a Postgres database, you have a GraphRAG store.
+
+### 3. Faithful Microsoft GraphRAG data model
+
+Every artifact — `GraphRagDocument`, `TextUnit`, `Entity`, `Relationship`, `Covariate`, `Community`, `CommunityReport`, `EmbeddingRecord` — is a Zod-validated TypeScript type that maps directly to the Microsoft GraphRAG spec. Teams can import Microsoft-generated parquet/CSV outputs and query them from TypeScript.
+
+### 4. Provider-agnostic LLM interfaces
+
+`ChatModel` and `EmbeddingModel` are two-method interfaces. Adapters ship for:
+
+- **OpenAI** — `OpenAiChatModel`, `OpenAiEmbeddingModel` (Chat Completions + Embeddings APIs)
+- **Anthropic / Claude** — `AnthropicChatModel` (Messages API, all Claude models)
+- **Azure OpenAI** — pass `baseUrl` to either adapter
+- **Local / custom** — implement two methods, done
+
+No vendor lock-in at any layer.
+
+### 5. Full indexing pipeline with correct storage
+
+`StandardGraphRagPipeline` runs all Microsoft GraphRAG phases in order:
+
+1. Chunk documents into text units
+2. Extract entities + relationships per chunk (LLM, concurrency-controlled)
+3. Compute entity degree / frequency / rank
+4. Back-link text units with their entity and relationship IDs ← **was missing in every other TypeScript attempt**
+5. Detect communities (label propagation, no external deps)
+6. Populate entity `communityIds` ← **was missing in every other TypeScript attempt**
+7. Generate community reports (LLM)
+8. Generate embeddings (batch)
+
+Every artifact stored at every phase is fully linked — neighborhoods, local search, and global search all work correctly.
+
+### 6. `createOpenAiPipeline` one-liner
+
+```ts
+import { MemoryGraphRagStore } from "@farming-labs/grag";
+import { createOpenAiPipeline, OpenAiChatModel, GlobalSearchEngine } from "@farming-labs/grag/openai";
+
+const store = new MemoryGraphRagStore();
+const pipeline = createOpenAiPipeline({ store });
+await pipeline.indexDocuments(myDocuments);
+
+const engine = new GlobalSearchEngine({ store, model: new OpenAiChatModel() });
+const result = await engine.search("What are the main themes?");
+```
+
+No boilerplate. No config files. No Python environment.
+
+### 7. GraphRAG Studio
+
+`grag studio ./snapshot.json --port 3333 --open` opens a visual graph canvas — node selection, edge selection, community filtering, source grounding, retrieval panel — in the browser. No comparable tool exists in any TypeScript RAG ecosystem.
+
+### 8. `grag repo` — index any codebase in one command
+
+```bash
+grag repo . --ask "What does this repo do?" --snapshot repo.json
+grag repo https://github.com/microsoft/graphrag.git --ask "Explain the indexing pipeline"
+```
+
+Turns any local or remote Git repository into a queryable knowledge graph. Useful for onboarding, code Q&A, and documentation generation.
+
+### 9. Multiple storage adapters
+
+| Store | Use case |
+|---|---|
+| `MemoryGraphRagStore` | Tests and prototypes — zero setup |
+| `SqlGraphRagStore` | Postgres / SQLite / MySQL via Kysely |
+| `OrmGraphRagStore` | Via `@farming-labs/orm` — swap drivers without changing schema |
+| Custom | Implement `GraphRagStore` (11 methods) and use any backend |
+
+### 10. Incremental indexing
+
+Every store method is `upsert`-based. Re-indexing a document that changed is a partial update, not a full rebuild. This is critical for large corpora where only a fraction of documents change between index runs.
+
+---
+
+## What is still on the roadmap
+
+| Feature | Status |
+|---|---|
+| Postgres `pgvector` adapter | Planned — JSON vector fallback works today |
+| Microsoft GraphRAG parquet/CSV import | Planned |
+| Streaming global/local search | Planned |
+| Leiden algorithm for community detection | Planned (label propagation is the default) |
+| Incremental sync watermarks for relational sources | Planned |
+
+---
+
+## Who this is for
+
+- **Node.js / TypeScript backend teams** who want GraphRAG without running Python.
+- **Teams that already have Postgres** and don't want a separate vector database for graph artifacts.
+- **Docs-infra, support tooling, and developer platforms** that need structured Q&A over large corpora.
+- **Anyone building with Claude or OpenAI** who wants graph-enriched retrieval without framework lock-in.

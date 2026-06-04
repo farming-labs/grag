@@ -1,3 +1,8 @@
+---
+order: 1
+title: "Getting Started With GRAG"
+description: "Build your first graph-backed retrieval flow with memory, SQL, or ORM storage."
+---
 # Getting Started With GRAG
 
 GRAG is easiest to understand as a five-step flow:
@@ -116,10 +121,6 @@ Today, source selection happens when you load and index the graph rather than as
 an `ask()` option. The resulting retrieval output still keeps source paths and
 citations, so answers can be grounded across multiple sources without losing
 where the evidence came from.
-
-The `document` source reads files as UTF-8 text, so it is right for `.md`,
-`.txt`, `.ts`, `.json`, and similar text files. For PDFs or other rich/binary
-files, extract text first or use a custom source loader.
 
 ## Postgres Path
 
@@ -283,4 +284,4 @@ For a serious Postgres deployment:
 
 The winning shape is composability: your retrieval code talks to `GraphRagStore`, your storage adapter talks to Postgres or ORM, your indexing pipeline can improve independently, and Studio can inspect the exact same graph.
 
-See [RETRIEVAL_SDK.md](RETRIEVAL_SDK.md) for the dashboard-ready result shape.
+See [RETRIEVAL_SDK.md](/docs/retrieval-sdk) for the dashboard-ready result shape.

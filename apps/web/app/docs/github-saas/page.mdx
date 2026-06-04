@@ -1,0 +1,154 @@
+---
+order: 8
+title: "GitHub SaaS Repo Indexing"
+description: "Index public or private GitHub repositories for docs, search, and Ask AI flows."
+---
+# GitHub SaaS Repo Indexing
+
+Use this flow when your SaaS accepts a GitHub repository and turns it into docs, search, and Ask AI.
+
+## Indexing Config
+
+For a public repository:
+
+```ts
+import { indexRepository } from "@farming-labs/grag";
+
+const indexed = await indexRepository({
+  source: `${owner}/${repo}`,
+  provider: "github",
+  remote: {
+    ref: "main"
+  },
+  scan: {
+    maxFiles: "all",
+    maxFileBytes: 64_000
+  },
+  extraction: {
+    provider: "local"
+  }
+});
+```
+
+For a private repository, pass a short-lived GitHub App installation token:
+
+```ts
+const indexed = await indexRepository({
+  source: `${owner}/${repo}`,
+  provider: "github",
+  remote: {
+    ref: defaultBranch,
+    token: githubInstallationToken
+  },
+  scan: {
+    maxFiles: "all",
+    maxFileBytes: 64_000
+  },
+  extraction: {
+    provider: "local"
+  }
+});
+```
+
+The token is used only for `git clone`. It is not stored in the snapshot and is not included in `clonedFrom`.
+
+## SaaS Flow
+
+1. User installs your GitHub App or connects a public repo.
+2. Your app receives `{ owner, repo, installationId, defaultBranch }`.
+3. Your backend creates a GitHub installation token.
+4. GRAG clones the repo, scans all eligible text/source files, and builds a repository index snapshot.
+5. Persist the snapshot into your tenant/repo store.
+6. Generate docs from the same indexed files or from selected text units.
+7. Search and Ask AI read from the stored index.
+
+## Ask AI Endpoint
+
+```ts
+import {
+  AnthropicChatModel,
+  createGraphRagService,
+  indexRepository,
+  type GraphRagStore
+} from "@farming-labs/grag";
+
+export async function indexGitHubRepo(input: {
+  owner: string;
+  repo: string;
+  ref: string;
+  installationToken: string;
+  store: GraphRagStore;
+}) {
+  const indexed = await indexRepository({
+    source: `${input.owner}/${input.repo}`,
+    provider: "github",
+    remote: {
+      ref: input.ref,
+      token: input.installationToken
+    },
+    scan: {
+      maxFiles: "all",
+      maxFileBytes: 64_000
+    },
+    extraction: {
+      provider: "local"
+    }
+  });
+
+  const grag = createGraphRagService({ store: input.store });
+  await grag.ingestSnapshot(indexed.snapshot);
+
+  return {
+    provider: indexed.provider,
+    clonedFrom: indexed.clonedFrom,
+    files: indexed.files.map((file) => file.path),
+    stats: await grag.stats()
+  };
+}
+
+export async function askGitHubRepo(input: {
+  question: string;
+  store: GraphRagStore;
+}) {
+  const grag = createGraphRagService({
+    store: input.store,
+    model: new AnthropicChatModel({
+      model: process.env.ANTHROPIC_MODEL ?? "claude-haiku-4-5-20251001"
+    })
+  });
+
+  return grag.ask(input.question, {
+    limit: 10,
+    maxContextChars: 16_000,
+    responseStyle: "answer with file citations and mention uncertainty when the repo context is missing"
+  });
+}
+```
+
+## What Claude Receives
+
+Claude receives the question plus a compact retrieved context built from the stored index:
+
+- ranked hit text from relevant source files
+- source paths for citations
+- related entities and relationships
+- community/report context when available
+
+Claude does not receive the raw repository or the database dump on each Ask AI request.
+
+## Recommended Tenant Key
+
+Persist indexes by repo and ref:
+
+```ts
+const indexKey = {
+  tenantId,
+  provider: "github",
+  owner,
+  repo,
+  ref,
+  installationId
+};
+```
+
+Reindex on GitHub webhooks such as `push`, `pull_request`, and installation repository changes.

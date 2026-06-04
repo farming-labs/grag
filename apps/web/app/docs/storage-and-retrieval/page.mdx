@@ -1,0 +1,127 @@
+---
+order: 7
+title: "GraphRAG Storage And Retrieval"
+description: "Understand the relational schema and graph retrieval helpers."
+---
+# GraphRAG Storage And Retrieval
+
+This package stores the GraphRAG artifact model as normalized relational tables. The same shape works through the Kysely SQL store and the `@farming-labs/orm` schema adapter.
+
+## What Gets Persisted
+
+Core records:
+
+- `grag_documents`: source files, extracted text, source metadata, raw data.
+- `grag_text_units`: grounded chunks used for recall and citations.
+- `grag_entities`: extracted concepts with type, description, rank, degree, and optional embeddings.
+- `grag_relationships`: weighted graph edges between entities with grounded descriptions.
+- `grag_covariates`: claims, statuses, dates, or facts attached to graph subjects.
+- `grag_communities`: clusters of entities and relationships.
+- `grag_community_reports`: summaries used by global search and map-reduce answering.
+- `grag_embeddings`: vectors for text units, entities, relationships, documents, or reports.
+
+Link tables keep the graph explainable:
+
+- `grag_document_text_units`
+- `grag_text_unit_entities`
+- `grag_text_unit_relationships`
+- `grag_entity_communities`
+- `grag_entity_text_units`
+- `grag_relationship_text_units`
+- `grag_community_entities`
+- `grag_community_relationships`
+- `grag_community_text_units`
+
+Those link tables are the important part: they let retrieval jump from a matching chunk to entities, from entities to nearby relationships, from communities to reports, and back to source text for citations.
+
+## Related Chunks
+
+Related chunks are covered as first-class links, not only as JSON metadata.
+
+For example, when an entity is stored, its grounded chunks are persisted through:
+
+- `grag_entity_text_units`
+- `grag_text_unit_entities`
+
+When a relationship is stored, its grounded chunks are persisted through:
+
+- `grag_relationship_text_units`
+- `grag_text_unit_relationships`
+
+When a community is stored, its source chunks are persisted through:
+
+- `grag_community_text_units`
+- `grag_community_entities`
+- `grag_community_relationships`
+
+Use the service API to read those neighborhoods without hand-writing joins:
+
+```ts
+const neighborhood = await grag.neighborhood({
+  entityIds: ["ent_postgres"],
+  includeCommunityReports: true
+});
+
+console.log(neighborhood.textUnits); // related chunks
+console.log(neighborhood.relationships); // nearby edges
+console.log(neighborhood.context); // model-ready context
+```
+
+Or only fetch the chunks:
+
+```ts
+const chunks = await grag.relatedTextUnits({
+  relationshipIds: ["rel_storage_retrieval"]
+});
+```
+
+## Retrieval Flow
+
+Local retrieval:
+
+1. Score `grag_text_units`, `grag_entities`, and `grag_relationships` against the query.
+2. Use link tables to expand from seed hits to nearby graph evidence.
+3. Pull source text units and document metadata for grounding.
+4. Build a compact context window.
+5. Ask the model to answer from that context.
+
+Global retrieval:
+
+1. Load ranked `grag_community_reports`.
+2. Chunk reports into bounded context groups.
+3. Map the question over each group.
+4. Reduce partial answers into one grounded response.
+
+Hybrid retrieval:
+
+1. Combine lexical recall, vector recall from `grag_embeddings`, entity matching, relationship matching, and community reports.
+2. Expand around the graph neighborhood.
+3. Prefer evidence with source paths, relationship weights, and community-level support.
+4. Return answer context plus inspectable graph evidence.
+
+## Why This Is Designed To Be Strong
+
+Most RAG frameworks optimize only one retrieval surface, usually vector chunks. This design keeps several surfaces available at once:
+
+- relational durability for operational workloads;
+- normalized graph joins for explainability;
+- text units for exact citations;
+- embeddings for semantic recall;
+- entities and relationships for graph expansion;
+- community reports for global summarization;
+- covariates for claims, time, status, and incidents;
+- a stable snapshot shape for Studio, SQL, and `@farming-labs/orm`.
+
+The goal is not to beat every framework by having one trick. The goal is to make the core data model composable enough that you can plug in better extractors, better embeddings, better rerankers, and database-native indexes without changing the GraphRAG contract.
+
+## Next Optimization Layer
+
+For production, add:
+
+- Postgres `pgvector` columns beside `vector_json`;
+- HNSW indexes for `text_unit`, `entity`, and `community_report` embeddings;
+- full-text indexes on `text`, `title`, `description`, and `summary`;
+- tenant/source/run ids in `attributes_json` or first-class columns;
+- incremental indexing by document hash;
+- background extraction jobs with retries;
+- evaluation sets for retrieval quality and citation accuracy.
