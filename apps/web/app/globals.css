@@ -612,3 +612,88 @@ h3 {
     font-size: 4.5rem;
   }
 }
+
+/* Final docs chrome locks: keep generated nav links square after utility CSS. */
+#nd-docs-layout .fd-page-nav-card,
+#nd-docs-layout article#nd-page a[class*="rounded-lg"][class*="border"],
+#nd-docs-layout #nd-page a[class*="rounded-lg"][class*="border"] {
+  border: 1px solid var(--color-fd-border) !important;
+  border-radius: 0 !important;
+  background: color-mix(in srgb, var(--color-fd-card) 88%, transparent) !important;
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--color-fd-foreground) 5%, transparent) !important;
+}
+
+#nd-docs-layout .fd-page-nav-card:hover,
+#nd-docs-layout article#nd-page a[class*="rounded-lg"][class*="border"]:hover,
+#nd-docs-layout #nd-page a[class*="rounded-lg"][class*="border"]:hover {
+  background: color-mix(in srgb, var(--color-fd-foreground) 7%, var(--color-fd-card)) !important;
+}
+
+/* Final docs table locks: add breathing room and remove threadline rounding. */
+#nd-docs-layout .fd-table-wrapper,
+#nd-docs-layout .fd-docs-content table,
+#nd-docs-layout .prose table {
+  margin-top: 1.5rem !important;
+  border: 1px solid var(--color-fd-border) !important;
+  border-radius: 0 !important;
+  background: color-mix(in srgb, var(--color-fd-card) 88%, transparent) !important;
+  overflow: hidden;
+}
+
+#nd-docs-layout .fd-table-wrapper table {
+  margin-top: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+#nd-docs-layout :is(.fd-table-wrapper, .fd-table-wrapper *, table, table *) {
+  border-radius: 0 !important;
+}
+
+#nd-docs-layout :is(.fd-table-wrapper th, .fd-table-wrapper td, .fd-docs-content th, .fd-docs-content td, .prose th, .prose td) {
+  border-color: var(--color-fd-border) !important;
+}
+
+/* Final docs layout locks: keep content padded and search centered to viewport. */
+#nd-docs-layout #nd-page {
+  padding-inline: clamp(1.25rem, 3vw, 3rem) !important;
+}
+
+@media (min-width: 1280px) {
+  #nd-docs-layout #nd-page {
+    padding-inline: 3rem !important;
+  }
+}
+
+body:has(#nd-sidebar) .omni-overlay {
+  inset: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: auto !important;
+  z-index: 100 !important;
+}
+
+body:has(#nd-sidebar) .omni-content {
+  left: 50% !important;
+  right: auto !important;
+  width: min(720px, calc(100vw - 32px)) !important;
+  max-width: calc(100vw - 32px) !important;
+  transform: translateX(-50%) !important;
+  z-index: 103 !important;
+}
+
+@media (min-width: 768px) {
+  body:has(.omni-overlay) #nd-docs-layout > div:has(> aside#nd-sidebar) {
+    position: sticky !important;
+    top: 0 !important;
+    inset-block: auto !important;
+    inset-inline-start: auto !important;
+    width: auto !important;
+    height: 100dvh !important;
+    z-index: 102 !important;
+  }
+
+  body:has(.omni-overlay) #nd-docs-layout aside#nd-sidebar {
+    z-index: 102 !important;
+  }
+}
