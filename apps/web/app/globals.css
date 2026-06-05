@@ -651,9 +651,8 @@ h3 {
   outline-offset: 4px;
 }
 
-/* Hide only the hardcoded Ask AI item in threadline's TOC action rail. */
-#nd-docs-layout .fd-page-actions-rail > button.fd-page-action-btn:not([data-copied]):last-child,
-#nd-docs-layout [data-page-actions-variant="rail"] > button.fd-page-action-btn:not([data-copied]):last-child {
+/* Replace threadline's hardcoded Ask AI rail item with our llms.txt link. */
+#nd-docs-layout .fd-page-action-btn[data-grag-hidden-ask-ai="true"] {
   display: none !important;
 }
 
