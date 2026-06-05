@@ -1,5 +1,5 @@
 import { defineDocs } from "@farming-labs/docs";
-import { threadline } from "@farming-labs/theme/threadline";
+import { threadline, threadlinePageActions } from "@farming-labs/theme/threadline";
 import { SidebarThemeToggle } from "@/app/components/sidebar-theme-toggle";
 import {
   BookOpenIcon,
@@ -101,8 +101,7 @@ export default defineDocs({
     enabled: false
   },
   pageActions: {
-    copyMarkdown: false,
-    openDocs: false
+    ...threadlinePageActions
   },
   search: true,
   ai: {
