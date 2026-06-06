@@ -1,10 +1,4 @@
-import type {
-  Community,
-  CommunityReport,
-  Entity,
-  Relationship,
-  TextUnit
-} from "../model.js";
+import type { Community, CommunityReport, Entity, Relationship, TextUnit } from "../model.js";
 import type { GraphRagStore } from "../storage/types.js";
 
 export interface GraphRagNeighborhoodOptions {
@@ -36,18 +30,21 @@ const DEFAULT_MAX_COMMUNITIES = 8;
 
 export async function loadGraphRagNeighborhood(
   store: GraphRagStore,
-  options: GraphRagNeighborhoodOptions
+  options: GraphRagNeighborhoodOptions,
 ): Promise<GraphRagNeighborhood> {
-  const [allEntities, allRelationships, allCommunities, allReports, allTextUnits] = await Promise.all([
-    store.listEntities(),
-    store.listRelationships(),
-    store.listCommunities(),
-    store.listCommunityReports(),
-    store.listTextUnits()
-  ]);
+  const [allEntities, allRelationships, allCommunities, allReports, allTextUnits] =
+    await Promise.all([
+      store.listEntities(),
+      store.listRelationships(),
+      store.listCommunities(),
+      store.listCommunityReports(),
+      store.listTextUnits(),
+    ]);
   const entityById = new Map(allEntities.map((entity) => [entity.id, entity]));
   const entityByTitle = new Map(allEntities.map((entity) => [entity.title, entity]));
-  const relationshipById = new Map(allRelationships.map((relationship) => [relationship.id, relationship]));
+  const relationshipById = new Map(
+    allRelationships.map((relationship) => [relationship.id, relationship]),
+  );
   const communityById = new Map(allCommunities.map((community) => [community.id, community]));
   const textUnitById = new Map(allTextUnits.map((textUnit) => [textUnit.id, textUnit]));
   const entityIds = new Set(options.entityIds ?? []);
@@ -104,24 +101,32 @@ export async function loadGraphRagNeighborhood(
     for (const relationshipId of textUnit.relationshipIds) relationshipIds.add(relationshipId);
   }
 
-  const entities = rankedEntities([...entityIds].flatMap((id) => entityById.get(id) ?? []))
-    .slice(0, options.maxEntities ?? DEFAULT_MAX_ENTITIES);
-  const relationships = rankedRelationships([...relationshipIds].flatMap((id) => relationshipById.get(id) ?? []))
-    .slice(0, options.maxRelationships ?? DEFAULT_MAX_RELATIONSHIPS);
-  const communities = rankedCommunities([...communityIds].flatMap((id) => communityById.get(id) ?? []))
-    .slice(0, options.maxCommunities ?? DEFAULT_MAX_COMMUNITIES);
+  const entities = rankedEntities([...entityIds].flatMap((id) => entityById.get(id) ?? [])).slice(
+    0,
+    options.maxEntities ?? DEFAULT_MAX_ENTITIES,
+  );
+  const relationships = rankedRelationships(
+    [...relationshipIds].flatMap((id) => relationshipById.get(id) ?? []),
+  ).slice(0, options.maxRelationships ?? DEFAULT_MAX_RELATIONSHIPS);
+  const communities = rankedCommunities(
+    [...communityIds].flatMap((id) => communityById.get(id) ?? []),
+  ).slice(0, options.maxCommunities ?? DEFAULT_MAX_COMMUNITIES);
   const selectedEntityIds = new Set(entities.map((entity) => entity.id));
   const selectedRelationshipIds = new Set(relationships.map((relationship) => relationship.id));
   const selectedCommunityNumbers = new Set(communities.map((community) => community.community));
-  const textUnits = rankedTextUnits([...textUnitIds].flatMap((id) => textUnitById.get(id) ?? []), {
-    entityIds: selectedEntityIds,
-    relationshipIds: selectedRelationshipIds
-  }).slice(0, options.maxTextUnits ?? DEFAULT_MAX_TEXT_UNITS);
-  const communityReports = options.includeCommunityReports === false
-    ? []
-    : allReports
-        .filter((report) => selectedCommunityNumbers.has(report.community))
-        .sort((left, right) => right.rank - left.rank);
+  const textUnits = rankedTextUnits(
+    [...textUnitIds].flatMap((id) => textUnitById.get(id) ?? []),
+    {
+      entityIds: selectedEntityIds,
+      relationshipIds: selectedRelationshipIds,
+    },
+  ).slice(0, options.maxTextUnits ?? DEFAULT_MAX_TEXT_UNITS);
+  const communityReports =
+    options.includeCommunityReports === false
+      ? []
+      : allReports
+          .filter((report) => selectedCommunityNumbers.has(report.community))
+          .sort((left, right) => right.rank - left.rank);
 
   return {
     entities,
@@ -134,50 +139,52 @@ export async function loadGraphRagNeighborhood(
       relationships,
       communities,
       communityReports,
-      textUnits
-    })
+      textUnits,
+    }),
   };
 }
 
 function relationshipEndpointEntityIds(
   relationship: Relationship,
-  entityByTitle: Map<string, Entity>
+  entityByTitle: Map<string, Entity>,
 ): string[] {
-  const sourceEntityId = typeof relationship.attributes?.sourceEntityId === "string"
-    ? relationship.attributes.sourceEntityId
-    : entityByTitle.get(relationship.source)?.id;
-  const targetEntityId = typeof relationship.attributes?.targetEntityId === "string"
-    ? relationship.attributes.targetEntityId
-    : entityByTitle.get(relationship.target)?.id;
+  const sourceEntityId =
+    typeof relationship.attributes?.sourceEntityId === "string"
+      ? relationship.attributes.sourceEntityId
+      : entityByTitle.get(relationship.source)?.id;
+  const targetEntityId =
+    typeof relationship.attributes?.targetEntityId === "string"
+      ? relationship.attributes.targetEntityId
+      : entityByTitle.get(relationship.target)?.id;
 
   return [sourceEntityId, targetEntityId].filter((id): id is string => Boolean(id));
 }
 
 function rankedEntities(entities: readonly Entity[]): Entity[] {
-  return uniqueById(entities)
-    .sort((left, right) =>
+  return uniqueById(entities).sort(
+    (left, right) =>
       (right.rank ?? 0) - (left.rank ?? 0) ||
       (right.degree ?? 0) - (left.degree ?? 0) ||
-      left.title.localeCompare(right.title)
-    );
+      left.title.localeCompare(right.title),
+  );
 }
 
 function rankedRelationships(relationships: readonly Relationship[]): Relationship[] {
-  return uniqueById(relationships)
-    .sort((left, right) =>
+  return uniqueById(relationships).sort(
+    (left, right) =>
       (right.rank ?? 0) - (left.rank ?? 0) ||
       right.weight - left.weight ||
-      (left.description ?? "").localeCompare(right.description ?? "")
-    );
+      (left.description ?? "").localeCompare(right.description ?? ""),
+  );
 }
 
 function rankedCommunities(communities: readonly Community[]): Community[] {
-  return uniqueById(communities)
-    .sort((left, right) =>
+  return uniqueById(communities).sort(
+    (left, right) =>
       (right.size ?? right.entityIds.length) - (left.size ?? left.entityIds.length) ||
       left.level - right.level ||
-      left.title.localeCompare(right.title)
-    );
+      left.title.localeCompare(right.title),
+  );
 }
 
 function rankedTextUnits(
@@ -185,14 +192,16 @@ function rankedTextUnits(
   selected: {
     entityIds: ReadonlySet<string>;
     relationshipIds: ReadonlySet<string>;
-  }
+  },
 ): TextUnit[] {
-  return uniqueById(textUnits)
-    .sort((left, right) =>
+  return uniqueById(textUnits).sort(
+    (left, right) =>
       textUnitSupportScore(right, selected) - textUnitSupportScore(left, selected) ||
       (right.nTokens ?? 0) - (left.nTokens ?? 0) ||
-      String(left.humanReadableId ?? left.id).localeCompare(String(right.humanReadableId ?? right.id))
-    );
+      String(left.humanReadableId ?? left.id).localeCompare(
+        String(right.humanReadableId ?? right.id),
+      ),
+  );
 }
 
 function textUnitSupportScore(
@@ -200,10 +209,12 @@ function textUnitSupportScore(
   selected: {
     entityIds: ReadonlySet<string>;
     relationshipIds: ReadonlySet<string>;
-  }
+  },
 ): number {
-  return textUnit.entityIds.filter((id) => selected.entityIds.has(id)).length * 2 +
-    textUnit.relationshipIds.filter((id) => selected.relationshipIds.has(id)).length * 3;
+  return (
+    textUnit.entityIds.filter((id) => selected.entityIds.has(id)).length * 2 +
+    textUnit.relationshipIds.filter((id) => selected.relationshipIds.has(id)).length * 3
+  );
 }
 
 function uniqueById<T extends { id: string }>(records: readonly T[]): T[] {
@@ -235,6 +246,8 @@ function buildNeighborhoodContext(input: Omit<GraphRagNeighborhood, "context">):
       : "",
     input.textUnits.length
       ? `Related Chunks\n${input.textUnits.map((textUnit) => `- ${textUnit.humanReadableId ?? textUnit.id}: ${textUnit.text}`).join("\n")}`
-      : ""
-  ].filter(Boolean).join("\n\n");
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 }

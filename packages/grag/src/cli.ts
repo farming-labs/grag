@@ -107,7 +107,12 @@ function parseArgs(argv: string[]): ParsedCommand {
     return parseRepoArgs(args);
   }
 
-  const command = first === "studio" || first === "preview" ? args.shift() : args.includes("--preview") ? "studio" : null;
+  const command =
+    first === "studio" || first === "preview"
+      ? args.shift()
+      : args.includes("--preview")
+        ? "studio"
+        : null;
 
   if (!command) {
     throw new Error(`Unknown command: ${first ?? ""}\n\n${helpText}`);
@@ -183,7 +188,7 @@ function parseArgs(argv: string[]): ParsedCommand {
     port,
     open,
     ...(snapshotPath ? { snapshotPath } : {}),
-    ...(exportHtmlPath ? { exportHtmlPath } : {})
+    ...(exportHtmlPath ? { exportHtmlPath } : {}),
   };
 }
 
@@ -265,7 +270,10 @@ function parseRepoArgs(args: string[]): RepoCommand {
     }
 
     if (arg === "--max-files") {
-      maxFiles = parseRepositoryFileLimit(requiredValue(args, ++index, "--max-files"), "--max-files");
+      maxFiles = parseRepositoryFileLimit(
+        requiredValue(args, ++index, "--max-files"),
+        "--max-files",
+      );
       continue;
     }
 
@@ -280,7 +288,10 @@ function parseRepoArgs(args: string[]): RepoCommand {
     }
 
     if (arg === "--max-file-bytes") {
-      maxFileBytes = parsePositiveInt(requiredValue(args, ++index, "--max-file-bytes"), "--max-file-bytes");
+      maxFileBytes = parsePositiveInt(
+        requiredValue(args, ++index, "--max-file-bytes"),
+        "--max-file-bytes",
+      );
       continue;
     }
 
@@ -290,12 +301,18 @@ function parseRepoArgs(args: string[]): RepoCommand {
     }
 
     if (arg === "--max-corpus-chars") {
-      maxCorpusChars = parsePositiveInt(requiredValue(args, ++index, "--max-corpus-chars"), "--max-corpus-chars");
+      maxCorpusChars = parsePositiveInt(
+        requiredValue(args, ++index, "--max-corpus-chars"),
+        "--max-corpus-chars",
+      );
       continue;
     }
 
     if (arg.startsWith("--max-corpus-chars=")) {
-      maxCorpusChars = parsePositiveInt(arg.slice("--max-corpus-chars=".length), "--max-corpus-chars");
+      maxCorpusChars = parsePositiveInt(
+        arg.slice("--max-corpus-chars=".length),
+        "--max-corpus-chars",
+      );
       continue;
     }
 
@@ -357,7 +374,9 @@ function parseRepoArgs(args: string[]): RepoCommand {
   }
 
   if (!repo) {
-    throw new Error("repo requires a repository path or Git URL. Example: grag repo . --ask \"What does this repo do?\"");
+    throw new Error(
+      'repo requires a repository path or Git URL. Example: grag repo . --ask "What does this repo do?"',
+    );
   }
 
   return {
@@ -375,7 +394,7 @@ function parseRepoArgs(args: string[]): RepoCommand {
     ...(maxFiles ? { maxFiles } : {}),
     ...(maxFileBytes ? { maxFileBytes } : {}),
     ...(maxCorpusChars ? { maxCorpusChars } : {}),
-    ...(snapshotPath ? { snapshotPath } : {})
+    ...(snapshotPath ? { snapshotPath } : {}),
   };
 }
 
@@ -423,14 +442,16 @@ function parseRetrieveArgs(args: string[]): RetrieveCommand {
   }
 
   if (!query) {
-    throw new Error("retrieve requires a query. Example: grag retrieve snapshot.json \"How does retrieval work?\"");
+    throw new Error(
+      'retrieve requires a query. Example: grag retrieve snapshot.json "How does retrieval work?"',
+    );
   }
 
   return {
     command: "retrieve",
     query,
     ...(snapshotPath ? { snapshotPath } : {}),
-    ...(limit ? { limit } : {})
+    ...(limit ? { limit } : {}),
   };
 }
 
@@ -512,7 +533,7 @@ function openUrl(url: string): void {
   const args = platform === "win32" ? ["/c", "start", "", url] : [url];
   const child = spawn(command, args, {
     detached: true,
-    stdio: "ignore"
+    stdio: "ignore",
   });
   child.unref();
 }
@@ -541,7 +562,9 @@ async function renderExportHtml(snapshot: GraphRagSnapshot, title: string): Prom
 
 async function inlineStudioAssets(html: string): Promise<string> {
   let output = html;
-  const scriptMatches = [...output.matchAll(/<script type="module" crossorigin src="([^"]+)"><\/script>/g)];
+  const scriptMatches = [
+    ...output.matchAll(/<script type="module" crossorigin src="([^"]+)"><\/script>/g),
+  ];
   for (const match of scriptMatches) {
     const src = match[1];
     if (!src) continue;
@@ -591,7 +614,10 @@ async function loadDotEnv(path = resolve(".env")): Promise<void> {
 }
 
 function unquoteEnvValue(value: string): string {
-  if ((value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'"))) {
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
     return value.slice(1, -1);
   }
 
@@ -612,7 +638,9 @@ async function readJsonBody(request: IncomingMessage): Promise<unknown> {
     const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
     bytes += buffer.byteLength;
     if (bytes > Math.ceil(limit * 1.4)) {
-      throw new Error(`Upload body is too large. Max file size is ${Math.round(limit / 1024 / 1024)}MB.`);
+      throw new Error(
+        `Upload body is too large. Max file size is ${Math.round(limit / 1024 / 1024)}MB.`,
+      );
     }
     chunks.push(buffer);
   }
@@ -626,10 +654,12 @@ function parseDocumentGraphInput(value: unknown): OpenAiDocumentGraphInput {
   }
 
   const record = value as Record<string, unknown>;
-  const filename = typeof record.filename === "string" && record.filename.trim()
-    ? record.filename.trim()
-    : "uploaded-file";
-  const mimeType = typeof record.mimeType === "string" ? record.mimeType : "application/octet-stream";
+  const filename =
+    typeof record.filename === "string" && record.filename.trim()
+      ? record.filename.trim()
+      : "uploaded-file";
+  const mimeType =
+    typeof record.mimeType === "string" ? record.mimeType : "application/octet-stream";
   const text = typeof record.text === "string" ? record.text : undefined;
   const dataUrl = typeof record.dataUrl === "string" ? record.dataUrl : undefined;
   const byteSize = typeof record.byteSize === "number" ? record.byteSize : 0;
@@ -645,7 +675,7 @@ function parseDocumentGraphInput(value: unknown): OpenAiDocumentGraphInput {
     filename,
     mimeType,
     ...(text ? { text } : {}),
-    ...(dataUrl ? { dataUrl } : {})
+    ...(dataUrl ? { dataUrl } : {}),
   };
 }
 
@@ -668,9 +698,10 @@ function parseRepoGraphInput(value: unknown): StudioRepoGraphInput {
     throw new Error("Repository must be a GitHub URL or owner/name pair.");
   }
 
-  const query = typeof record.query === "string" && record.query.trim()
-    ? record.query.trim()
-    : "What are the important packages, plugins, storage surfaces, and auth flows in this repository?";
+  const query =
+    typeof record.query === "string" && record.query.trim()
+      ? record.query.trim()
+      : "What are the important packages, plugins, storage surfaces, and auth flows in this repository?";
   const maxFiles = parseRepositoryFileLimitFromUnknown(record.maxFiles);
   const maxCorpusChars = boundedInt(record.maxCorpusChars, 10_000, 120_000, 60_000);
   const useOpenAI = record.useOpenAI === true;
@@ -680,7 +711,7 @@ function parseRepoGraphInput(value: unknown): StudioRepoGraphInput {
     query,
     useOpenAI,
     maxFiles,
-    maxCorpusChars
+    maxCorpusChars,
   };
 }
 
@@ -741,26 +772,32 @@ function createRepoService(useOpenAI: boolean | "auto", model?: string): GraphRa
   const shouldUseModel = useOpenAI !== false && Boolean(process.env.OPENAI_API_KEY);
   return createMemoryGraphRagService({
     ...(shouldUseModel
-      ? { model: new OpenAiChatModel({
-          ...(model ? { model } : {})
-        }) }
-      : {})
+      ? {
+          model: new OpenAiChatModel({
+            ...(model ? { model } : {}),
+          }),
+        }
+      : {}),
   });
 }
 
 function writeJson(response: ServerResponse, status: number, payload: unknown): void {
   response.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
-    "cache-control": "no-store"
+    "cache-control": "no-store",
   });
   response.end(JSON.stringify(payload, null, 2));
 }
 
-async function handleDocumentGraphRequest(request: IncomingMessage, response: ServerResponse): Promise<void> {
+async function handleDocumentGraphRequest(
+  request: IncomingMessage,
+  response: ServerResponse,
+): Promise<void> {
   try {
     if (!process.env.OPENAI_API_KEY) {
       writeJson(response, 400, {
-        error: "OPENAI_API_KEY is not set. Text and Markdown can still use the local browser extractor."
+        error:
+          "OPENAI_API_KEY is not set. Text and Markdown can still use the local browser extractor.",
       });
       return;
     }
@@ -771,16 +808,19 @@ async function handleDocumentGraphRequest(request: IncomingMessage, response: Se
       snapshot: result.snapshot,
       extraction: result.extraction,
       model: result.model,
-      suggestedQueries: result.extraction.suggestedQueries
+      suggestedQueries: result.extraction.suggestedQueries,
     });
   } catch (error) {
     writeJson(response, 500, {
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     });
   }
 }
 
-async function handleRepoGraphRequest(request: IncomingMessage, response: ServerResponse): Promise<void> {
+async function handleRepoGraphRequest(
+  request: IncomingMessage,
+  response: ServerResponse,
+): Promise<void> {
   try {
     const input = parseRepoGraphInput(await readJsonBody(request));
     const result = await indexRepository({
@@ -789,8 +829,8 @@ async function handleRepoGraphRequest(request: IncomingMessage, response: Server
       scan: { maxFiles: input.maxFiles },
       extraction: {
         provider: input.useOpenAI ? "openai" : "local",
-        maxCorpusChars: input.maxCorpusChars
-      }
+        maxCorpusChars: input.maxCorpusChars,
+      },
     });
     const service = createRepoService(input.useOpenAI);
     await service.ingestSnapshot(result.snapshot);
@@ -798,17 +838,20 @@ async function handleRepoGraphRequest(request: IncomingMessage, response: Server
     const retrieval = await service.retrieve(input.query, {
       useBasicSearch: true,
       limit: 12,
-      basicSearch: { limit: 8 }
+      basicSearch: { limit: 8 },
     });
-    const answer = input.useOpenAI && process.env.OPENAI_API_KEY
-      ? (await service.ask(input.query, {
-          limit: 12,
-          basicSearch: { limit: 8 },
-          responseStyle: "concise repository answer with source file citations",
-          temperature: 0,
-          maxTokens: 1_200
-        })).answer
-      : undefined;
+    const answer =
+      input.useOpenAI && process.env.OPENAI_API_KEY
+        ? (
+            await service.ask(input.query, {
+              limit: 12,
+              basicSearch: { limit: 8 },
+              responseStyle: "concise repository answer with source file citations",
+              temperature: 0,
+              maxTokens: 1_200,
+            })
+          ).answer
+        : undefined;
 
     writeJson(response, 200, {
       snapshot: result.snapshot,
@@ -822,14 +865,14 @@ async function handleRepoGraphRequest(request: IncomingMessage, response: Server
       files: result.files.map((file) => ({
         path: file.path,
         kind: file.kind,
-        bytes: file.bytes
+        bytes: file.bytes,
       })),
       answer,
-      retrieval
+      retrieval,
     });
   } catch (error) {
     writeJson(response, 500, {
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     });
   }
 }
@@ -839,7 +882,7 @@ async function handleStudioQueryRequest(
   request: IncomingMessage,
   response: ServerResponse,
   url: URL,
-  mode: "ask" | "search"
+  mode: "ask" | "search",
 ): Promise<void> {
   try {
     if (request.method !== "GET" && request.method !== "POST") {
@@ -847,60 +890,73 @@ async function handleStudioQueryRequest(
       return;
     }
 
-    const input = request.method === "POST"
-      ? parseStudioQueryInput(await readJsonBody(request), url)
-      : parseStudioQueryInput(undefined, url);
-    const result = mode === "ask"
-      ? await service.ask(input.query, {
-          limit: input.limit,
-          includeTextSearch: input.includeTextSearch,
-          maxContextChars: input.maxContextChars
-        })
-      : await service.searchGraph(input.query, {
-          limit: input.limit,
-          includeTextSearch: input.includeTextSearch,
-          maxContextChars: input.maxContextChars
-        });
+    const input =
+      request.method === "POST"
+        ? parseStudioQueryInput(await readJsonBody(request), url)
+        : parseStudioQueryInput(undefined, url);
+    const result =
+      mode === "ask"
+        ? await service.ask(input.query, {
+            limit: input.limit,
+            includeTextSearch: input.includeTextSearch,
+            maxContextChars: input.maxContextChars,
+          })
+        : await service.searchGraph(input.query, {
+            limit: input.limit,
+            includeTextSearch: input.includeTextSearch,
+            maxContextChars: input.maxContextChars,
+          });
     writeJson(response, 200, result);
   } catch (error) {
     writeJson(response, 500, {
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     });
   }
 }
 
-function parseStudioQueryInput(value: unknown, url: URL): {
+function parseStudioQueryInput(
+  value: unknown,
+  url: URL,
+): {
   query: string;
   limit: number;
   includeTextSearch: boolean;
   maxContextChars: number;
 } {
-  const record = value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
-  const queryValue = typeof record.query === "string"
-    ? record.query
-    : typeof record.q === "string"
-      ? record.q
-      : url.searchParams.get("query") ?? url.searchParams.get("q") ?? "";
+  const record =
+    value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : {};
+  const queryValue =
+    typeof record.query === "string"
+      ? record.query
+      : typeof record.q === "string"
+        ? record.q
+        : (url.searchParams.get("query") ?? url.searchParams.get("q") ?? "");
   const query = queryValue.trim();
   if (!query) {
     throw new Error("Missing query. Pass ?query=... or a JSON body with query.");
   }
 
-  const limitValue = typeof record.limit === "number" || typeof record.limit === "string"
-    ? record.limit
-    : url.searchParams.get("limit") ?? "12";
-  const maxContextValue = typeof record.maxContextChars === "number" || typeof record.maxContextChars === "string"
-    ? record.maxContextChars
-    : url.searchParams.get("maxContextChars") ?? "12000";
-  const includeTextValue = typeof record.includeTextSearch === "boolean"
-    ? record.includeTextSearch
-    : url.searchParams.get("includeTextSearch");
+  const limitValue =
+    typeof record.limit === "number" || typeof record.limit === "string"
+      ? record.limit
+      : (url.searchParams.get("limit") ?? "12");
+  const maxContextValue =
+    typeof record.maxContextChars === "number" || typeof record.maxContextChars === "string"
+      ? record.maxContextChars
+      : (url.searchParams.get("maxContextChars") ?? "12000");
+  const includeTextValue =
+    typeof record.includeTextSearch === "boolean"
+      ? record.includeTextSearch
+      : url.searchParams.get("includeTextSearch");
 
   return {
     query,
     limit: boundedInt(limitValue, 1, 50, 12),
-    includeTextSearch: includeTextValue === null ? true : includeTextValue !== false && includeTextValue !== "false",
-    maxContextChars: boundedInt(maxContextValue, 1_000, 40_000, 12_000)
+    includeTextSearch:
+      includeTextValue === null ? true : includeTextValue !== false && includeTextValue !== "false",
+    maxContextChars: boundedInt(maxContextValue, 1_000, 40_000, 12_000),
   };
 }
 
@@ -908,11 +964,17 @@ async function runStudio(command: StudioCommand): Promise<void> {
   const snapshot = await loadSnapshot(command.snapshotPath);
   const studioService = createMemoryGraphRagService();
   await studioService.ingestSnapshot(snapshot);
-  const title = command.snapshotPath ? `GraphRAG Studio: ${command.snapshotPath}` : "GraphRAG Studio";
+  const title = command.snapshotPath
+    ? `GraphRAG Studio: ${command.snapshotPath}`
+    : "GraphRAG Studio";
   const html = await loadStudioIndexHtml(snapshot, title);
 
   if (command.exportHtmlPath) {
-    await writeFile(resolve(command.exportHtmlPath), await renderExportHtml(snapshot, title), "utf8");
+    await writeFile(
+      resolve(command.exportHtmlPath),
+      await renderExportHtml(snapshot, title),
+      "utf8",
+    );
   }
 
   const server = createServer((request, response) => {
@@ -939,7 +1001,7 @@ async function runStudio(command: StudioCommand): Promise<void> {
     if (url.pathname === "/" || url.pathname === "/studio" || url.pathname === "/preview") {
       response.writeHead(200, {
         "content-type": contentType(url.pathname),
-        "cache-control": "no-store"
+        "cache-control": "no-store",
       });
       response.end(html);
       return;
@@ -950,7 +1012,7 @@ async function runStudio(command: StudioCommand): Promise<void> {
         .then((asset) => {
           response.writeHead(200, {
             "content-type": contentType(url.pathname),
-            "cache-control": "no-store"
+            "cache-control": "no-store",
           });
           response.end(asset);
         })
@@ -964,7 +1026,7 @@ async function runStudio(command: StudioCommand): Promise<void> {
     if (url.pathname === "/snapshot.json") {
       response.writeHead(200, {
         "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store"
+        "cache-control": "no-store",
       });
       response.end(JSON.stringify(snapshot, null, 2));
       return;
@@ -972,12 +1034,14 @@ async function runStudio(command: StudioCommand): Promise<void> {
 
     if (url.pathname === "/health") {
       response.writeHead(200, { "content-type": "application/json; charset=utf-8" });
-      response.end(JSON.stringify({
-        ok: true,
-        openaiEnabled: Boolean(process.env.OPENAI_API_KEY),
-        openaiModel: process.env.GRAG_OPENAI_MODEL ?? "gpt-5.4-mini",
-        maxUploadBytes: maxUploadBytes()
-      }));
+      response.end(
+        JSON.stringify({
+          ok: true,
+          openaiEnabled: Boolean(process.env.OPENAI_API_KEY),
+          openaiModel: process.env.GRAG_OPENAI_MODEL ?? "gpt-5.4-mini",
+          maxUploadBytes: maxUploadBytes(),
+        }),
+      );
       return;
     }
 
@@ -986,11 +1050,17 @@ async function runStudio(command: StudioCommand): Promise<void> {
       const limit = Number(url.searchParams.get("limit") ?? "12");
       response.writeHead(200, {
         "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store"
+        "cache-control": "no-store",
       });
-      response.end(JSON.stringify(retrieveFromGraphRagSnapshot(snapshot, query, {
-        limit: Number.isFinite(limit) ? limit : 12
-      }), null, 2));
+      response.end(
+        JSON.stringify(
+          retrieveFromGraphRagSnapshot(snapshot, query, {
+            limit: Number.isFinite(limit) ? limit : 12,
+          }),
+          null,
+          2,
+        ),
+      );
       return;
     }
 
@@ -1015,7 +1085,11 @@ async function runStudio(command: StudioCommand): Promise<void> {
 
   const url = `http://${command.host}:${command.port}`;
   console.log(`GraphRAG Studio running at ${url}`);
-  console.log(command.snapshotPath ? `Snapshot: ${resolve(command.snapshotPath)}` : "Snapshot: built-in sample");
+  console.log(
+    command.snapshotPath
+      ? `Snapshot: ${resolve(command.snapshotPath)}`
+      : "Snapshot: built-in sample",
+  );
   if (command.exportHtmlPath) {
     console.log(`HTML: ${resolve(command.exportHtmlPath)}`);
   }
@@ -1031,28 +1105,29 @@ async function runRetrieve(command: RetrieveCommand): Promise<void> {
   const result = retrieveFromGraphRagSnapshot(
     snapshot,
     command.query,
-    command.limit === undefined ? {} : { limit: command.limit }
+    command.limit === undefined ? {} : { limit: command.limit },
   );
   console.log(JSON.stringify(result, null, 2));
 }
 
 async function runRepo(command: RepoCommand): Promise<void> {
-  const snapshotPath = command.snapshotPath ?? (command.studio
-    ? join(tmpdir(), `grag-repo-${Date.now()}.snapshot.json`)
-    : undefined);
+  const snapshotPath =
+    command.snapshotPath ??
+    (command.studio ? join(tmpdir(), `grag-repo-${Date.now()}.snapshot.json`) : undefined);
   const result = await indexRepository({
     source: command.repo,
     provider: "auto",
     scan: {
       ...(command.maxFiles ? { maxFiles: command.maxFiles } : {}),
       ...(command.maxFileBytes ? { maxFileBytes: command.maxFileBytes } : {}),
-      keepClone: command.keepClone
+      keepClone: command.keepClone,
     },
     extraction: {
-      provider: command.useOpenAI === true ? "openai" : command.useOpenAI === false ? "local" : "auto",
+      provider:
+        command.useOpenAI === true ? "openai" : command.useOpenAI === false ? "local" : "auto",
       ...(command.model ? { model: command.model } : {}),
-      ...(command.maxCorpusChars ? { maxCorpusChars: command.maxCorpusChars } : {})
-    }
+      ...(command.maxCorpusChars ? { maxCorpusChars: command.maxCorpusChars } : {}),
+    },
   });
   const service = createRepoService(command.useOpenAI, command.answerModel ?? command.model);
   await service.ingestSnapshot(result.snapshot);
@@ -1061,27 +1136,36 @@ async function runRepo(command: RepoCommand): Promise<void> {
     ? await service.retrieve(command.query, {
         useBasicSearch: true,
         limit: 12,
-        basicSearch: { limit: 8 }
+        basicSearch: { limit: 8 },
       })
     : undefined;
-  const answer = command.query && command.useOpenAI !== false && process.env.OPENAI_API_KEY
-    ? (await service.ask(command.query, {
-        limit: 12,
-        basicSearch: { limit: 8 },
-        responseStyle: "concise repository answer with source file citations",
-        temperature: 0,
-        maxTokens: 1_200
-      })).answer
-    : undefined;
+  const answer =
+    command.query && command.useOpenAI !== false && process.env.OPENAI_API_KEY
+      ? (
+          await service.ask(command.query, {
+            limit: 12,
+            basicSearch: { limit: 8 },
+            responseStyle: "concise repository answer with source file citations",
+            temperature: 0,
+            maxTokens: 1_200,
+          })
+        ).answer
+      : undefined;
 
   if (snapshotPath) {
     await writeFile(resolve(snapshotPath), JSON.stringify(result.snapshot, null, 2), "utf8");
   }
 
-  console.log(`Repository index built from ${result.files.length} files from ${result.clonedFrom ?? result.repoPath}`);
+  console.log(
+    `Repository index built from ${result.files.length} files from ${result.clonedFrom ?? result.repoPath}`,
+  );
   console.log(`Provider: ${result.provider}`);
-  console.log(`Mode: ${result.mode}${result.extractionModel ? ` (${result.extractionModel})` : ""}`);
-  console.log(`Stats: ${stats.documents} documents, ${stats.textUnits} text units, ${stats.entities} entities, ${stats.relationships} relationships, ${stats.communities} communities`);
+  console.log(
+    `Mode: ${result.mode}${result.extractionModel ? ` (${result.extractionModel})` : ""}`,
+  );
+  console.log(
+    `Stats: ${stats.documents} documents, ${stats.textUnits} text units, ${stats.entities} entities, ${stats.relationships} relationships, ${stats.communities} communities`,
+  );
   if (snapshotPath) {
     console.log(`Snapshot: ${resolve(snapshotPath)}`);
   }
@@ -1096,7 +1180,8 @@ async function runRepo(command: RepoCommand): Promise<void> {
     console.log("");
     console.log("Top graph hits:");
     for (const [index, hit] of retrieval.hits.slice(0, 6).entries()) {
-      const sources = hit.sourcePaths.length > 0 ? ` sources=${hit.sourcePaths.slice(0, 3).join(", ")}` : "";
+      const sources =
+        hit.sourcePaths.length > 0 ? ` sources=${hit.sourcePaths.slice(0, 3).join(", ")}` : "";
       console.log(`${index + 1}. [${hit.kind}] ${hit.title} score=${hit.score}${sources}`);
     }
   }
@@ -1108,7 +1193,7 @@ async function runRepo(command: RepoCommand): Promise<void> {
       host: command.host,
       port: command.port,
       open: command.open,
-      snapshotPath
+      snapshotPath,
     });
   }
 }

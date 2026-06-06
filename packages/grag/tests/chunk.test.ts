@@ -9,7 +9,7 @@ describe("chunkDocuments", () => {
       title: "Order note",
       type: "relational-row",
       text: "alpha beta gamma delta epsilon zeta eta theta",
-      textUnitIds: []
+      textUnitIds: [],
     };
 
     const result = chunkDocuments([document], { chunkSize: 4, overlap: 1 });

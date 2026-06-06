@@ -18,13 +18,13 @@ import {
   type JsonObject,
   type PartialGraphRagSnapshot,
   type Relationship,
-  type TextUnit
+  type TextUnit,
 } from "../model.js";
 import type {
   CommunityReportListOptions,
   EmbeddingListOptions,
   GraphRagStore,
-  ListOptions
+  ListOptions,
 } from "../storage/types.js";
 import { decodeJson, decodeJsonObject, encodeJson } from "../utils/json.js";
 import type { GraphRagOrmClient } from "./schema.js";
@@ -83,7 +83,7 @@ export class OrmGraphRagStore implements GraphRagStore {
       covariates: await this.listCovariates(),
       communities: await this.listCommunities(),
       communityReports: await this.listCommunityReports(),
-      embeddings: await this.listEmbeddings()
+      embeddings: await this.listEmbeddings(),
     });
   }
 
@@ -131,9 +131,16 @@ export class OrmGraphRagStore implements GraphRagStore {
         "textUnitId",
         "relationshipId",
         records,
-        "relationshipIds"
+        "relationshipIds",
       );
-      await createLinks(tx, "textUnitCovariate", "textUnitId", "covariateId", records, "covariateIds");
+      await createLinks(
+        tx,
+        "textUnitCovariate",
+        "textUnitId",
+        "covariateId",
+        records,
+        "covariateIds",
+      );
     });
   }
 
@@ -144,16 +151,21 @@ export class OrmGraphRagStore implements GraphRagStore {
       this.orm,
       "textUnitRelationship",
       "textUnitId",
-      "relationshipId"
+      "relationshipId",
     );
-    const covariateIds = await loadLinks(this.orm, "textUnitCovariate", "textUnitId", "covariateId");
+    const covariateIds = await loadLinks(
+      this.orm,
+      "textUnitCovariate",
+      "textUnitId",
+      "covariateId",
+    );
 
     return rows.map((row) =>
       fromTextUnitRow(row, {
         entityIds: entityIds.get(row.id) ?? [],
         relationshipIds: relationshipIds.get(row.id) ?? [],
-        covariateIds: covariateIds.get(row.id) ?? []
-      })
+        covariateIds: covariateIds.get(row.id) ?? [],
+      }),
     );
   }
 
@@ -165,13 +177,18 @@ export class OrmGraphRagStore implements GraphRagStore {
       this.orm,
       "textUnitRelationship",
       "textUnitId",
-      "relationshipId"
+      "relationshipId",
     );
-    const covariateIds = await loadLinks(this.orm, "textUnitCovariate", "textUnitId", "covariateId");
+    const covariateIds = await loadLinks(
+      this.orm,
+      "textUnitCovariate",
+      "textUnitId",
+      "covariateId",
+    );
     return fromTextUnitRow(row, {
       entityIds: entityIds.get(id) ?? [],
       relationshipIds: relationshipIds.get(id) ?? [],
-      covariateIds: covariateIds.get(id) ?? []
+      covariateIds: covariateIds.get(id) ?? [],
     });
   }
 
@@ -197,8 +214,8 @@ export class OrmGraphRagStore implements GraphRagStore {
     return rows.map((row) =>
       fromEntityRow(row, {
         communityIds: communityIds.get(row.id) ?? [],
-        textUnitIds: textUnitIds.get(row.id) ?? []
-      })
+        textUnitIds: textUnitIds.get(row.id) ?? [],
+      }),
     );
   }
 
@@ -221,7 +238,7 @@ export class OrmGraphRagStore implements GraphRagStore {
         "relationshipId",
         "textUnitId",
         records,
-        "textUnitIds"
+        "textUnitIds",
       );
     });
   }
@@ -232,7 +249,7 @@ export class OrmGraphRagStore implements GraphRagStore {
       this.orm,
       "relationshipTextUnit",
       "relationshipId",
-      "textUnitId"
+      "textUnitId",
     );
     return rows.map((row) => fromRelationshipRow(row, textUnitIds.get(row.id) ?? []));
   }
@@ -250,7 +267,14 @@ export class OrmGraphRagStore implements GraphRagStore {
       await deleteWhereIn(tx, "covariateTextUnit", "covariateId", ids);
       await deleteWhereIn(tx, "covariate", "id", ids);
       await tx.covariate.createMany({ data: records.map(toCovariateRow) });
-      await createLinks(tx, "covariateTextUnit", "covariateId", "textUnitId", records, "textUnitIds");
+      await createLinks(
+        tx,
+        "covariateTextUnit",
+        "covariateId",
+        "textUnitId",
+        records,
+        "textUnitIds",
+      );
     });
   }
 
@@ -283,10 +307,24 @@ export class OrmGraphRagStore implements GraphRagStore {
         "communityId",
         "relationshipId",
         records,
-        "relationshipIds"
+        "relationshipIds",
       );
-      await createLinks(tx, "communityTextUnit", "communityId", "textUnitId", records, "textUnitIds");
-      await createLinks(tx, "communityCovariate", "communityId", "covariateId", records, "covariateIds");
+      await createLinks(
+        tx,
+        "communityTextUnit",
+        "communityId",
+        "textUnitId",
+        records,
+        "textUnitIds",
+      );
+      await createLinks(
+        tx,
+        "communityCovariate",
+        "communityId",
+        "covariateId",
+        records,
+        "covariateIds",
+      );
     });
   }
 
@@ -297,17 +335,22 @@ export class OrmGraphRagStore implements GraphRagStore {
       this.orm,
       "communityRelationship",
       "communityId",
-      "relationshipId"
+      "relationshipId",
     );
     const textUnitIds = await loadLinks(this.orm, "communityTextUnit", "communityId", "textUnitId");
-    const covariateIds = await loadLinks(this.orm, "communityCovariate", "communityId", "covariateId");
+    const covariateIds = await loadLinks(
+      this.orm,
+      "communityCovariate",
+      "communityId",
+      "covariateId",
+    );
     return rows.map((row) =>
       fromCommunityRow(row, {
         entityIds: entityIds.get(row.id) ?? [],
         relationshipIds: relationshipIds.get(row.id) ?? [],
         textUnitIds: textUnitIds.get(row.id) ?? [],
-        covariateIds: covariateIds.get(row.id) ?? []
-      })
+        covariateIds: covariateIds.get(row.id) ?? [],
+      }),
     );
   }
 
@@ -333,7 +376,7 @@ export class OrmGraphRagStore implements GraphRagStore {
 
     const rows = await this.orm.communityReport.findMany({
       ...toFindManyArgs(options, { rank: "desc" }),
-      where
+      where,
     });
     return rows.map(fromCommunityReportRow);
   }
@@ -362,7 +405,7 @@ export class OrmGraphRagStore implements GraphRagStore {
 
     const rows = await this.orm.embedding.findMany({
       ...toFindManyArgs(options, { id: "asc" }),
-      where
+      where,
     });
     return rows.map(fromEmbeddingRow);
   }
@@ -381,15 +424,15 @@ async function deleteWhereIn(
   orm: GraphRagOrmTx,
   model: string,
   field: string,
-  values: readonly string[]
+  values: readonly string[],
 ): Promise<void> {
   if (!values.length) return;
   await clientFor(orm, model).deleteMany({
     where: {
       [field]: {
-        in: [...values]
-      }
-    }
+        in: [...values],
+      },
+    },
   });
 }
 
@@ -397,12 +440,12 @@ async function loadLinks(
   orm: GraphRagOrmClient,
   model: LinkModelName,
   ownerKey: string,
-  valueKey: string
+  valueKey: string,
 ): Promise<Map<string, string[]>> {
   const rows = await clientFor(orm, model).findMany({
     orderBy: {
-      position: "asc"
-    }
+      position: "asc",
+    },
   });
   const map = new Map<string, string[]>();
 
@@ -426,14 +469,14 @@ async function createLinks<T extends { id: string }>(
   ownerKey: string,
   valueKey: string,
   records: readonly T[],
-  sourceKey: keyof T = "textUnitIds" as keyof T
+  sourceKey: keyof T = "textUnitIds" as keyof T,
 ): Promise<void> {
   const rows = records.flatMap((record) => {
     const values = (record[sourceKey] as readonly string[] | undefined) ?? [];
     return values.map((value, position) => ({
       [ownerKey]: record.id,
       [valueKey]: value,
-      position
+      position,
     }));
   });
 
@@ -472,17 +515,21 @@ function asString(value: unknown): string | undefined {
 function toDocumentRow(document: GraphRagDocument) {
   return {
     id: document.id,
-    humanReadableId: document.humanReadableId === undefined ? null : String(document.humanReadableId),
+    humanReadableId:
+      document.humanReadableId === undefined ? null : String(document.humanReadableId),
     title: document.title,
     type: document.type,
     text: document.text,
     attributesJson: encodeJson(document.attributes),
     rawDataJson: encodeJson(document.rawData),
-    createdAt: document.createdAt ?? null
+    createdAt: document.createdAt ?? null,
   };
 }
 
-function fromDocumentRow(row: Record<string, unknown>, textUnitIds: readonly string[]): GraphRagDocument {
+function fromDocumentRow(
+  row: Record<string, unknown>,
+  textUnitIds: readonly string[],
+): GraphRagDocument {
   return documentSchema.parse({
     id: row.id,
     humanReadableId: row.humanReadableId,
@@ -492,25 +539,30 @@ function fromDocumentRow(row: Record<string, unknown>, textUnitIds: readonly str
     textUnitIds,
     attributes: decodeJsonObject(asString(row.attributesJson)),
     rawData: decodeJsonObject(asString(row.rawDataJson)),
-    createdAt: asString(row.createdAt)
+    createdAt: asString(row.createdAt),
   });
 }
 
 function toTextUnitRow(textUnit: TextUnit) {
   return {
     id: textUnit.id,
-    humanReadableId: textUnit.humanReadableId === undefined ? null : String(textUnit.humanReadableId),
+    humanReadableId:
+      textUnit.humanReadableId === undefined ? null : String(textUnit.humanReadableId),
     text: textUnit.text,
     nTokens: textUnit.nTokens ?? null,
     documentId: textUnit.documentId ?? null,
     attributesJson: encodeJson(textUnit.attributes),
-    createdAt: null
+    createdAt: null,
   };
 }
 
 function fromTextUnitRow(
   row: Record<string, unknown>,
-  relations: { entityIds: readonly string[]; relationshipIds: readonly string[]; covariateIds: readonly string[] }
+  relations: {
+    entityIds: readonly string[];
+    relationshipIds: readonly string[];
+    covariateIds: readonly string[];
+  },
 ): TextUnit {
   return textUnitSchema.parse({
     id: row.id,
@@ -521,7 +573,7 @@ function fromTextUnitRow(
     attributes: decodeJsonObject(asString(row.attributesJson)),
     entityIds: relations.entityIds,
     relationshipIds: relations.relationshipIds,
-    covariateIds: relations.covariateIds
+    covariateIds: relations.covariateIds,
   });
 }
 
@@ -538,13 +590,13 @@ function toEntityRow(entity: Entity) {
     degree: entity.degree ?? null,
     rank: decimalString(entity.rank),
     attributesJson: encodeJson(entity.attributes),
-    createdAt: null
+    createdAt: null,
   };
 }
 
 function fromEntityRow(
   row: Record<string, unknown>,
-  relations: { communityIds: readonly string[]; textUnitIds: readonly string[] }
+  relations: { communityIds: readonly string[]; textUnitIds: readonly string[] },
 ): Entity {
   return entitySchema.parse({
     id: row.id,
@@ -559,7 +611,7 @@ function fromEntityRow(
     rank: row.rank === null ? null : parseDecimal(row.rank, 1),
     attributes: decodeJsonObject(asString(row.attributesJson)),
     communityIds: relations.communityIds,
-    textUnitIds: relations.textUnitIds
+    textUnitIds: relations.textUnitIds,
   });
 }
 
@@ -576,11 +628,14 @@ function toRelationshipRow(relationship: Relationship) {
     combinedDegree: relationship.combinedDegree ?? null,
     rank: decimalString(relationship.rank),
     attributesJson: encodeJson(relationship.attributes),
-    createdAt: null
+    createdAt: null,
   };
 }
 
-function fromRelationshipRow(row: Record<string, unknown>, textUnitIds: readonly string[]): Relationship {
+function fromRelationshipRow(
+  row: Record<string, unknown>,
+  textUnitIds: readonly string[],
+): Relationship {
   return relationshipSchema.parse({
     id: row.id,
     humanReadableId: row.humanReadableId,
@@ -592,14 +647,15 @@ function fromRelationshipRow(row: Record<string, unknown>, textUnitIds: readonly
     combinedDegree: row.combinedDegree,
     rank: row.rank === null ? null : parseDecimal(row.rank, 1),
     attributes: decodeJsonObject(asString(row.attributesJson)),
-    textUnitIds
+    textUnitIds,
   });
 }
 
 function toCovariateRow(covariate: Covariate) {
   return {
     id: covariate.id,
-    humanReadableId: covariate.humanReadableId === undefined ? null : String(covariate.humanReadableId),
+    humanReadableId:
+      covariate.humanReadableId === undefined ? null : String(covariate.humanReadableId),
     covariateType: covariate.covariateType,
     type: covariate.type ?? null,
     description: covariate.description ?? null,
@@ -611,7 +667,7 @@ function toCovariateRow(covariate: Covariate) {
     endDate: covariate.endDate ?? null,
     sourceText: covariate.sourceText ?? null,
     attributesJson: encodeJson(covariate.attributes),
-    createdAt: null
+    createdAt: null,
   };
 }
 
@@ -630,14 +686,15 @@ function fromCovariateRow(row: Record<string, unknown>, textUnitIds: readonly st
     endDate: row.endDate,
     sourceText: row.sourceText,
     attributes: decodeJsonObject(asString(row.attributesJson)),
-    textUnitIds
+    textUnitIds,
   });
 }
 
 function toCommunityRow(community: Community) {
   return {
     id: community.id,
-    humanReadableId: community.humanReadableId === undefined ? null : String(community.humanReadableId),
+    humanReadableId:
+      community.humanReadableId === undefined ? null : String(community.humanReadableId),
     community: community.community,
     level: community.level,
     parent: community.parent ?? null,
@@ -646,7 +703,7 @@ function toCommunityRow(community: Community) {
     attributesJson: encodeJson(community.attributes),
     period: community.period ?? null,
     size: community.size ?? null,
-    createdAt: null
+    createdAt: null,
   };
 }
 
@@ -657,7 +714,7 @@ function fromCommunityRow(
     relationshipIds: readonly string[];
     textUnitIds: readonly string[];
     covariateIds: readonly string[];
-  }
+  },
 ): Community {
   return communitySchema.parse({
     id: row.id,
@@ -673,7 +730,7 @@ function fromCommunityRow(
     entityIds: relations.entityIds,
     relationshipIds: relations.relationshipIds,
     textUnitIds: relations.textUnitIds,
-    covariateIds: relations.covariateIds
+    covariateIds: relations.covariateIds,
   });
 }
 
@@ -696,7 +753,7 @@ function toCommunityReportRow(report: CommunityReport) {
     attributesJson: encodeJson(report.attributes),
     period: report.period ?? null,
     size: report.size ?? null,
-    createdAt: null
+    createdAt: null,
   };
 }
 
@@ -718,7 +775,7 @@ function fromCommunityReportRow(row: Record<string, unknown>): CommunityReport {
     fullContentEmbedding: decodeJson<number[] | null>(asString(row.fullContentEmbeddingJson), null),
     attributes: decodeJsonObject(asString(row.attributesJson)),
     period: row.period,
-    size: row.size
+    size: row.size,
   });
 }
 
@@ -733,7 +790,7 @@ function toEmbeddingRow(record: EmbeddingRecord) {
     dimensions: record.dimensions ?? record.vector.length,
     text: record.text ?? null,
     metadataJson: encodeJson(record.metadata),
-    createdAt: record.createdAt ?? null
+    createdAt: record.createdAt ?? null,
   };
 }
 
@@ -748,6 +805,6 @@ function fromEmbeddingRow(row: Record<string, unknown>): EmbeddingRecord {
     dimensions: row.dimensions,
     text: row.text,
     metadata: decodeJsonObject(asString(row.metadataJson)),
-    createdAt: asString(row.createdAt)
+    createdAt: asString(row.createdAt),
   });
 }

@@ -4,7 +4,7 @@ import { graphRagOrmSchema, OrmGraphRagStore } from "../src/orm/index.js";
 
 const orm = createOrm({
   schema: graphRagOrmSchema,
-  driver: createMemoryDriver<typeof graphRagOrmSchema>()
+  driver: createMemoryDriver<typeof graphRagOrmSchema>(),
 });
 
 const store = new OrmGraphRagStore({ orm });
@@ -15,12 +15,12 @@ const documents = relationalRowsToDocuments({
     {
       id: 101,
       customer: "Acme",
-      body: "The billing export fails after the migration."
-    }
+      body: "The billing export fails after the migration.",
+    },
   ],
   idColumn: "id",
   titleColumn: "customer",
-  textColumn: "body"
+  textColumn: "body",
 });
 
 const graph = chunkDocuments(documents);

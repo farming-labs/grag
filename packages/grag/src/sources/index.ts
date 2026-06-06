@@ -8,7 +8,7 @@ export type {
   DatabaseRowsLoader,
   UrlSourceConfig,
   CustomSourceConfig,
-  RelationalRow
+  RelationalRow,
 } from "./types.js";
 
 import type {
@@ -17,21 +17,14 @@ import type {
   DocumentSourceConfig,
   RelationalRow,
   RepoSourceConfig,
-  UrlSourceConfig
+  UrlSourceConfig,
 } from "./types.js";
 
-export {
-  DataSourceLoader,
-  defineSource,
-  defineSources
-} from "./loader.js";
+export { DataSourceLoader, defineSource, defineSources } from "./loader.js";
 
 export { loadDatabaseSource } from "./database.js";
 
-export type {
-  DataSourceLoaderOptions,
-  LoadedDocuments
-} from "./loader.js";
+export type { DataSourceLoaderOptions, LoadedDocuments } from "./loader.js";
 
 export const source = {
   repo(config: Omit<RepoSourceConfig, "type">): RepoSourceConfig {
@@ -43,7 +36,7 @@ export const source = {
   },
 
   database<Row extends RelationalRow>(
-    config: Omit<DatabaseSourceConfig<Row>, "type">
+    config: Omit<DatabaseSourceConfig<Row>, "type">,
   ): DatabaseSourceConfig<Row> {
     return { ...config, type: "database" };
   },
@@ -54,5 +47,5 @@ export const source = {
 
   custom(config: CustomSourceConfig): CustomSourceConfig {
     return config;
-  }
+  },
 };

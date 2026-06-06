@@ -26,12 +26,12 @@ async function fetchUrl(
     maxBytes: number;
     stripHtml: boolean;
     sourceLabel: string | undefined;
-  }
+  },
 ): Promise<GraphRagDocument | null> {
   try {
     const response = await fetch(url, {
       headers: { "user-agent": "grag-data-source/1.0 (+https://github.com/farming-labs/grag)" },
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
 
     if (!response.ok) {
@@ -63,8 +63,8 @@ async function fetchUrl(
       attributes: {
         sourceUrl: url,
         contentType,
-        ...(options.sourceLabel !== undefined ? { sourceLabel: options.sourceLabel } : {})
-      }
+        ...(options.sourceLabel !== undefined ? { sourceLabel: options.sourceLabel } : {}),
+      },
     };
   } catch {
     // Network errors, timeouts, CORS — skip silently

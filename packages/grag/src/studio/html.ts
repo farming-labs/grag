@@ -23,15 +23,17 @@ function safeJson(value: unknown): string {
 function globalsScript(options: GraphRagStudioGlobalsOptions): string {
   const globals = [
     `window.__GRAG_STUDIO__=${safeJson({ title: options.title ?? "GraphRAG Studio" })};`,
-    options.snapshot ? `window.__GRAG_SNAPSHOT__=${safeJson(options.snapshot)};` : ""
-  ].filter(Boolean).join("");
+    options.snapshot ? `window.__GRAG_SNAPSHOT__=${safeJson(options.snapshot)};` : "",
+  ]
+    .filter(Boolean)
+    .join("");
 
   return `<script>${globals}</script>`;
 }
 
 export function injectGraphRagStudioGlobals(
   html: string,
-  options: GraphRagStudioGlobalsOptions = {}
+  options: GraphRagStudioGlobalsOptions = {},
 ): string {
   const script = globalsScript(options);
 
@@ -44,7 +46,7 @@ export function injectGraphRagStudioGlobals(
 
 export function renderGraphRagStudioHtml(
   snapshot: GraphRagSnapshot,
-  options: GraphRagStudioHtmlOptions = {}
+  options: GraphRagStudioHtmlOptions = {},
 ): string {
   const title = escapeHtml(options.title ?? "GraphRAG Studio");
 

@@ -17,13 +17,13 @@ import {
   type GraphRagSnapshot,
   type PartialGraphRagSnapshot,
   type Relationship,
-  type TextUnit
+  type TextUnit,
 } from "../model.js";
 import type {
   CommunityReportListOptions,
   EmbeddingListOptions,
   GraphRagStore,
-  ListOptions
+  ListOptions,
 } from "./types.js";
 
 type ModelWithId = { id: string };
@@ -78,12 +78,15 @@ export class MemoryGraphRagStore implements GraphRagStore {
       covariates: await this.listCovariates(),
       communities: await this.listCommunities(),
       communityReports: await this.listCommunityReports(),
-      embeddings: await this.listEmbeddings()
+      embeddings: await this.listEmbeddings(),
     });
   }
 
   async upsertDocuments(documents: readonly GraphRagDocument[]): Promise<void> {
-    upsertInto(this.documents, documents.map((document) => documentSchema.parse(document)));
+    upsertInto(
+      this.documents,
+      documents.map((document) => documentSchema.parse(document)),
+    );
   }
 
   async listDocuments(options?: ListOptions): Promise<GraphRagDocument[]> {
@@ -96,7 +99,10 @@ export class MemoryGraphRagStore implements GraphRagStore {
   }
 
   async upsertTextUnits(textUnits: readonly TextUnit[]): Promise<void> {
-    upsertInto(this.textUnits, textUnits.map((textUnit) => textUnitSchema.parse(textUnit)));
+    upsertInto(
+      this.textUnits,
+      textUnits.map((textUnit) => textUnitSchema.parse(textUnit)),
+    );
   }
 
   async listTextUnits(options?: ListOptions): Promise<TextUnit[]> {
@@ -109,7 +115,10 @@ export class MemoryGraphRagStore implements GraphRagStore {
   }
 
   async upsertEntities(entities: readonly Entity[]): Promise<void> {
-    upsertInto(this.entities, entities.map((entity) => entitySchema.parse(entity)));
+    upsertInto(
+      this.entities,
+      entities.map((entity) => entitySchema.parse(entity)),
+    );
   }
 
   async listEntities(options?: ListOptions): Promise<Entity[]> {
@@ -124,7 +133,7 @@ export class MemoryGraphRagStore implements GraphRagStore {
   async upsertRelationships(relationships: readonly Relationship[]): Promise<void> {
     upsertInto(
       this.relationships,
-      relationships.map((relationship) => relationshipSchema.parse(relationship))
+      relationships.map((relationship) => relationshipSchema.parse(relationship)),
     );
   }
 
@@ -138,7 +147,10 @@ export class MemoryGraphRagStore implements GraphRagStore {
   }
 
   async upsertCovariates(covariates: readonly Covariate[]): Promise<void> {
-    upsertInto(this.covariates, covariates.map((covariate) => covariateSchema.parse(covariate)));
+    upsertInto(
+      this.covariates,
+      covariates.map((covariate) => covariateSchema.parse(covariate)),
+    );
   }
 
   async listCovariates(options?: ListOptions): Promise<Covariate[]> {
@@ -153,7 +165,7 @@ export class MemoryGraphRagStore implements GraphRagStore {
   async upsertCommunities(communities: readonly Community[]): Promise<void> {
     upsertInto(
       this.communities,
-      communities.map((community) => communitySchema.parse(community))
+      communities.map((community) => communitySchema.parse(community)),
     );
   }
 
@@ -169,7 +181,7 @@ export class MemoryGraphRagStore implements GraphRagStore {
   async upsertCommunityReports(reports: readonly CommunityReport[]): Promise<void> {
     upsertInto(
       this.communityReports,
-      reports.map((report) => communityReportSchema.parse(report))
+      reports.map((report) => communityReportSchema.parse(report)),
     );
   }
 
@@ -177,7 +189,8 @@ export class MemoryGraphRagStore implements GraphRagStore {
     const reports = [...this.communityReports.values()]
       .filter((report) => options?.level === undefined || report.level === options.level)
       .filter(
-        (report) => !options?.communityIds?.length || options.communityIds.includes(report.community)
+        (report) =>
+          !options?.communityIds?.length || options.communityIds.includes(report.community),
       )
       .sort((left, right) => (right.rank ?? 0) - (left.rank ?? 0));
 
@@ -190,13 +203,20 @@ export class MemoryGraphRagStore implements GraphRagStore {
   }
 
   async upsertEmbeddings(records: readonly EmbeddingRecord[]): Promise<void> {
-    upsertInto(this.embeddings, records.map((record) => embeddingRecordSchema.parse(record)));
+    upsertInto(
+      this.embeddings,
+      records.map((record) => embeddingRecordSchema.parse(record)),
+    );
   }
 
   async listEmbeddings(options?: EmbeddingListOptions): Promise<EmbeddingRecord[]> {
     const records = [...this.embeddings.values()]
-      .filter((record) => options?.targetKind === undefined || record.targetKind === options.targetKind)
-      .filter((record) => !options?.targetIds?.length || options.targetIds.includes(record.targetId))
+      .filter(
+        (record) => options?.targetKind === undefined || record.targetKind === options.targetKind,
+      )
+      .filter(
+        (record) => !options?.targetIds?.length || options.targetIds.includes(record.targetId),
+      )
       .filter((record) => options?.model === undefined || record.model === options.model);
 
     return slice(records, options).map((record) => clone(record));

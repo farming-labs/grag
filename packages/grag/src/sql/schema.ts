@@ -212,8 +212,7 @@ export interface GraphRagSqlDatabase {
   grag_community_covariates: GraphRagCommunityCovariateTable;
 }
 
-export type GraphRagTable<RowName extends keyof GraphRagSqlDatabase> =
-  GraphRagSqlDatabase[RowName];
+export type GraphRagTable<RowName extends keyof GraphRagSqlDatabase> = GraphRagSqlDatabase[RowName];
 export type GraphRagSelectable<RowName extends keyof GraphRagSqlDatabase> = Selectable<
   GraphRagTable<RowName>
 >;

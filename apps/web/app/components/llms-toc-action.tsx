@@ -56,10 +56,16 @@ export function LlmsTocAction() {
   }
 
   return createPortal(
-    <a className="fd-page-action-btn" data-grag-llms-toc-action href="/llms.txt" rel="noreferrer" target="_blank">
+    <a
+      className="fd-page-action-btn"
+      data-grag-llms-toc-action
+      href="/llms.txt"
+      rel="noreferrer"
+      target="_blank"
+    >
       <BotIcon aria-hidden="true" />
       <span>llms.txt</span>
     </a>,
-    rail
+    rail,
   );
 }

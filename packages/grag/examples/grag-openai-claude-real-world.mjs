@@ -5,11 +5,13 @@ import {
   OpenAiEmbeddingModel,
   createMemoryGraphRagService,
   createStableId,
-  indexRepository
+  indexRepository,
 } from "../dist/index.js";
 
 const repoPath = process.argv[2] ?? process.cwd();
-const query = process.argv.slice(3).join(" ") || "What does this repository do, and where are the core modules?";
+const query =
+  process.argv.slice(3).join(" ") ||
+  "What does this repository do, and where are the core modules?";
 const openAiKeyPresent = Boolean(process.env.OPENAI_API_KEY);
 const anthropicKeyPresent = Boolean(process.env.ANTHROPIC_API_KEY);
 const embeddingModelName = process.env.OPENAI_EMBEDDING_MODEL ?? "text-embedding-3-small";
@@ -25,7 +27,9 @@ function oneLine(value) {
 
 function sourcePathForTextUnit(textUnit) {
   const sourcePath = textUnit.attributes?.sourcePath;
-  return typeof sourcePath === "string" ? sourcePath : textUnit.humanReadableId?.toString() ?? textUnit.id;
+  return typeof sourcePath === "string"
+    ? sourcePath
+    : (textUnit.humanReadableId?.toString() ?? textUnit.id);
 }
 
 function embeddingTextForTextUnit(textUnit) {
@@ -40,16 +44,18 @@ async function embedTextUnits(service, embeddingModel) {
   const records = textUnits.flatMap((textUnit, index) => {
     const vector = vectors[index];
     if (!vector) return [];
-    return [{
-      id: createStableId(["text_unit", textUnit.id, embeddingModelName], "emb"),
-      targetKind: "text_unit",
-      targetId: textUnit.id,
-      vector,
-      model: embeddingModelName,
-      dimensions: vector.length,
-      text: inputs[index],
-      metadata: { sourcePath: sourcePathForTextUnit(textUnit) }
-    }];
+    return [
+      {
+        id: createStableId(["text_unit", textUnit.id, embeddingModelName], "emb"),
+        targetKind: "text_unit",
+        targetId: textUnit.id,
+        vector,
+        model: embeddingModelName,
+        dimensions: vector.length,
+        text: inputs[index],
+        metadata: { sourcePath: sourcePathForTextUnit(textUnit) },
+      },
+    ];
   });
 
   await service.store.upsertEmbeddings(records);
@@ -60,13 +66,13 @@ function createAnswerModel() {
   if (anthropicKeyPresent) {
     return new AnthropicChatModel({
       model: process.env.ANTHROPIC_MODEL ?? "claude-haiku-4-5-20251001",
-      maxTokens: Number(process.env.GRAG_EXAMPLE_MAX_TOKENS ?? 1200)
+      maxTokens: Number(process.env.GRAG_EXAMPLE_MAX_TOKENS ?? 1200),
     });
   }
 
   if (openAiKeyPresent) {
     return new OpenAiChatModel({
-      model: process.env.OPENAI_MODEL ?? process.env.GRAG_OPENAI_ANSWER_MODEL ?? "gpt-4o-mini"
+      model: process.env.OPENAI_MODEL ?? process.env.GRAG_OPENAI_ANSWER_MODEL ?? "gpt-4o-mini",
     });
   }
 
@@ -74,8 +80,12 @@ function createAnswerModel() {
 }
 
 step("1. Provider wiring");
-console.log(`OPENAI_API_KEY: ${openAiKeyPresent ? "present, used for embeddings" : "missing, vector search disabled"}`);
-console.log(`ANTHROPIC_API_KEY: ${anthropicKeyPresent ? "present, used for Claude answer" : "missing"}`);
+console.log(
+  `OPENAI_API_KEY: ${openAiKeyPresent ? "present, used for embeddings" : "missing, vector search disabled"}`,
+);
+console.log(
+  `ANTHROPIC_API_KEY: ${anthropicKeyPresent ? "present, used for Claude answer" : "missing"}`,
+);
 console.log(`Answer provider: ${answerProvider}`);
 
 step("2. Full codebase scan");
@@ -83,7 +93,7 @@ const indexed = await indexRepository({
   source: repoPath,
   provider: "auto",
   scan: { maxFiles: "all" },
-  extraction: { provider: "local" }
+  extraction: { provider: "local" },
 });
 const selectedFiles = indexed.files;
 console.log(`Repo: ${repoPath}`);
@@ -97,12 +107,15 @@ console.log(`config files: ${selectedFiles.filter((file) => file.kind === "confi
 step("3. Local graph build");
 const { snapshot, mode } = indexed;
 const embeddingModel = openAiKeyPresent
-  ? new OpenAiEmbeddingModel({ model: embeddingModelName, batchSize: Number(process.env.GRAG_EXAMPLE_EMBED_BATCH_SIZE ?? 128) })
+  ? new OpenAiEmbeddingModel({
+      model: embeddingModelName,
+      batchSize: Number(process.env.GRAG_EXAMPLE_EMBED_BATCH_SIZE ?? 128),
+    })
   : undefined;
 const answerModel = createAnswerModel();
 const service = createMemoryGraphRagService({
   ...(answerModel ? { model: answerModel } : {}),
-  ...(embeddingModel ? { embeddingModel } : {})
+  ...(embeddingModel ? { embeddingModel } : {}),
 });
 await service.ingestSnapshot(snapshot);
 let stats = await service.stats();
@@ -133,19 +146,19 @@ try {
     maxContextChars: 12_000,
     responseStyle: "concise engineering answer with source file citations",
     temperature: 0,
-    maxTokens: Number(process.env.GRAG_EXAMPLE_MAX_TOKENS ?? 1200)
+    maxTokens: Number(process.env.GRAG_EXAMPLE_MAX_TOKENS ?? 1200),
   });
 } catch (error) {
   console.log(`Model answer failed: ${error instanceof Error ? error.message : String(error)}`);
   console.log("Retrying in extractive mode.");
   const fallbackService = createMemoryGraphRagService({
-    ...(embeddingModel ? { embeddingModel } : {})
+    ...(embeddingModel ? { embeddingModel } : {}),
   });
   await fallbackService.ingestSnapshot(await service.snapshot());
   result = await fallbackService.ask(query, {
     limit: 8,
     basicSearch: { limit: 10 },
-    maxContextChars: 12_000
+    maxContextChars: 12_000,
   });
 }
 
@@ -160,7 +173,9 @@ for (const item of result.trace) {
 step("7. Top evidence");
 for (const [index, hit] of result.hits.entries()) {
   const source = hit.sourcePaths.join(", ") || hit.title;
-  console.log(`${index + 1}. score=${hit.score} channels=${hit.channels.join("+")} source=${source}`);
+  console.log(
+    `${index + 1}. score=${hit.score} channels=${hit.channels.join("+")} source=${source}`,
+  );
   console.log(`   ${oneLine(hit.text).slice(0, 180)}`);
 }
 

@@ -6,12 +6,12 @@ export default defineConfig({
     "orm/index": "src/orm/index.ts",
     "openai/index": "src/openai/index.ts",
     "anthropic/index": "src/anthropic/index.ts",
-    cli: "src/cli.ts"
+    cli: "src/cli.ts",
   },
   format: ["esm"],
   dts: true,
   sourcemap: true,
   splitting: true,
   clean: true,
-  target: "es2022"
+  target: "es2022",
 });

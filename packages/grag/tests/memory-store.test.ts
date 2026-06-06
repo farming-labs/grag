@@ -12,8 +12,8 @@ describe("MemoryGraphRagStore", () => {
           title: "Support ticket",
           type: "ticket",
           text: "The billing export failed.",
-          textUnitIds: ["tu_1"]
-        }
+          textUnitIds: ["tu_1"],
+        },
       ],
       textUnits: [
         {
@@ -22,8 +22,8 @@ describe("MemoryGraphRagStore", () => {
           documentId: "doc_1",
           entityIds: ["ent_billing"],
           relationshipIds: [],
-          covariateIds: []
-        }
+          covariateIds: [],
+        },
       ],
       entities: [
         {
@@ -31,8 +31,8 @@ describe("MemoryGraphRagStore", () => {
           title: "Billing",
           description: "Billing subsystem",
           textUnitIds: ["tu_1"],
-          communityIds: ["0"]
-        }
+          communityIds: ["0"],
+        },
       ],
       communityReports: [
         {
@@ -44,9 +44,9 @@ describe("MemoryGraphRagStore", () => {
           summary: "Billing exports are failing.",
           fullContent: "Billing exports are failing for support users.",
           rank: 8,
-          findings: []
-        }
-      ]
+          findings: [],
+        },
+      ],
     });
 
     const snapshot = await store.getSnapshot();

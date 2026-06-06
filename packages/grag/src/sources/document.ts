@@ -4,7 +4,9 @@ import type { GraphRagDocument } from "../model.js";
 import { createStableId } from "../utils/ids.js";
 import type { DocumentSourceConfig, InlineDocument } from "./types.js";
 
-export async function loadDocumentSource(config: DocumentSourceConfig): Promise<GraphRagDocument[]> {
+export async function loadDocumentSource(
+  config: DocumentSourceConfig,
+): Promise<GraphRagDocument[]> {
   const docs: GraphRagDocument[] = [];
 
   // --- Files from disk ---
@@ -22,8 +24,8 @@ export async function loadDocumentSource(config: DocumentSourceConfig): Promise<
       textUnitIds: [],
       attributes: {
         sourcePath: filePath,
-        ...(config.label !== undefined ? { sourceLabel: config.label } : {})
-      }
+        ...(config.label !== undefined ? { sourceLabel: config.label } : {}),
+      },
     });
   }
 
@@ -35,7 +37,10 @@ export async function loadDocumentSource(config: DocumentSourceConfig): Promise<
   return docs;
 }
 
-function inlineToDocument(inline: InlineDocument, sourceLabel: string | undefined): GraphRagDocument {
+function inlineToDocument(
+  inline: InlineDocument,
+  sourceLabel: string | undefined,
+): GraphRagDocument {
   const id = inline.id ?? createStableId([inline.title, inline.text.slice(0, 120)], "doc");
   return {
     id,
@@ -46,7 +51,7 @@ function inlineToDocument(inline: InlineDocument, sourceLabel: string | undefine
     textUnitIds: [],
     attributes: {
       ...(inline.attributes ?? {}),
-      ...(sourceLabel !== undefined ? { sourceLabel } : {})
-    }
+      ...(sourceLabel !== undefined ? { sourceLabel } : {}),
+    },
   };
 }

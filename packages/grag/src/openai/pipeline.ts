@@ -36,21 +36,23 @@ export interface CreateOpenAiPipelineOptions {
  * const result = await pipeline.indexDocuments(documents);
  * ```
  */
-export function createOpenAiPipeline(options: CreateOpenAiPipelineOptions): StandardGraphRagPipeline {
+export function createOpenAiPipeline(
+  options: CreateOpenAiPipelineOptions,
+): StandardGraphRagPipeline {
   const { store, apiKey, baseUrl, entityTypes } = options;
   const useEmbeddings = options.embeddings ?? true;
 
   const chatModel = new OpenAiChatModel({
     ...(apiKey !== undefined ? { apiKey } : {}),
     ...(baseUrl !== undefined ? { baseUrl } : {}),
-    ...(options.extractionModel !== undefined ? { model: options.extractionModel } : {})
+    ...(options.extractionModel !== undefined ? { model: options.extractionModel } : {}),
   });
 
   const embeddingModel = useEmbeddings
     ? new OpenAiEmbeddingModel({
         ...(apiKey !== undefined ? { apiKey } : {}),
         ...(baseUrl !== undefined ? { baseUrl } : {}),
-        ...(options.embeddingModel !== undefined ? { model: options.embeddingModel } : {})
+        ...(options.embeddingModel !== undefined ? { model: options.embeddingModel } : {}),
       })
     : undefined;
 
@@ -58,10 +60,10 @@ export function createOpenAiPipeline(options: CreateOpenAiPipelineOptions): Stan
     store,
     graphExtractor: new OpenAiGraphExtractor({
       model: chatModel,
-      ...(entityTypes !== undefined ? { entityTypes } : {})
+      ...(entityTypes !== undefined ? { entityTypes } : {}),
     }),
     communityDetector: new LabelPropagationCommunityDetector(),
     communityReporter: new OpenAiCommunityReporter({ model: chatModel }),
-    ...(embeddingModel !== undefined ? { embeddingModel } : {})
+    ...(embeddingModel !== undefined ? { embeddingModel } : {}),
   });
 }

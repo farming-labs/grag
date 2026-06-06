@@ -19,7 +19,7 @@ export interface BasicSearchHit {
 export async function basicSearch(
   store: GraphRagStore,
   query: string,
-  options: BasicSearchOptions = {}
+  options: BasicSearchOptions = {},
 ): Promise<BasicSearchHit[]> {
   const limit = options.limit ?? 10;
   const textUnits = await store.listTextUnits();
@@ -30,15 +30,17 @@ export async function basicSearch(
       options.embeddingRecords ??
       (await store.listEmbeddings({
         targetKind: "text_unit",
-        targetIds: textUnits.map((textUnit) => textUnit.id)
+        targetIds: textUnits.map((textUnit) => textUnit.id),
       }));
-    const vectorsByTargetId = new Map(embeddings.map((embedding) => [embedding.targetId, embedding.vector]));
+    const vectorsByTargetId = new Map(
+      embeddings.map((embedding) => [embedding.targetId, embedding.vector]),
+    );
 
     return textUnits
       .map((textUnit) => ({
         textUnit,
         score: cosineSimilarity(queryVector ?? [], vectorsByTargetId.get(textUnit.id) ?? []),
-        scoreType: "vector" as const
+        scoreType: "vector" as const,
       }))
       .filter((hit) => hit.score > 0)
       .sort((left, right) => right.score - left.score)
@@ -49,7 +51,7 @@ export async function basicSearch(
     .map((textUnit) => ({
       textUnit,
       score: lexicalScore(query, textUnit.text),
-      scoreType: "lexical" as const
+      scoreType: "lexical" as const,
     }))
     .filter((hit) => hit.score > 0)
     .sort((left, right) => right.score - left.score)

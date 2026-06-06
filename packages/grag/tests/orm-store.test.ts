@@ -3,14 +3,14 @@ import { describe, expect, it } from "vitest";
 import {
   getGraphRagOrmMigrationSql,
   graphRagOrmSchema,
-  OrmGraphRagStore
+  OrmGraphRagStore,
 } from "../src/orm/index.js";
 
 describe("OrmGraphRagStore", () => {
   it("round-trips graph artifacts through farming-labs/orm", async () => {
     const orm = createOrm({
       schema: graphRagOrmSchema,
-      driver: createMemoryDriver<typeof graphRagOrmSchema>()
+      driver: createMemoryDriver<typeof graphRagOrmSchema>(),
     });
     const store = new OrmGraphRagStore({ orm });
 
@@ -21,8 +21,8 @@ describe("OrmGraphRagStore", () => {
           title: "Support ticket",
           type: "ticket",
           text: "Billing exports fail.",
-          textUnitIds: ["tu_1"]
-        }
+          textUnitIds: ["tu_1"],
+        },
       ],
       textUnits: [
         {
@@ -31,8 +31,8 @@ describe("OrmGraphRagStore", () => {
           documentId: "doc_1",
           entityIds: ["ent_billing"],
           relationshipIds: [],
-          covariateIds: []
-        }
+          covariateIds: [],
+        },
       ],
       entities: [
         {
@@ -41,8 +41,8 @@ describe("OrmGraphRagStore", () => {
           description: "Billing subsystem",
           rank: 2,
           communityIds: ["community_0"],
-          textUnitIds: ["tu_1"]
-        }
+          textUnitIds: ["tu_1"],
+        },
       ],
       communityReports: [
         {
@@ -54,9 +54,9 @@ describe("OrmGraphRagStore", () => {
           summary: "Billing exports fail.",
           fullContent: "Support tickets mention failed billing exports.",
           rank: 9,
-          findings: []
-        }
-      ]
+          findings: [],
+        },
+      ],
     });
 
     const snapshot = await store.getSnapshot();

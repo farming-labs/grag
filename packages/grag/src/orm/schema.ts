@@ -16,11 +16,11 @@ export const graphRagOrmSchema = defineSchema({
       text: string(),
       attributesJson: nullableString().map("attributes_json"),
       rawDataJson: nullableString().map("raw_data_json"),
-      createdAt: nullableString().map("created_at")
+      createdAt: nullableString().map("created_at"),
     },
     constraints: {
-      indexes: [["title"]]
-    }
+      indexes: [["title"]],
+    },
   }),
   textUnit: model({
     table: "grag_text_units",
@@ -31,11 +31,11 @@ export const graphRagOrmSchema = defineSchema({
       nTokens: nullableInteger().map("n_tokens"),
       documentId: nullableString().map("document_id"),
       attributesJson: nullableString().map("attributes_json"),
-      createdAt: nullableString().map("created_at")
+      createdAt: nullableString().map("created_at"),
     },
     constraints: {
-      indexes: [["documentId"]]
-    }
+      indexes: [["documentId"]],
+    },
   }),
   entity: model({
     table: "grag_entities",
@@ -51,11 +51,11 @@ export const graphRagOrmSchema = defineSchema({
       degree: nullableInteger(),
       rank: nullableDecimal(),
       attributesJson: nullableString().map("attributes_json"),
-      createdAt: nullableString().map("created_at")
+      createdAt: nullableString().map("created_at"),
     },
     constraints: {
-      indexes: [["title"]]
-    }
+      indexes: [["title"]],
+    },
   }),
   relationship: model({
     table: "grag_relationships",
@@ -70,11 +70,11 @@ export const graphRagOrmSchema = defineSchema({
       combinedDegree: nullableInteger().map("combined_degree"),
       rank: nullableDecimal(),
       attributesJson: nullableString().map("attributes_json"),
-      createdAt: nullableString().map("created_at")
+      createdAt: nullableString().map("created_at"),
     },
     constraints: {
-      indexes: [["source", "target"]]
-    }
+      indexes: [["source", "target"]],
+    },
   }),
   covariate: model({
     table: "grag_covariates",
@@ -92,11 +92,11 @@ export const graphRagOrmSchema = defineSchema({
       endDate: nullableString().map("end_date"),
       sourceText: nullableString().map("source_text"),
       attributesJson: nullableString().map("attributes_json"),
-      createdAt: nullableString().map("created_at")
+      createdAt: nullableString().map("created_at"),
     },
     constraints: {
-      indexes: [["subjectType", "subjectId"]]
-    }
+      indexes: [["subjectType", "subjectId"]],
+    },
   }),
   community: model({
     table: "grag_communities",
@@ -111,11 +111,11 @@ export const graphRagOrmSchema = defineSchema({
       attributesJson: nullableString().map("attributes_json"),
       period: nullableString(),
       size: nullableInteger(),
-      createdAt: nullableString().map("created_at")
+      createdAt: nullableString().map("created_at"),
     },
     constraints: {
-      indexes: [["level"], ["community"]]
-    }
+      indexes: [["level"], ["community"]],
+    },
   }),
   communityReport: model({
     table: "grag_community_reports",
@@ -137,11 +137,11 @@ export const graphRagOrmSchema = defineSchema({
       attributesJson: nullableString().map("attributes_json"),
       period: nullableString(),
       size: nullableInteger(),
-      createdAt: nullableString().map("created_at")
+      createdAt: nullableString().map("created_at"),
     },
     constraints: {
-      indexes: [["level"], ["community"], ["rank"]]
-    }
+      indexes: [["level"], ["community"], ["rank"]],
+    },
   }),
   embedding: model({
     table: "grag_embeddings",
@@ -155,156 +155,156 @@ export const graphRagOrmSchema = defineSchema({
       dimensions: nullableInteger(),
       text: nullableString(),
       metadataJson: nullableString().map("metadata_json"),
-      createdAt: nullableString().map("created_at")
+      createdAt: nullableString().map("created_at"),
     },
     constraints: {
-      indexes: [["targetKind", "targetId"], ["model"]]
-    }
+      indexes: [["targetKind", "targetId"], ["model"]],
+    },
   }),
   documentTextUnit: model({
     table: "grag_document_text_units",
     fields: {
       documentId: string().map("document_id"),
       textUnitId: string().map("text_unit_id"),
-      position: integer().default(0)
+      position: integer().default(0),
     },
     constraints: {
       unique: [["documentId", "textUnitId"]],
-      indexes: [["documentId"], ["textUnitId"]]
-    }
+      indexes: [["documentId"], ["textUnitId"]],
+    },
   }),
   textUnitEntity: model({
     table: "grag_text_unit_entities",
     fields: {
       textUnitId: string().map("text_unit_id"),
       entityId: string().map("entity_id"),
-      position: integer().default(0)
+      position: integer().default(0),
     },
     constraints: {
       unique: [["textUnitId", "entityId"]],
-      indexes: [["textUnitId"], ["entityId"]]
-    }
+      indexes: [["textUnitId"], ["entityId"]],
+    },
   }),
   textUnitRelationship: model({
     table: "grag_text_unit_relationships",
     fields: {
       textUnitId: string().map("text_unit_id"),
       relationshipId: string().map("relationship_id"),
-      position: integer().default(0)
+      position: integer().default(0),
     },
     constraints: {
       unique: [["textUnitId", "relationshipId"]],
-      indexes: [["textUnitId"], ["relationshipId"]]
-    }
+      indexes: [["textUnitId"], ["relationshipId"]],
+    },
   }),
   textUnitCovariate: model({
     table: "grag_text_unit_covariates",
     fields: {
       textUnitId: string().map("text_unit_id"),
       covariateId: string().map("covariate_id"),
-      position: integer().default(0)
+      position: integer().default(0),
     },
     constraints: {
       unique: [["textUnitId", "covariateId"]],
-      indexes: [["textUnitId"], ["covariateId"]]
-    }
+      indexes: [["textUnitId"], ["covariateId"]],
+    },
   }),
   entityCommunity: model({
     table: "grag_entity_communities",
     fields: {
       entityId: string().map("entity_id"),
       communityId: string().map("community_id"),
-      position: integer().default(0)
+      position: integer().default(0),
     },
     constraints: {
       unique: [["entityId", "communityId"]],
-      indexes: [["entityId"], ["communityId"]]
-    }
+      indexes: [["entityId"], ["communityId"]],
+    },
   }),
   entityTextUnit: model({
     table: "grag_entity_text_units",
     fields: {
       entityId: string().map("entity_id"),
       textUnitId: string().map("text_unit_id"),
-      position: integer().default(0)
+      position: integer().default(0),
     },
     constraints: {
       unique: [["entityId", "textUnitId"]],
-      indexes: [["entityId"], ["textUnitId"]]
-    }
+      indexes: [["entityId"], ["textUnitId"]],
+    },
   }),
   relationshipTextUnit: model({
     table: "grag_relationship_text_units",
     fields: {
       relationshipId: string().map("relationship_id"),
       textUnitId: string().map("text_unit_id"),
-      position: integer().default(0)
+      position: integer().default(0),
     },
     constraints: {
       unique: [["relationshipId", "textUnitId"]],
-      indexes: [["relationshipId"], ["textUnitId"]]
-    }
+      indexes: [["relationshipId"], ["textUnitId"]],
+    },
   }),
   covariateTextUnit: model({
     table: "grag_covariate_text_units",
     fields: {
       covariateId: string().map("covariate_id"),
       textUnitId: string().map("text_unit_id"),
-      position: integer().default(0)
+      position: integer().default(0),
     },
     constraints: {
       unique: [["covariateId", "textUnitId"]],
-      indexes: [["covariateId"], ["textUnitId"]]
-    }
+      indexes: [["covariateId"], ["textUnitId"]],
+    },
   }),
   communityEntity: model({
     table: "grag_community_entities",
     fields: {
       communityId: string().map("community_id"),
       entityId: string().map("entity_id"),
-      position: integer().default(0)
+      position: integer().default(0),
     },
     constraints: {
       unique: [["communityId", "entityId"]],
-      indexes: [["communityId"], ["entityId"]]
-    }
+      indexes: [["communityId"], ["entityId"]],
+    },
   }),
   communityRelationship: model({
     table: "grag_community_relationships",
     fields: {
       communityId: string().map("community_id"),
       relationshipId: string().map("relationship_id"),
-      position: integer().default(0)
+      position: integer().default(0),
     },
     constraints: {
       unique: [["communityId", "relationshipId"]],
-      indexes: [["communityId"], ["relationshipId"]]
-    }
+      indexes: [["communityId"], ["relationshipId"]],
+    },
   }),
   communityTextUnit: model({
     table: "grag_community_text_units",
     fields: {
       communityId: string().map("community_id"),
       textUnitId: string().map("text_unit_id"),
-      position: integer().default(0)
+      position: integer().default(0),
     },
     constraints: {
       unique: [["communityId", "textUnitId"]],
-      indexes: [["communityId"], ["textUnitId"]]
-    }
+      indexes: [["communityId"], ["textUnitId"]],
+    },
   }),
   communityCovariate: model({
     table: "grag_community_covariates",
     fields: {
       communityId: string().map("community_id"),
       covariateId: string().map("covariate_id"),
-      position: integer().default(0)
+      position: integer().default(0),
     },
     constraints: {
       unique: [["communityId", "covariateId"]],
-      indexes: [["communityId"], ["covariateId"]]
-    }
-  })
+      indexes: [["communityId"], ["covariateId"]],
+    },
+  }),
 });
 
 export type GraphRagOrmSchema = typeof graphRagOrmSchema;

@@ -4,7 +4,7 @@ import {
   GlobalSearchEngine,
   MemoryGraphRagStore,
   planGraphRagQuery,
-  type ChatModel
+  type ChatModel,
 } from "../src/index.js";
 
 describe("search helpers", () => {
@@ -16,23 +16,33 @@ describe("search helpers", () => {
     expect(plan.entities).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ kind: "env", value: "OPENAI_API_KEY" }),
-        expect.objectContaining({ kind: "path", value: "packages/ai/src/index.ts" })
-      ])
+        expect.objectContaining({ kind: "path", value: "packages/ai/src/index.ts" }),
+      ]),
     );
     expect(plan.steps.join(" ")).toContain("Resolve explicit references");
   });
 
   it("does not treat generic API acronyms as env vars and detects impact questions", () => {
-    const plan = planGraphRagQuery("If the session table schema changes, which internal adapter and API route files are likely impacted?");
+    const plan = planGraphRagQuery(
+      "If the session table schema changes, which internal adapter and API route files are likely impacted?",
+    );
 
     expect(plan.intent).toBe("impact");
-    expect(plan.entities.some((entity) => entity.kind === "env" && entity.value === "API")).toBe(false);
+    expect(plan.entities.some((entity) => entity.kind === "env" && entity.value === "API")).toBe(
+      false,
+    );
   });
 
   it("keeps workflow acronyms out of query entities and classifies command flows", () => {
-    const organizationPlan = planGraphRagQuery("How do organization invitation routes enforce membership permissions, and which files define the invite CRUD and access checks?");
-    const migrationPlan = planGraphRagQuery("What happens when the migration command runs, from CLI command to generated schema/migrations?");
-    const callbackPlan = planGraphRagQuery("Explain the social sign-in callback path and how it decides whether to link an OAuth account, sign in, or create a session.");
+    const organizationPlan = planGraphRagQuery(
+      "How do organization invitation routes enforce membership permissions, and which files define the invite CRUD and access checks?",
+    );
+    const migrationPlan = planGraphRagQuery(
+      "What happens when the migration command runs, from CLI command to generated schema/migrations?",
+    );
+    const callbackPlan = planGraphRagQuery(
+      "Explain the social sign-in callback path and how it decides whether to link an OAuth account, sign in, or create a session.",
+    );
 
     expect(organizationPlan.entities.some((entity) => entity.value === "CRUD")).toBe(false);
     expect(migrationPlan.intent).toBe("how");
@@ -45,8 +55,20 @@ describe("search helpers", () => {
   it("runs lexical basic search over text units", async () => {
     const store = new MemoryGraphRagStore();
     await store.upsertTextUnits([
-      { id: "tu_1", text: "Billing export failed for Acme", entityIds: [], relationshipIds: [], covariateIds: [] },
-      { id: "tu_2", text: "Password reset succeeded", entityIds: [], relationshipIds: [], covariateIds: [] }
+      {
+        id: "tu_1",
+        text: "Billing export failed for Acme",
+        entityIds: [],
+        relationshipIds: [],
+        covariateIds: [],
+      },
+      {
+        id: "tu_2",
+        text: "Password reset succeeded",
+        entityIds: [],
+        relationshipIds: [],
+        covariateIds: [],
+      },
     ]);
 
     const hits = await basicSearch(store, "billing export", { limit: 1 });
@@ -68,8 +90,8 @@ describe("search helpers", () => {
         summary: "Billing export failures",
         fullContent: "Support tickets mention failed billing exports.",
         rank: 1,
-        findings: []
-      }
+        findings: [],
+      },
     ]);
     const model: ChatModel = {
       async complete(messages) {
@@ -77,7 +99,7 @@ describe("search helpers", () => {
         return lastMessage.includes("Partial answers")
           ? "Billing exports are the main support issue."
           : JSON.stringify({ answer: "Billing exports fail", confidence: 0.9 });
-      }
+      },
     };
 
     const engine = new GlobalSearchEngine({ store, model });

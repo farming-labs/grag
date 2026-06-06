@@ -5,7 +5,7 @@ import {
   createGraphRagService,
   createMemoryGraphRagService,
   type ChatMessage,
-  type ChatModel
+  type ChatModel,
 } from "../src/index.js";
 
 describe("GraphRagService", () => {
@@ -18,13 +18,13 @@ describe("GraphRagService", () => {
       text: [
         "The docs platform uses GraphRAG Studio to visualize entities and relationships.",
         "Postgres stores documents, text units, entities, relationships, and community reports.",
-        "@farming-labs/orm keeps the storage layer portable across SQL drivers."
-      ].join("\n\n")
+        "@farming-labs/orm keeps the storage layer portable across SQL drivers.",
+      ].join("\n\n"),
     });
 
     const stats = await service.stats();
     const result = await service.retrieve("How does orm storage help docs platform retrieval?", {
-      useBasicSearch: true
+      useBasicSearch: true,
     });
 
     expect(stats.documents).toBe(1);
@@ -36,16 +36,19 @@ describe("GraphRagService", () => {
   it("wraps any GraphRagStore implementation", async () => {
     const store = new MemoryGraphRagStore();
     const service = createGraphRagService({ store });
-    const snapshot = buildDocumentGraphRagSnapshot("Hybrid retrieval uses graph expansion and citations.", {
-      title: "Retrieval note",
-      sourcePath: "docs/retrieval.md"
-    });
+    const snapshot = buildDocumentGraphRagSnapshot(
+      "Hybrid retrieval uses graph expansion and citations.",
+      {
+        title: "Retrieval note",
+        sourcePath: "docs/retrieval.md",
+      },
+    );
 
     await service.ingestSnapshot(snapshot);
 
     expect(await service.snapshot()).toMatchObject({
       documents: expect.any(Array),
-      entities: expect.any(Array)
+      entities: expect.any(Array),
     });
     expect((await service.stats()).relationships).toBeGreaterThan(0);
   });
@@ -58,21 +61,24 @@ describe("GraphRagService", () => {
       text: [
         "Postgres stores GraphRAG text units, entities, relationships, and community reports.",
         "Related chunks are linked through entity text unit and relationship text unit tables.",
-        "The retrieval service expands from a selected entity into nearby relationships and source chunks."
-      ].join("\n\n")
+        "The retrieval service expands from a selected entity into nearby relationships and source chunks.",
+      ].join("\n\n"),
     });
-    const entity = snapshot.entities.find((entry) => entry.textUnitIds.length > 0) ?? snapshot.entities[0];
+    const entity =
+      snapshot.entities.find((entry) => entry.textUnitIds.length > 0) ?? snapshot.entities[0];
     expect(entity).toBeDefined();
 
     const neighborhood = await service.neighborhood({
       entityIds: [entity!.id],
-      includeCommunityReports: true
+      includeCommunityReports: true,
     });
 
     expect(neighborhood.entities.length).toBeGreaterThan(0);
     expect(neighborhood.textUnits.length).toBeGreaterThan(0);
     expect(neighborhood.context).toContain("Related Chunks");
-    expect(await service.relatedTextUnits({ entityIds: [entity!.id] })).toEqual(neighborhood.textUnits);
+    expect(await service.relatedTextUnits({ entityIds: [entity!.id] })).toEqual(
+      neighborhood.textUnits,
+    );
   });
 
   it("returns dashboard-ready search results with citations and graph highlights", async () => {
@@ -82,13 +88,16 @@ describe("GraphRagService", () => {
       sourcePath: "docs/dashboard-retrieval.md",
       text: [
         "The dashboard calls grag.searchGraph to retrieve citations, graph highlights, and context blocks.",
-        "GraphRAG retrieval links entities, relationships, text units, and source paths for explainable answers."
-      ].join("\n")
+        "GraphRAG retrieval links entities, relationships, text units, and source paths for explainable answers.",
+      ].join("\n"),
     });
 
-    const result = await service.searchGraph("What does dashboard retrieval return for citations?", {
-      limit: 6
-    });
+    const result = await service.searchGraph(
+      "What does dashboard retrieval return for citations?",
+      {
+        limit: 6,
+      },
+    );
 
     expect(result.hits.length).toBeGreaterThan(0);
     expect(result.citations.length).toBeGreaterThan(0);
@@ -105,7 +114,7 @@ describe("GraphRagService", () => {
     await service.ingestTextDocuments({
       title: "Ask SDK",
       sourcePath: "docs/ask-sdk.md",
-      text: "grag.ask returns a dashboard-ready answer with citations and source-backed graph context."
+      text: "grag.ask returns a dashboard-ready answer with citations and source-backed graph context.",
     });
 
     const extractive = await service.ask("What does grag.ask return?");
@@ -118,13 +127,13 @@ describe("GraphRagService", () => {
         seenMessages.push([...messages]);
         return {
           content: "grag.ask returns a cited dashboard answer [S1].",
-          usage: { inputTokens: 12, outputTokens: 8 }
+          usage: { inputTokens: 12, outputTokens: 8 },
         };
-      }
+      },
     };
     const modeled = await service.ask("What does grag.ask return?", {
       model,
-      responseStyle: "one sentence"
+      responseStyle: "one sentence",
     });
 
     expect(modeled.mode).toBe("model");
@@ -143,7 +152,7 @@ describe("GraphRagService", () => {
           entityIds: [],
           relationshipIds: [],
           covariateIds: [],
-          attributes: { sourcePath: "packages/auth-core/src/api/middlewares/origin-check.ts" }
+          attributes: { sourcePath: "packages/auth-core/src/api/middlewares/origin-check.ts" },
         },
         {
           id: "tu_docs",
@@ -151,7 +160,7 @@ describe("GraphRagService", () => {
           entityIds: [],
           relationshipIds: [],
           covariateIds: [],
-          attributes: { sourcePath: "docs/content/docs/plugins/oauth-proxy.mdx" }
+          attributes: { sourcePath: "docs/content/docs/plugins/oauth-proxy.mdx" },
         },
         {
           id: "tu_session",
@@ -159,20 +168,28 @@ describe("GraphRagService", () => {
           entityIds: [],
           relationshipIds: [],
           covariateIds: [],
-          attributes: { sourcePath: "packages/auth-core/src/cookies/index.ts" }
-        }
-      ]
+          attributes: { sourcePath: "packages/auth-core/src/cookies/index.ts" },
+        },
+      ],
     });
 
-    const origin = await service.searchGraph("Where is request origin checking implemented, and how does it use trustedOrigins?", {
-      limit: 4
-    });
-    expect(origin.hits[0]?.sourcePaths[0]).toBe("packages/auth-core/src/api/middlewares/origin-check.ts");
+    const origin = await service.searchGraph(
+      "Where is request origin checking implemented, and how does it use trustedOrigins?",
+      {
+        limit: 4,
+      },
+    );
+    expect(origin.hits[0]?.sourcePaths[0]).toBe(
+      "packages/auth-core/src/api/middlewares/origin-check.ts",
+    );
     expect(origin.hits[0]?.channels).toContain("reference");
 
-    const cookies = await service.ask("How do session cookies get named, read, and set, including custom prefixes?", {
-      limit: 4
-    });
+    const cookies = await service.ask(
+      "How do session cookies get named, read, and set, including custom prefixes?",
+      {
+        limit: 4,
+      },
+    );
     expect(cookies.hits[0]?.sourcePaths[0]).toBe("packages/auth-core/src/cookies/index.ts");
     expect(cookies.answer).toContain("Strongest evidence");
     expect(cookies.answer).toContain("setSessionCookie");

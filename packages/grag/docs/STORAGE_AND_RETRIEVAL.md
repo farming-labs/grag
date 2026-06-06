@@ -54,7 +54,7 @@ Use the service API to read those neighborhoods without hand-writing joins:
 ```ts
 const neighborhood = await grag.neighborhood({
   entityIds: ["ent_postgres"],
-  includeCommunityReports: true
+  includeCommunityReports: true,
 });
 
 console.log(neighborhood.textUnits); // related chunks
@@ -66,7 +66,7 @@ Or only fetch the chunks:
 
 ```ts
 const chunks = await grag.relatedTextUnits({
-  relationshipIds: ["rel_storage_retrieval"]
+  relationshipIds: ["rel_storage_retrieval"],
 });
 ```
 

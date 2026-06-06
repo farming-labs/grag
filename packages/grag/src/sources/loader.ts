@@ -5,7 +5,7 @@ import type {
   RepoSourceConfig,
   DocumentSourceConfig,
   DatabaseSourceConfig,
-  UrlSourceConfig
+  UrlSourceConfig,
 } from "./types.js";
 import { loadRepoSource } from "./repo.js";
 import { loadDocumentSource } from "./document.js";
@@ -93,13 +93,13 @@ export class DataSourceLoader {
         textUnits: [],
         sourceCount: this.sources.length,
         documentCount: rawDocs.length,
-        textUnitCount: 0
+        textUnitCount: 0,
       };
     }
 
     const chunkOpts: ChunkDocumentOptions = {
       chunkSize: this.options.chunkSize ?? 300,
-      overlap: this.options.overlap ?? 40
+      overlap: this.options.overlap ?? 40,
     };
 
     const { documents, textUnits } = chunkDocuments(rawDocs, chunkOpts);
@@ -109,7 +109,7 @@ export class DataSourceLoader {
       textUnits,
       sourceCount: this.sources.length,
       documentCount: rawDocs.length,
-      textUnitCount: textUnits.length
+      textUnitCount: textUnits.length,
     };
   }
 
@@ -153,7 +153,7 @@ export class DataSourceLoader {
     }
     throw new Error(
       `Unknown data source type "${custom.type}". ` +
-      `For custom sources, provide a "load" function on the config object.`
+        `For custom sources, provide a "load" function on the config object.`,
     );
   }
 }

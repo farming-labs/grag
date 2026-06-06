@@ -1,18 +1,23 @@
-import { MemoryGraphRagStore, basicSearch, chunkDocuments, relationalRowsToDocuments } from "../src/index.js";
+import {
+  MemoryGraphRagStore,
+  basicSearch,
+  chunkDocuments,
+  relationalRowsToDocuments,
+} from "../src/index.js";
 
 const rows = [
   {
     id: 101,
     customer: "Acme",
     status: "open",
-    body: "The billing export fails after the migration. The support team needs a workaround."
+    body: "The billing export fails after the migration. The support team needs a workaround.",
   },
   {
     id: 102,
     customer: "Globex",
     status: "closed",
-    body: "Password reset email arrived after two minutes."
-  }
+    body: "Password reset email arrived after two minutes.",
+  },
 ];
 
 const documents = relationalRowsToDocuments({
@@ -21,7 +26,7 @@ const documents = relationalRowsToDocuments({
   idColumn: "id",
   titleColumn: "customer",
   textColumn: "body",
-  attributeColumns: ["status"]
+  attributeColumns: ["status"],
 });
 
 const graph = chunkDocuments(documents, { chunkSize: 60, overlap: 10 });

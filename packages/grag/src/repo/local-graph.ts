@@ -7,7 +7,7 @@ import type {
   GraphRagSnapshot,
   JsonObject,
   Relationship,
-  TextUnit
+  TextUnit,
 } from "../model.js";
 import { createStableId } from "../utils/ids.js";
 
@@ -29,38 +29,38 @@ const COMMUNITY_DEFINITIONS = [
   {
     key: "overview",
     title: "Repository Overview",
-    summary: "Repository identity, core purpose, and top-level architecture."
+    summary: "Repository identity, core purpose, and top-level architecture.",
   },
   {
     key: "source",
     title: "Core Implementation",
-    summary: "Primary source files, core features, and exported API surface."
+    summary: "Primary source files, core features, and exported API surface.",
   },
   {
     key: "storage",
     title: "Storage And Data",
-    summary: "Database adapters, schemas, persistence interfaces, and data models."
+    summary: "Database adapters, schemas, persistence interfaces, and data models.",
   },
   {
     key: "retrieval",
     title: "Integrations And Flows",
-    summary: "Integration patterns, data flows, middleware, and key workflows."
+    summary: "Integration patterns, data flows, middleware, and key workflows.",
   },
   {
     key: "surface",
     title: "Entry Points And Tooling",
-    summary: "CLI tools, REST APIs, framework integrations, and developer-facing surfaces."
+    summary: "CLI tools, REST APIs, framework integrations, and developer-facing surfaces.",
   },
   {
     key: "docs",
     title: "Documentation",
-    summary: "Readmes, guides, examples, and documented topics."
+    summary: "Readmes, guides, examples, and documented topics.",
   },
   {
     key: "dependencies",
     title: "Packages And Dependencies",
-    summary: "Package manifests, scripts, runtime and dev dependencies."
-  }
+    summary: "Package manifests, scripts, runtime and dev dependencies.",
+  },
 ] as const;
 
 type CommunityKey = (typeof COMMUNITY_DEFINITIONS)[number]["key"];
@@ -147,7 +147,7 @@ const COMMON_NON_ENV_TOKENS = new Set([
   "URL",
   "UUID",
   "XML",
-  "YAML"
+  "YAML",
 ]);
 
 const NOISY_SYMBOL_NAMES = new Set([
@@ -167,7 +167,7 @@ const NOISY_SYMBOL_NAMES = new Set([
   "Record",
   "Set",
   "String",
-  "Symbol"
+  "Symbol",
 ]);
 
 const REPOSITORY_CONCEPTS: RepositoryConcept[] = [
@@ -177,42 +177,65 @@ const REPOSITORY_CONCEPTS: RepositoryConcept[] = [
     type: "Core Feature",
     description: "Core authentication logic handling sign-in, sign-up, and identity verification.",
     communityKey: "source",
-    patterns: [/\bauth(?:enticate|entication)?\b/i, /\bsignIn\b/i, /\bsignUp\b/i, /\bverif(?:y|ication)\b/i]
+    patterns: [
+      /\bauth(?:enticate|entication)?\b/i,
+      /\bsignIn\b/i,
+      /\bsignUp\b/i,
+      /\bverif(?:y|ication)\b/i,
+    ],
   },
   {
     title: "Session Management",
     type: "Auth Concept",
     description: "Session creation, storage, validation, and expiry across requests.",
     communityKey: "source",
-    patterns: [/\bsession(?:Store|Token|Manager|Cookie)?\b/i, /\bcreateSession\b/i, /\bgetSession\b/i]
+    patterns: [
+      /\bsession(?:Store|Token|Manager|Cookie)?\b/i,
+      /\bcreateSession\b/i,
+      /\bgetSession\b/i,
+    ],
   },
   {
     title: "OAuth 2.0 / Social Login",
     type: "Authentication Protocol",
-    description: "OAuth 2.0 flows and social provider integrations (GitHub, Google, Twitter, etc.).",
+    description:
+      "OAuth 2.0 flows and social provider integrations (GitHub, Google, Twitter, etc.).",
     communityKey: "source",
-    patterns: [/\bOAuth\b/i, /\boauth2?\b/i, /\bsocial\b/i, /\bprovider\b/i, /\bgithub.*auth\b/i, /\bgoogle.*auth\b/i]
+    patterns: [
+      /\bOAuth\b/i,
+      /\boauth2?\b/i,
+      /\bsocial\b/i,
+      /\bprovider\b/i,
+      /\bgithub.*auth\b/i,
+      /\bgoogle.*auth\b/i,
+    ],
   },
   {
     title: "Two-Factor Authentication",
     type: "Auth Feature",
     description: "TOTP, OTP, and two-factor verification support.",
     communityKey: "source",
-    patterns: [/\btotp\b/i, /\b2fa\b/i, /\btwo.?factor\b/i, /\botp\b/i]
+    patterns: [/\btotp\b/i, /\b2fa\b/i, /\btwo.?factor\b/i, /\botp\b/i],
   },
   {
     title: "Magic Link / Passwordless",
     type: "Auth Feature",
     description: "Passwordless authentication via magic links and email verification.",
     communityKey: "source",
-    patterns: [/\bmagic.?link\b/i, /\bpasswordless\b/i, /\bemail.*verif\b/i]
+    patterns: [/\bmagic.?link\b/i, /\bpasswordless\b/i, /\bemail.*verif\b/i],
   },
   {
     title: "Authorization",
     type: "Security Concept",
     description: "Role-based and permission-based access control.",
     communityKey: "source",
-    patterns: [/\bauthoriz\b/i, /\bpermission\b/i, /\brole\b/i, /\baccess.?control\b/i, /\bRBAC\b/i]
+    patterns: [
+      /\bauthoriz\b/i,
+      /\bpermission\b/i,
+      /\brole\b/i,
+      /\baccess.?control\b/i,
+      /\bRBAC\b/i,
+    ],
   },
   // ── Storage & Data ──
   {
@@ -220,14 +243,27 @@ const REPOSITORY_CONCEPTS: RepositoryConcept[] = [
     type: "Storage Concept",
     description: "SQL-based durable storage via PostgreSQL, SQLite, or MySQL.",
     communityKey: "storage",
-    patterns: [/\bPostgres\b/i, /\bSQLite\b/i, /\bMySQL\b/i, /\bKysely\b/i, /\brelational\b/i, /\bSQL\b/]
+    patterns: [
+      /\bPostgres\b/i,
+      /\bSQLite\b/i,
+      /\bMySQL\b/i,
+      /\bKysely\b/i,
+      /\brelational\b/i,
+      /\bSQL\b/,
+    ],
   },
   {
     title: "Database Adapter",
     type: "Storage Adapter",
     description: "Database adapter layer supporting Drizzle, Prisma, Mongoose, and others.",
     communityKey: "storage",
-    patterns: [/\bdrizzle\b/i, /\bprisma\b/i, /\bmongoose\b/i, /\badapter\b/i, /\bdrizzleAdapter\b/i]
+    patterns: [
+      /\bdrizzle\b/i,
+      /\bprisma\b/i,
+      /\bmongoose\b/i,
+      /\badapter\b/i,
+      /\bdrizzleAdapter\b/i,
+    ],
   },
   // ── Plugin / Extension system ──
   {
@@ -235,7 +271,7 @@ const REPOSITORY_CONCEPTS: RepositoryConcept[] = [
     type: "Extension Mechanism",
     description: "Plugin and middleware architecture for extending core functionality.",
     communityKey: "retrieval",
-    patterns: [/\bplugin\b/i, /\bmiddleware\b/i, /\bextension\b/i, /\bhook\b/i]
+    patterns: [/\bplugin\b/i, /\bmiddleware\b/i, /\bextension\b/i, /\bhook\b/i],
   },
   // ── API & Framework integrations ──
   {
@@ -243,36 +279,50 @@ const REPOSITORY_CONCEPTS: RepositoryConcept[] = [
     type: "API Surface",
     description: "HTTP handler layer exposing authentication routes and REST endpoints.",
     communityKey: "surface",
-    patterns: [/\bhandler\b/i, /\broute\b/i, /\bapi\b/i, /\bHTTP\b/i, /\bfetch\b/i, /\bPOST|GET|PUT|DELETE\b/]
+    patterns: [
+      /\bhandler\b/i,
+      /\broute\b/i,
+      /\bapi\b/i,
+      /\bHTTP\b/i,
+      /\bfetch\b/i,
+      /\bPOST|GET|PUT|DELETE\b/,
+    ],
   },
   {
     title: "Next.js Integration",
     type: "Framework Integration",
     description: "Integration with Next.js App Router and API routes.",
     communityKey: "surface",
-    patterns: [/\bnext\.js\b/i, /\bnextjs\b/i, /next\/server/i, /next\/headers/i, /\bNextRequest\b/]
+    patterns: [
+      /\bnext\.js\b/i,
+      /\bnextjs\b/i,
+      /next\/server/i,
+      /next\/headers/i,
+      /\bNextRequest\b/,
+    ],
   },
   {
     title: "CLI Tool",
     type: "Developer Tool",
     description: "Command-line interface for setup, code generation, and administration.",
     communityKey: "surface",
-    patterns: [/\bcli\b/i, /\bcommand.line\b/i, /\bbin\b.*cli/i, /\byargs\b/i, /\bcommander\b/i]
+    patterns: [/\bcli\b/i, /\bcommand.line\b/i, /\bbin\b.*cli/i, /\byargs\b/i, /\bcommander\b/i],
   },
   // ── AI / GraphRAG specific (for this repo) ──
   {
     title: "GraphRAG",
     type: "AI Infra Concept",
-    description: "GraphRAG capability for retrieval over documents, entities, relationships, and communities.",
+    description:
+      "GraphRAG capability for retrieval over documents, entities, relationships, and communities.",
     communityKey: "overview",
-    patterns: [/\bGraphRAG\b/i, /\bGRAG\b/i, /\bknowledge graph\b/i]
+    patterns: [/\bGraphRAG\b/i, /\bGRAG\b/i, /\bknowledge graph\b/i],
   },
   {
     title: "OpenAI Integration",
     type: "LLM Integration",
     description: "OpenAI API integration for extraction, embeddings, or chat completions.",
     communityKey: "retrieval",
-    patterns: [/\bOpenAI\b/i, /\bOPENAI_API_KEY\b/, /\bgpt-/i, /\bembedding.*model\b/i]
+    patterns: [/\bOpenAI\b/i, /\bOPENAI_API_KEY\b/, /\bgpt-/i, /\bembedding.*model\b/i],
   },
   // ── Testing ──
   {
@@ -280,27 +330,29 @@ const REPOSITORY_CONCEPTS: RepositoryConcept[] = [
     type: "Quality",
     description: "Unit, integration, and end-to-end test infrastructure.",
     communityKey: "source",
-    patterns: [/\bvitest\b/i, /\bjest\b/i, /\bdescribe\b/i, /\bit\(['"`]/i, /\btest\b.*spec\b/i]
+    patterns: [/\bvitest\b/i, /\bjest\b/i, /\bdescribe\b/i, /\bit\(['"`]/i, /\btest\b.*spec\b/i],
   },
   // ── Studio / Visualizer (grag-specific) ──
   {
     title: "Studio Visualizer",
     type: "Application Surface",
-    description: "Interactive visual explorer for graph nodes, relationships, and retrieval results.",
+    description:
+      "Interactive visual explorer for graph nodes, relationships, and retrieval results.",
     communityKey: "surface",
-    patterns: [/\bstudio\b/i, /\bvisuali[sz]/i, /\bpreview\b/i]
+    patterns: [/\bstudio\b/i, /\bvisuali[sz]/i, /\bpreview\b/i],
   },
   {
     title: "Document Ingestion",
     type: "Ingestion Flow",
-    description: "Document chunking and ingestion path that converts source text into graph records.",
+    description:
+      "Document chunking and ingestion path that converts source text into graph records.",
     communityKey: "retrieval",
-    patterns: [/\bingest/i, /\bchunk/i, /\btext.unit/i]
-  }
+    patterns: [/\bingest/i, /\bchunk/i, /\btext.unit/i],
+  },
 ];
 
 export function buildLocalRepositoryGraphRagSnapshot(
-  options: BuildLocalRepositoryGraphRagSnapshotOptions
+  options: BuildLocalRepositoryGraphRagSnapshotOptions,
 ): GraphRagSnapshot {
   const maxTextUnitChars = Math.max(2_000, options.maxTextUnitChars ?? 8_000);
   const documents: GraphRagDocument[] = [];
@@ -314,8 +366,8 @@ export function buildLocalRepositoryGraphRagSnapshot(
   const communityIdByKey = new Map<CommunityKey, string>(
     COMMUNITY_DEFINITIONS.map((definition) => [
       definition.key,
-      createStableId(["repo-community", options.repoName, definition.key], "community")
-    ])
+      createStableId(["repo-community", options.repoName, definition.key], "community"),
+    ]),
   );
 
   const repoEntityId = entityId("repository", options.repoName, options.repoPath);
@@ -331,8 +383,8 @@ export function buildLocalRepositoryGraphRagSnapshot(
     attributes: {
       repositoryName: options.repoName,
       repositoryPath: options.repoPath,
-      selectedFileCount: options.selectedFiles.length
-    }
+      selectedFileCount: options.selectedFiles.length,
+    },
   });
 
   for (const file of options.selectedFiles) {
@@ -344,7 +396,7 @@ export function buildLocalRepositoryGraphRagSnapshot(
       kind: file.kind,
       bytes: file.bytes,
       repositoryName: options.repoName,
-      repositoryPath: options.repoPath
+      repositoryPath: options.repoPath,
     };
 
     documents.push({
@@ -354,7 +406,7 @@ export function buildLocalRepositoryGraphRagSnapshot(
       type: file.kind,
       text: file.text,
       textUnitIds: [textUnitId],
-      attributes: documentAttributes
+      attributes: documentAttributes,
     });
     textUnitSeeds.set(textUnitId, {
       id: textUnitId,
@@ -364,7 +416,7 @@ export function buildLocalRepositoryGraphRagSnapshot(
       sourcePath: file.path,
       kind: file.kind,
       entityIds: new Set(),
-      relationshipIds: new Set()
+      relationshipIds: new Set(),
     });
   }
 
@@ -373,7 +425,7 @@ export function buildLocalRepositoryGraphRagSnapshot(
     repoEntityId,
     files: options.selectedFiles,
     entitySeeds,
-    relationshipSeeds
+    relationshipSeeds,
   });
 
   addPackageMetadata({
@@ -383,7 +435,7 @@ export function buildLocalRepositoryGraphRagSnapshot(
     entitySeeds,
     relationshipSeeds,
     packageEntityIds,
-    dependencyEntityIds
+    dependencyEntityIds,
   });
 
   addExportedSymbols({
@@ -391,42 +443,42 @@ export function buildLocalRepositoryGraphRagSnapshot(
     files: options.selectedFiles,
     entitySeeds,
     relationshipSeeds,
-    exportedSymbolEntityIds
+    exportedSymbolEntityIds,
   });
 
   addDatabaseTables({
     repoPath: options.repoPath,
     files: options.selectedFiles,
     entitySeeds,
-    relationshipSeeds
+    relationshipSeeds,
   });
 
   addEnvironmentVariables({
     repoPath: options.repoPath,
     files: options.selectedFiles,
     entitySeeds,
-    relationshipSeeds
+    relationshipSeeds,
   });
 
   addCliOptions({
     repoPath: options.repoPath,
     files: options.selectedFiles,
     entitySeeds,
-    relationshipSeeds
+    relationshipSeeds,
   });
 
   addMarkdownTopics({
     repoPath: options.repoPath,
     files: options.selectedFiles,
     entitySeeds,
-    relationshipSeeds
+    relationshipSeeds,
   });
 
   const conceptEntityIds = addRepositoryConcepts({
     repoPath: options.repoPath,
     files: options.selectedFiles,
     entitySeeds,
-    relationshipSeeds
+    relationshipSeeds,
   });
 
   addCrossCuttingRelationships({
@@ -437,13 +489,19 @@ export function buildLocalRepositoryGraphRagSnapshot(
     packageEntityIds,
     dependencyEntityIds,
     exportedSymbolEntityIds,
-    conceptEntityIds
+    conceptEntityIds,
   });
 
   const degreeByEntityId = new Map<string, number>();
   for (const relationship of relationshipSeeds.values()) {
-    degreeByEntityId.set(relationship.sourceId, (degreeByEntityId.get(relationship.sourceId) ?? 0) + 1);
-    degreeByEntityId.set(relationship.targetId, (degreeByEntityId.get(relationship.targetId) ?? 0) + 1);
+    degreeByEntityId.set(
+      relationship.sourceId,
+      (degreeByEntityId.get(relationship.sourceId) ?? 0) + 1,
+    );
+    degreeByEntityId.set(
+      relationship.targetId,
+      (degreeByEntityId.get(relationship.targetId) ?? 0) + 1,
+    );
   }
 
   for (const entity of entitySeeds.values()) {
@@ -476,11 +534,14 @@ export function buildLocalRepositoryGraphRagSnapshot(
         attributes: {
           ...seed.attributes,
           communityKey: seed.communityKey,
-          sourcePaths: sortedStrings(seed.sourcePaths)
-        }
+          sourcePaths: sortedStrings(seed.sourcePaths),
+        },
       };
     })
-    .sort((left, right) => (right.rank ?? 0) - (left.rank ?? 0) || left.title.localeCompare(right.title));
+    .sort(
+      (left, right) =>
+        (right.rank ?? 0) - (left.rank ?? 0) || left.title.localeCompare(right.title),
+    );
 
   const entityById = new Map(entities.map((entity) => [entity.id, entity]));
   const relationships = Array.from(relationshipSeeds.values())
@@ -493,49 +554,62 @@ export function buildLocalRepositoryGraphRagSnapshot(
       const sourceDegree = degreeByEntityId.get(seed.sourceId) ?? 0;
       const targetDegree = degreeByEntityId.get(seed.targetId) ?? 0;
       const combinedDegree = sourceDegree + targetDegree;
-      return [{
-        id: seed.id,
-        humanReadableId: `${source.title} ${seed.kind} ${target.title}`,
-        source: source.title,
-        target: target.title,
-        description: seed.description,
-        weight: roundRank(seed.weight),
-        combinedDegree,
-        rank: roundRank(seed.weight + combinedDegree * 0.12),
-        textUnitIds: sortedStrings(seed.textUnitIds),
-        attributes: {
-          kind: seed.kind,
-          sourceEntityId: seed.sourceId,
-          targetEntityId: seed.targetId,
-          sourcePaths: sortedStrings(seed.sourcePaths)
-        }
-      }];
+      return [
+        {
+          id: seed.id,
+          humanReadableId: `${source.title} ${seed.kind} ${target.title}`,
+          source: source.title,
+          target: target.title,
+          description: seed.description,
+          weight: roundRank(seed.weight),
+          combinedDegree,
+          rank: roundRank(seed.weight + combinedDegree * 0.12),
+          textUnitIds: sortedStrings(seed.textUnitIds),
+          attributes: {
+            kind: seed.kind,
+            sourceEntityId: seed.sourceId,
+            targetEntityId: seed.targetId,
+            sourcePaths: sortedStrings(seed.sourcePaths),
+          },
+        },
+      ];
     })
-    .sort((left, right) => (right.rank ?? 0) - (left.rank ?? 0) || left.source.localeCompare(right.source) || left.target.localeCompare(right.target));
+    .sort(
+      (left, right) =>
+        (right.rank ?? 0) - (left.rank ?? 0) ||
+        left.source.localeCompare(right.source) ||
+        left.target.localeCompare(right.target),
+    );
 
   const textUnits = Array.from(textUnitSeeds.values())
-    .map((seed): TextUnit => ({
-      id: seed.id,
-      humanReadableId: seed.humanReadableId,
-      text: seed.text,
-      entityIds: sortedStrings(seed.entityIds),
-      relationshipIds: sortedStrings(seed.relationshipIds),
-      covariateIds: [],
-      nTokens: estimateTokenCount(seed.text),
-      documentId: seed.documentId,
-      attributes: {
-        sourcePath: seed.sourcePath,
-        sourcePaths: [seed.sourcePath],
-        kind: seed.kind
-      }
-    }))
-    .sort((left, right) => String(left.humanReadableId ?? left.id).localeCompare(String(right.humanReadableId ?? right.id)));
+    .map(
+      (seed): TextUnit => ({
+        id: seed.id,
+        humanReadableId: seed.humanReadableId,
+        text: seed.text,
+        entityIds: sortedStrings(seed.entityIds),
+        relationshipIds: sortedStrings(seed.relationshipIds),
+        covariateIds: [],
+        nTokens: estimateTokenCount(seed.text),
+        documentId: seed.documentId,
+        attributes: {
+          sourcePath: seed.sourcePath,
+          sourcePaths: [seed.sourcePath],
+          kind: seed.kind,
+        },
+      }),
+    )
+    .sort((left, right) =>
+      String(left.humanReadableId ?? left.id).localeCompare(
+        String(right.humanReadableId ?? right.id),
+      ),
+    );
 
   const { communities, communityReports } = buildCommunities({
     communityIdByKey,
     entities,
     relationships,
-    textUnits
+    textUnits,
   });
 
   return {
@@ -546,7 +620,7 @@ export function buildLocalRepositoryGraphRagSnapshot(
     covariates: [],
     communities,
     communityReports,
-    embeddings: []
+    embeddings: [],
   };
 }
 
@@ -577,8 +651,8 @@ function addFileAndModuleEntities(options: {
         sourcePath: file.path,
         kind: file.kind,
         bytes: file.bytes,
-        extension: extname(file.path) || "none"
-      }
+        extension: extname(file.path) || "none",
+      },
     });
 
     const moduleName = topLevelModuleName(file.path);
@@ -595,8 +669,8 @@ function addFileAndModuleEntities(options: {
         textUnitIds: [textUnitId],
         baseRank: 4.8,
         attributes: {
-          moduleName
-        }
+          moduleName,
+        },
       });
       addRelationship(options.relationshipSeeds, options.entitySeeds, {
         sourceId: options.repoEntityId,
@@ -605,7 +679,7 @@ function addFileAndModuleEntities(options: {
         description: `${basename(options.repoPath)} contains the ${moduleName}/ module.`,
         weight: 2.4,
         sourcePaths: [file.path],
-        textUnitIds: [textUnitId]
+        textUnitIds: [textUnitId],
       });
       addRelationship(options.relationshipSeeds, options.entitySeeds, {
         sourceId: moduleEntityId,
@@ -614,7 +688,7 @@ function addFileAndModuleEntities(options: {
         description: `${moduleName}/ contains ${file.path}.`,
         weight: 2.2,
         sourcePaths: [file.path],
-        textUnitIds: [textUnitId]
+        textUnitIds: [textUnitId],
       });
       continue;
     }
@@ -626,7 +700,7 @@ function addFileAndModuleEntities(options: {
       description: `${basename(options.repoPath)} contains ${file.path}.`,
       weight: 2.2,
       sourcePaths: [file.path],
-      textUnitIds: [textUnitId]
+      textUnitIds: [textUnitId],
     });
   }
 
@@ -662,8 +736,8 @@ function addPackageMetadata(options: {
       attributes: {
         packageName,
         version: stringFromRecord(parsed, "version") ?? "unknown",
-        private: booleanFromRecord(parsed, "private") ?? false
-      }
+        private: booleanFromRecord(parsed, "private") ?? false,
+      },
     });
     addRelationship(options.relationshipSeeds, options.entitySeeds, {
       sourceId: options.repoEntityId,
@@ -672,7 +746,7 @@ function addPackageMetadata(options: {
       description: `${basename(options.repoPath)} declares the ${packageName} package.`,
       weight: 3.2,
       sourcePaths: [file.path],
-      textUnitIds: [textUnitId]
+      textUnitIds: [textUnitId],
     });
     addRelationship(options.relationshipSeeds, options.entitySeeds, {
       sourceId: fileEntityId,
@@ -681,7 +755,7 @@ function addPackageMetadata(options: {
       description: `${file.path} declares package metadata for ${packageName}.`,
       weight: 3,
       sourcePaths: [file.path],
-      textUnitIds: [textUnitId]
+      textUnitIds: [textUnitId],
     });
 
     for (const script of readPackageScripts(parsed).slice(0, 18)) {
@@ -697,8 +771,8 @@ function addPackageMetadata(options: {
         baseRank: 3.2,
         attributes: {
           scriptName: script.name,
-          command: script.command
-        }
+          command: script.command,
+        },
       });
       addRelationship(options.relationshipSeeds, options.entitySeeds, {
         sourceId: packageEntityId,
@@ -707,7 +781,7 @@ function addPackageMetadata(options: {
         description: `${packageName} exposes the npm script "${script.name}".`,
         weight: 2.1,
         sourcePaths: [file.path],
-        textUnitIds: [textUnitId]
+        textUnitIds: [textUnitId],
       });
     }
 
@@ -726,8 +800,8 @@ function addPackageMetadata(options: {
         attributes: {
           dependencyName: dependency.name,
           version: dependency.version,
-          dependencyGroup: dependency.group
-        }
+          dependencyGroup: dependency.group,
+        },
       });
       addRelationship(options.relationshipSeeds, options.entitySeeds, {
         sourceId: packageEntityId,
@@ -736,7 +810,7 @@ function addPackageMetadata(options: {
         description: `${packageName} depends on ${dependency.name}.`,
         weight: dependency.name.includes("orm") || dependency.name === "kysely" ? 3 : 1.8,
         sourcePaths: [file.path],
-        textUnitIds: [textUnitId]
+        textUnitIds: [textUnitId],
       });
     }
   }
@@ -777,8 +851,8 @@ function addExportedSymbols(options: {
         attributes: {
           symbolName: symbol.name,
           symbolKind: symbol.kind,
-          sourcePath: file.path
-        }
+          sourcePath: file.path,
+        },
       });
       addRelationship(options.relationshipSeeds, options.entitySeeds, {
         sourceId: fileEntityId,
@@ -787,7 +861,7 @@ function addExportedSymbols(options: {
         description: `${file.path} declares ${symbol.name}.`,
         weight: symbol.name.includes("GraphRag") || symbol.name.includes("Graph") ? 2.8 : 2,
         sourcePaths: [file.path],
-        textUnitIds: [textUnitId]
+        textUnitIds: [textUnitId],
       });
     }
   }
@@ -818,8 +892,8 @@ function addDatabaseTables(options: {
         textUnitIds: [textUnitId],
         baseRank: 4.5,
         attributes: {
-          tableName
-        }
+          tableName,
+        },
       });
       addRelationship(options.relationshipSeeds, options.entitySeeds, {
         sourceId: fileEntityIdForPath(options.repoPath, file.path),
@@ -828,7 +902,7 @@ function addDatabaseTables(options: {
         description: `${file.path} references relational table ${tableName}.`,
         weight: 2.6,
         sourcePaths: [file.path],
-        textUnitIds: [textUnitId]
+        textUnitIds: [textUnitId],
       });
     }
   }
@@ -862,8 +936,8 @@ function addEnvironmentVariables(options: {
         textUnitIds: [textUnitId],
         baseRank: variableName.includes("OPENAI") || variableName.includes("DATABASE") ? 4.2 : 2.8,
         attributes: {
-          variableName
-        }
+          variableName,
+        },
       });
       addRelationship(options.relationshipSeeds, options.entitySeeds, {
         sourceId: fileEntityIdForPath(options.repoPath, file.path),
@@ -872,7 +946,7 @@ function addEnvironmentVariables(options: {
         description: `${file.path} references environment variable ${variableName}.`,
         weight: 2.1,
         sourcePaths: [file.path],
-        textUnitIds: [textUnitId]
+        textUnitIds: [textUnitId],
       });
     }
   }
@@ -907,8 +981,8 @@ function addCliOptions(options: {
         textUnitIds: [textUnitId],
         baseRank: 3,
         attributes: {
-          optionName
-        }
+          optionName,
+        },
       });
       addRelationship(options.relationshipSeeds, options.entitySeeds, {
         sourceId: fileEntityIdForPath(options.repoPath, file.path),
@@ -917,7 +991,7 @@ function addCliOptions(options: {
         description: `${file.path} documents or implements ${optionName}.`,
         weight: 2,
         sourcePaths: [file.path],
-        textUnitIds: [textUnitId]
+        textUnitIds: [textUnitId],
       });
     }
   }
@@ -951,10 +1025,13 @@ function addMarkdownTopics(options: {
         communityKey: "docs",
         sourcePaths: [file.path],
         textUnitIds: [textUnitId],
-        baseRank: heading.toLowerCase().includes("storage") || heading.toLowerCase().includes("rag") ? 4 : 2.8,
+        baseRank:
+          heading.toLowerCase().includes("storage") || heading.toLowerCase().includes("rag")
+            ? 4
+            : 2.8,
         attributes: {
-          heading
-        }
+          heading,
+        },
       });
       addRelationship(options.relationshipSeeds, options.entitySeeds, {
         sourceId: fileEntityId,
@@ -963,7 +1040,7 @@ function addMarkdownTopics(options: {
         description: `${file.path} documents "${heading}".`,
         weight: 2,
         sourcePaths: [file.path],
-        textUnitIds: [textUnitId]
+        textUnitIds: [textUnitId],
       });
     }
   }
@@ -977,7 +1054,9 @@ function addRepositoryConcepts(options: {
 }): Map<string, string> {
   const conceptEntityIds = new Map<string, string>();
   for (const concept of REPOSITORY_CONCEPTS) {
-    const matchingFiles = options.files.filter((file) => concept.patterns.some((pattern) => pattern.test(file.text) || pattern.test(file.path)));
+    const matchingFiles = options.files.filter((file) =>
+      concept.patterns.some((pattern) => pattern.test(file.text) || pattern.test(file.path)),
+    );
     if (matchingFiles.length === 0) {
       continue;
     }
@@ -994,8 +1073,8 @@ function addRepositoryConcepts(options: {
       textUnitIds: matchingFiles.map((file) => textUnitIdForPath(options.repoPath, file.path)),
       baseRank: 6.2,
       attributes: {
-        conceptTitle: concept.title
-      }
+        conceptTitle: concept.title,
+      },
     });
 
     for (const file of matchingFiles.slice(0, 16)) {
@@ -1007,7 +1086,7 @@ function addRepositoryConcepts(options: {
         description: `${file.path} provides source evidence for ${concept.title}.`,
         weight: concept.title === "GraphRAG" ? 3 : 2.2,
         sourcePaths: [file.path],
-        textUnitIds: [textUnitId]
+        textUnitIds: [textUnitId],
       });
     }
   }
@@ -1033,8 +1112,18 @@ function addCrossCuttingRelationships(options: {
   const apiConceptId = options.conceptEntityIds.get("REST API");
 
   // Wire storage-related dependencies to the storage concept
-  const storageDeps = ["kysely", "drizzle-orm", "prisma", "pg", "mysql2", "@farming-labs/orm",
-    "better-sqlite3", "mongoose", "@prisma/client", "drizzle-kit"];
+  const storageDeps = [
+    "kysely",
+    "drizzle-orm",
+    "prisma",
+    "pg",
+    "mysql2",
+    "@farming-labs/orm",
+    "better-sqlite3",
+    "mongoose",
+    "@prisma/client",
+    "drizzle-kit",
+  ];
   for (const depName of storageDeps) {
     const depId = options.dependencyEntityIds.get(depName);
     if (depId && storageConceptId) {
@@ -1045,7 +1134,7 @@ function addCrossCuttingRelationships(options: {
         description: `${depName} is a storage-layer dependency.`,
         weight: 3.0,
         sourcePaths: [],
-        textUnitIds: []
+        textUnitIds: [],
       });
     }
   }
@@ -1060,7 +1149,7 @@ function addCrossCuttingRelationships(options: {
         description: `${name} is part of the storage API surface.`,
         weight: 2.5,
         sourcePaths: [],
-        textUnitIds: []
+        textUnitIds: [],
       });
     }
     if (authConceptId && /[Aa]uth|[Ss]ignIn|[Ss]ignUp|[Ll]ogin|[Vv]erif/i.test(name)) {
@@ -1071,7 +1160,7 @@ function addCrossCuttingRelationships(options: {
         description: `${name} is part of the authentication API surface.`,
         weight: 2.5,
         sourcePaths: [],
-        textUnitIds: []
+        textUnitIds: [],
       });
     }
     if (sessionConceptId && /[Ss]ession/i.test(name)) {
@@ -1082,7 +1171,7 @@ function addCrossCuttingRelationships(options: {
         description: `${name} is part of the session management API.`,
         weight: 2.5,
         sourcePaths: [],
-        textUnitIds: []
+        textUnitIds: [],
       });
     }
     if (pluginConceptId && /[Pp]lugin|[Mm]iddleware|[Hh]ook/i.test(name)) {
@@ -1093,7 +1182,7 @@ function addCrossCuttingRelationships(options: {
         description: `${name} is part of the plugin/extension system.`,
         weight: 2.3,
         sourcePaths: [],
-        textUnitIds: []
+        textUnitIds: [],
       });
     }
     if (apiConceptId && /[Hh]andler|[Rr]outer|[Rr]oute|[Ee]ndpoint/i.test(name)) {
@@ -1104,7 +1193,7 @@ function addCrossCuttingRelationships(options: {
         description: `${name} is part of the API/routing surface.`,
         weight: 2.2,
         sourcePaths: [],
-        textUnitIds: []
+        textUnitIds: [],
       });
     }
   }
@@ -1119,12 +1208,14 @@ function addCrossCuttingRelationships(options: {
       description: "The primary source module implements the core authentication behavior.",
       weight: 3.0,
       sourcePaths: [],
-      textUnitIds: []
+      textUnitIds: [],
     });
   }
 
   // Wire the repo entity to its most important concepts
-  for (const conceptId of [authConceptId, storageConceptId, pluginConceptId, apiConceptId].filter(Boolean)) {
+  for (const conceptId of [authConceptId, storageConceptId, pluginConceptId, apiConceptId].filter(
+    Boolean,
+  )) {
     addRelationship(options.relationshipSeeds, options.entitySeeds, {
       sourceId: options.repoEntityId,
       targetId: conceptId as string,
@@ -1132,7 +1223,7 @@ function addCrossCuttingRelationships(options: {
       description: "The repository provides this capability.",
       weight: 2.8,
       sourcePaths: [],
-      textUnitIds: []
+      textUnitIds: [],
     });
   }
 }
@@ -1145,8 +1236,14 @@ function buildCommunities(options: {
 }): { communities: Community[]; communityReports: CommunityReport[] } {
   const relationshipsByEntityId = new Map<string, Set<string>>();
   for (const relationship of options.relationships) {
-    const sourceEntityId = typeof relationship.attributes?.sourceEntityId === "string" ? relationship.attributes.sourceEntityId : undefined;
-    const targetEntityId = typeof relationship.attributes?.targetEntityId === "string" ? relationship.attributes.targetEntityId : undefined;
+    const sourceEntityId =
+      typeof relationship.attributes?.sourceEntityId === "string"
+        ? relationship.attributes.sourceEntityId
+        : undefined;
+    const targetEntityId =
+      typeof relationship.attributes?.targetEntityId === "string"
+        ? relationship.attributes.targetEntityId
+        : undefined;
     if (sourceEntityId) {
       addToSetMap(relationshipsByEntityId, sourceEntityId, relationship.id);
     }
@@ -1170,17 +1267,25 @@ function buildCommunities(options: {
       continue;
     }
 
-    const communityEntities = options.entities.filter((entity) => entity.communityIds.includes(communityId));
+    const communityEntities = options.entities.filter((entity) =>
+      entity.communityIds.includes(communityId),
+    );
     if (communityEntities.length === 0) {
       continue;
     }
 
     const entityIds = communityEntities.map((entity) => entity.id);
     const entityIdSet = new Set(entityIds);
-    const relationshipIds = sortedStrings(flattenSets(entityIds.map((entityId) => relationshipsByEntityId.get(entityId))));
-    const textUnitIds = sortedStrings(flattenSets(entityIds.map((entityId) => textUnitsByEntityId.get(entityId))));
+    const relationshipIds = sortedStrings(
+      flattenSets(entityIds.map((entityId) => relationshipsByEntityId.get(entityId))),
+    );
+    const textUnitIds = sortedStrings(
+      flattenSets(entityIds.map((entityId) => textUnitsByEntityId.get(entityId))),
+    );
     const topEntities = communityEntities.slice(0, 7).map((entity) => entity.title);
-    const sourcePaths = sortedStrings(new Set(communityEntities.flatMap((entity) => sourcePathsFromAttributes(entity.attributes)))).slice(0, 12);
+    const sourcePaths = sortedStrings(
+      new Set(communityEntities.flatMap((entity) => sourcePathsFromAttributes(entity.attributes))),
+    ).slice(0, 12);
 
     communities.push({
       id: communityId,
@@ -1196,8 +1301,8 @@ function buildCommunities(options: {
       size: communityEntities.length,
       attributes: {
         communityKey: definition.key,
-        sourcePaths
-      }
+        sourcePaths,
+      },
     });
 
     const reportId = createStableId(["repo-community-report", communityId], "report");
@@ -1216,27 +1321,46 @@ function buildCommunities(options: {
 
     // Top concept/feature entities (non-structural)
     const semanticEntities = communityEntities
-      .filter(e => !["Package", "Package Manifest", "Package Script", "Dependency",
-        "Source File", "Documentation File", "Example File", "Config File",
-        "Test File", "Readme"].includes(e.type ?? ""))
+      .filter(
+        (e) =>
+          ![
+            "Package",
+            "Package Manifest",
+            "Package Script",
+            "Dependency",
+            "Source File",
+            "Documentation File",
+            "Example File",
+            "Config File",
+            "Test File",
+            "Readme",
+          ].includes(e.type ?? ""),
+      )
       .sort((a, b) => (b.rank ?? 0) - (a.rank ?? 0))
       .slice(0, 6)
-      .map(e => e.title);
+      .map((e) => e.title);
 
     const topNodes = semanticEntities.length > 0 ? semanticEntities : topEntities;
 
     const summary = [
       definition.summary,
       topNodes.length > 0 ? `Key concepts: ${topNodes.slice(0, 4).join(", ")}.` : "",
-      topTypes ? `Contains ${topTypes}.` : ""
-    ].filter(Boolean).join(" ");
+      topTypes ? `Contains ${topTypes}.` : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
 
     // Compute findings from entity groups
-    const findings = buildCommunityFindings(communityEntities, relationshipIds.length, definition.key);
+    const findings = buildCommunityFindings(
+      communityEntities,
+      relationshipIds.length,
+      definition.key,
+    );
 
     // Better rank: weight by semantic density, not raw count
     const semanticEntityCount = semanticEntities.length;
-    const rawRank = 1 + semanticEntityCount * 1.5 + communityEntities.length / 15 + relationshipIds.length / 25;
+    const rawRank =
+      1 + semanticEntityCount * 1.5 + communityEntities.length / 15 + relationshipIds.length / 25;
 
     communityReports.push({
       id: reportId,
@@ -1251,8 +1375,10 @@ function buildCommunities(options: {
         findings.length > 0
           ? `Findings:\n${findings.map((f, i) => `${i + 1}. ${f.summary}: ${f.explanation}`).join("\n")}`
           : "",
-        sourcePaths.length > 0 ? `Source evidence: ${sourcePaths.slice(0, 6).join(", ")}.` : ""
-      ].filter(Boolean).join("\n\n"),
+        sourcePaths.length > 0 ? `Source evidence: ${sourcePaths.slice(0, 6).join(", ")}.` : "",
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
       rank: roundRank(rawRank),
       findings,
       fullContentJson: {
@@ -1261,10 +1387,10 @@ function buildCommunities(options: {
         sourcePaths,
         entityCount: communityEntities.length,
         relationshipCount: relationshipIds.length,
-        entityIds: Array.from(entityIdSet)
+        entityIds: Array.from(entityIdSet),
       },
       attributes: { sourcePaths },
-      size: communityEntities.length
+      size: communityEntities.length,
     });
   }
 
@@ -1274,63 +1400,79 @@ function buildCommunities(options: {
 function buildCommunityFindings(
   entities: readonly Entity[],
   relationshipCount: number,
-  communityKey: string
+  communityKey: string,
 ): Array<{ summary: string; explanation: string }> {
   const findings: Array<{ summary: string; explanation: string }> = [];
 
   // Finding 1: top-ranked concept / feature entities
-  const conceptTypes = ["Core Feature", "Auth Concept", "Authentication Protocol",
-    "Auth Feature", "Security Concept", "Storage Concept", "Storage Adapter",
-    "Storage Interface", "Storage Implementation", "Extension Mechanism",
-    "API Surface", "Framework Integration", "Developer Tool", "Application Surface",
-    "AI Infra Concept", "LLM Integration", "Workflow", "Retrieval Flow", "Ingestion Flow"];
+  const conceptTypes = [
+    "Core Feature",
+    "Auth Concept",
+    "Authentication Protocol",
+    "Auth Feature",
+    "Security Concept",
+    "Storage Concept",
+    "Storage Adapter",
+    "Storage Interface",
+    "Storage Implementation",
+    "Extension Mechanism",
+    "API Surface",
+    "Framework Integration",
+    "Developer Tool",
+    "Application Surface",
+    "AI Infra Concept",
+    "LLM Integration",
+    "Workflow",
+    "Retrieval Flow",
+    "Ingestion Flow",
+  ];
   const concepts = entities
-    .filter(e => conceptTypes.includes(e.type ?? ""))
+    .filter((e) => conceptTypes.includes(e.type ?? ""))
     .sort((a, b) => (b.rank ?? 0) - (a.rank ?? 0))
     .slice(0, 4);
   if (concepts.length > 0) {
     findings.push({
-      summary: `Core concepts: ${concepts.map(e => e.title).join(", ")}`,
-      explanation: `These ${concepts.length} concept nodes represent the primary capabilities or architectural patterns in this community.`
+      summary: `Core concepts: ${concepts.map((e) => e.title).join(", ")}`,
+      explanation: `These ${concepts.length} concept nodes represent the primary capabilities or architectural patterns in this community.`,
     });
   }
 
   // Finding 2: top packages / dependencies (for dependencies community)
   if (communityKey === "dependencies" || communityKey === "storage") {
     const deps = entities
-      .filter(e => e.type === "Dependency" || e.type === "Package")
+      .filter((e) => e.type === "Dependency" || e.type === "Package")
       .sort((a, b) => (b.rank ?? 0) - (a.rank ?? 0))
       .slice(0, 5);
     if (deps.length > 0) {
       findings.push({
-        summary: `Key dependencies: ${deps.map(e => e.title).join(", ")}`,
-        explanation: `${deps.length} notable packages shape this community's dependency footprint.`
+        summary: `Key dependencies: ${deps.map((e) => e.title).join(", ")}`,
+        explanation: `${deps.length} notable packages shape this community's dependency footprint.`,
       });
     }
   }
 
   // Finding 3: exported symbols (API surface)
   const symbols = entities
-    .filter(e => e.type === "Exported Symbol")
+    .filter((e) => e.type === "Exported Symbol")
     .sort((a, b) => (b.rank ?? 0) - (a.rank ?? 0))
     .slice(0, 5);
   if (symbols.length > 0) {
     findings.push({
-      summary: `Public API: ${symbols.map(e => e.title).join(", ")}`,
-      explanation: `${symbols.length} exported symbols form the public API surface of this community.`
+      summary: `Public API: ${symbols.map((e) => e.title).join(", ")}`,
+      explanation: `${symbols.length} exported symbols form the public API surface of this community.`,
     });
   }
 
   // Finding 4: documentation topics (for docs community)
   if (communityKey === "docs") {
     const topics = entities
-      .filter(e => e.type === "Documentation Topic")
+      .filter((e) => e.type === "Documentation Topic")
       .sort((a, b) => (b.rank ?? 0) - (a.rank ?? 0))
       .slice(0, 6);
     if (topics.length > 0) {
       findings.push({
-        summary: `Documented topics: ${topics.map(e => e.title).join(", ")}`,
-        explanation: `${topics.length} documentation topics provide guidance on this community's subject area.`
+        summary: `Documented topics: ${topics.map((e) => e.title).join(", ")}`,
+        explanation: `${topics.length} documentation topics provide guidance on this community's subject area.`,
       });
     }
   }
@@ -1339,7 +1481,7 @@ function buildCommunityFindings(
   if (relationshipCount > 5) {
     findings.push({
       summary: `Graph connectivity: ${entities.length} entities, ${relationshipCount} relationships`,
-      explanation: `High connectivity (avg ${(relationshipCount / Math.max(entities.length, 1)).toFixed(1)} edges/entity) indicates a tightly integrated community.`
+      explanation: `High connectivity (avg ${(relationshipCount / Math.max(entities.length, 1)).toFixed(1)} edges/entity) indicates a tightly integrated community.`,
     });
   }
 
@@ -1358,7 +1500,7 @@ function upsertEntity(
     textUnitIds: readonly string[];
     baseRank: number;
     attributes?: JsonObject;
-  }
+  },
 ): void {
   const existing = seeds.get(input.id);
   if (existing) {
@@ -1372,7 +1514,7 @@ function upsertEntity(
     }
     existing.attributes = {
       ...existing.attributes,
-      ...(input.attributes ?? {})
+      ...(input.attributes ?? {}),
     };
     return;
   }
@@ -1386,7 +1528,7 @@ function upsertEntity(
     sourcePaths: new Set(input.sourcePaths),
     textUnitIds: new Set(input.textUnitIds),
     baseRank: input.baseRank,
-    attributes: input.attributes ?? {}
+    attributes: input.attributes ?? {},
   });
 }
 
@@ -1401,13 +1543,20 @@ function addRelationship(
     weight: number;
     sourcePaths: readonly string[];
     textUnitIds: readonly string[];
-  }
+  },
 ): void {
-  if (input.sourceId === input.targetId || !entities.has(input.sourceId) || !entities.has(input.targetId)) {
+  if (
+    input.sourceId === input.targetId ||
+    !entities.has(input.sourceId) ||
+    !entities.has(input.targetId)
+  ) {
     return;
   }
 
-  const id = createStableId(["repo-relationship", input.sourceId, input.kind, input.targetId], "rel");
+  const id = createStableId(
+    ["repo-relationship", input.sourceId, input.kind, input.targetId],
+    "rel",
+  );
   const existing = seeds.get(id);
   if (existing) {
     existing.description = mergeDescription(existing.description, input.description);
@@ -1429,13 +1578,16 @@ function addRelationship(
     description: input.description,
     weight: input.weight,
     sourcePaths: new Set(input.sourcePaths),
-    textUnitIds: new Set(input.textUnitIds)
+    textUnitIds: new Set(input.textUnitIds),
   });
 }
 
 function renderFileTextUnit(file: LocalRepositoryGraphSourceFile, maxChars: number): string {
-  const header = [`File: ${file.path}`, `Kind: ${file.kind}`, `Bytes: ${file.bytes}`, ""].join("\n");
-  const body = file.text.length > maxChars ? `${file.text.slice(0, maxChars)}\n\n[truncated]` : file.text;
+  const header = [`File: ${file.path}`, `Kind: ${file.kind}`, `Bytes: ${file.bytes}`, ""].join(
+    "\n",
+  );
+  const body =
+    file.text.length > maxChars ? `${file.text.slice(0, maxChars)}\n\n[truncated]` : file.text;
   return `${header}${body}`;
 }
 
@@ -1462,25 +1614,52 @@ function topLevelModuleName(path: string): string | undefined {
 function communityKeyForFile(file: LocalRepositoryGraphSourceFile): CommunityKey {
   const lower = file.path.toLowerCase();
   const text = file.text.slice(0, 8_000).toLowerCase();
-  if (file.kind === "readme" || file.kind === "docs" || lower.endsWith(".md") || lower.endsWith(".mdx")) {
+  if (
+    file.kind === "readme" ||
+    file.kind === "docs" ||
+    lower.endsWith(".md") ||
+    lower.endsWith(".mdx")
+  ) {
     return "docs";
   }
   if (file.kind === "package-manifest" || lower.includes("package.json")) {
     return "dependencies";
   }
-  if (lower.includes("studio") || lower.includes("cli") || lower.includes("preview") ||
-      lower.includes("handler") || lower.includes("route") || lower.includes("api")) {
+  if (
+    lower.includes("studio") ||
+    lower.includes("cli") ||
+    lower.includes("preview") ||
+    lower.includes("handler") ||
+    lower.includes("route") ||
+    lower.includes("api")
+  ) {
     return "surface";
   }
-  if (lower.includes("storage") || lower.includes("sql") || lower.includes("orm") ||
-      lower.includes("migration") || lower.includes("adapter") || lower.includes("schema") ||
-      text.includes("postgres") || text.includes("sqlite") || text.includes("drizzle") ||
-      text.includes("prisma") || text.includes("mysql")) {
+  if (
+    lower.includes("storage") ||
+    lower.includes("sql") ||
+    lower.includes("orm") ||
+    lower.includes("migration") ||
+    lower.includes("adapter") ||
+    lower.includes("schema") ||
+    text.includes("postgres") ||
+    text.includes("sqlite") ||
+    text.includes("drizzle") ||
+    text.includes("prisma") ||
+    text.includes("mysql")
+  ) {
     return "storage";
   }
-  if (lower.includes("plugin") || lower.includes("middleware") || lower.includes("hook") ||
-      lower.includes("pipeline") || lower.includes("integrat") || lower.includes("query") ||
-      lower.includes("retriev") || lower.includes("ingest")) {
+  if (
+    lower.includes("plugin") ||
+    lower.includes("middleware") ||
+    lower.includes("hook") ||
+    lower.includes("pipeline") ||
+    lower.includes("integrat") ||
+    lower.includes("query") ||
+    lower.includes("retriev") ||
+    lower.includes("ingest")
+  ) {
     return "retrieval";
   }
   return "source";
@@ -1489,51 +1668,113 @@ function communityKeyForFile(file: LocalRepositoryGraphSourceFile): CommunityKey
 function communityKeyForModule(moduleName: string): CommunityKey {
   const lower = moduleName.toLowerCase();
   if (lower.includes("doc")) return "docs";
-  if (lower.includes("studio") || lower.includes("cli") || lower.includes("example") ||
-      lower.includes("app") || lower.includes("api")) return "surface";
-  if (lower.includes("storage") || lower.includes("sql") || lower.includes("orm") ||
-      lower.includes("adapter") || lower.includes("schema") || lower.includes("db") ||
-      lower.includes("database") || lower.includes("migration")) return "storage";
-  if (lower.includes("plugin") || lower.includes("middleware") || lower.includes("hook") ||
-      lower.includes("query") || lower.includes("ingest") || lower.includes("pipeline") ||
-      lower.includes("integrat")) return "retrieval";
+  if (
+    lower.includes("studio") ||
+    lower.includes("cli") ||
+    lower.includes("example") ||
+    lower.includes("app") ||
+    lower.includes("api")
+  )
+    return "surface";
+  if (
+    lower.includes("storage") ||
+    lower.includes("sql") ||
+    lower.includes("orm") ||
+    lower.includes("adapter") ||
+    lower.includes("schema") ||
+    lower.includes("db") ||
+    lower.includes("database") ||
+    lower.includes("migration")
+  )
+    return "storage";
+  if (
+    lower.includes("plugin") ||
+    lower.includes("middleware") ||
+    lower.includes("hook") ||
+    lower.includes("query") ||
+    lower.includes("ingest") ||
+    lower.includes("pipeline") ||
+    lower.includes("integrat")
+  )
+    return "retrieval";
   if (lower.includes("test")) return "source";
   return "source";
 }
 
 function communityKeyForSymbol(path: string, symbolName: string): CommunityKey {
   const lower = `${path} ${symbolName}`.toLowerCase();
-  if (lower.includes("store") || lower.includes("storage") || lower.includes("schema") ||
-      lower.includes("migration") || lower.includes("sql") || lower.includes("orm") ||
-      lower.includes("adapter") || lower.includes("drizzle") || lower.includes("prisma") ||
-      lower.includes("database") || lower.includes("db")) {
+  if (
+    lower.includes("store") ||
+    lower.includes("storage") ||
+    lower.includes("schema") ||
+    lower.includes("migration") ||
+    lower.includes("sql") ||
+    lower.includes("orm") ||
+    lower.includes("adapter") ||
+    lower.includes("drizzle") ||
+    lower.includes("prisma") ||
+    lower.includes("database") ||
+    lower.includes("db")
+  ) {
     return "storage";
   }
-  if (lower.includes("plugin") || lower.includes("middleware") || lower.includes("hook") ||
-      lower.includes("pipeline") || lower.includes("integrat") ||
-      lower.includes("retrieve") || lower.includes("search") || lower.includes("query") ||
-      lower.includes("ingest")) {
+  if (
+    lower.includes("plugin") ||
+    lower.includes("middleware") ||
+    lower.includes("hook") ||
+    lower.includes("pipeline") ||
+    lower.includes("integrat") ||
+    lower.includes("retrieve") ||
+    lower.includes("search") ||
+    lower.includes("query") ||
+    lower.includes("ingest")
+  ) {
     return "retrieval";
   }
-  if (lower.includes("studio") || lower.includes("cli") || lower.includes("preview") ||
-      lower.includes("html") || lower.includes("handler") || lower.includes("route") ||
-      lower.includes("api")) {
+  if (
+    lower.includes("studio") ||
+    lower.includes("cli") ||
+    lower.includes("preview") ||
+    lower.includes("html") ||
+    lower.includes("handler") ||
+    lower.includes("route") ||
+    lower.includes("api")
+  ) {
     return "surface";
   }
   return "source";
 }
 
 function dependencyCommunityKey(name: string): CommunityKey {
-  if (name === "@farming-labs/orm" || name === "kysely" || name.includes("sqlite") ||
-      name === "pg" || name === "mysql2" || name === "drizzle-orm" || name === "drizzle-kit" ||
-      name === "mongoose" || name === "@prisma/client" || name === "prisma" ||
-      name === "better-sqlite3" || name.includes("database")) {
+  if (
+    name === "@farming-labs/orm" ||
+    name === "kysely" ||
+    name.includes("sqlite") ||
+    name === "pg" ||
+    name === "mysql2" ||
+    name === "drizzle-orm" ||
+    name === "drizzle-kit" ||
+    name === "mongoose" ||
+    name === "@prisma/client" ||
+    name === "prisma" ||
+    name === "better-sqlite3" ||
+    name.includes("database")
+  ) {
     return "storage";
   }
-  if (name.includes("vite") || name.includes("react") || name.includes("lucide") ||
-      name.includes("next") || name.includes("astro") || name.includes("svelte") ||
-      name.includes("nuxt") || name.includes("remix") || name.includes("hono") ||
-      name.includes("express") || name.includes("fastify")) {
+  if (
+    name.includes("vite") ||
+    name.includes("react") ||
+    name.includes("lucide") ||
+    name.includes("next") ||
+    name.includes("astro") ||
+    name.includes("svelte") ||
+    name.includes("nuxt") ||
+    name.includes("remix") ||
+    name.includes("hono") ||
+    name.includes("express") ||
+    name.includes("fastify")
+  ) {
     return "surface";
   }
   return "dependencies";
@@ -1576,16 +1817,38 @@ function symbolBaseRank(symbolName: string): number {
 
 function dependencyBaseRank(name: string): number {
   // Core ORM / DB drivers
-  if (["kysely", "drizzle-orm", "prisma", "mongoose", "@prisma/client",
-       "@farming-labs/orm", "pg", "mysql2", "better-sqlite3"].includes(name)) return 5.4;
+  if (
+    [
+      "kysely",
+      "drizzle-orm",
+      "prisma",
+      "mongoose",
+      "@prisma/client",
+      "@farming-labs/orm",
+      "pg",
+      "mysql2",
+      "better-sqlite3",
+    ].includes(name)
+  )
+    return 5.4;
   // Auth / identity libraries
-  if (name.includes("auth") || name.includes("next-auth") ||
-      name.includes("passport") || name.includes("jose") || name.includes("jsonwebtoken")) return 5.2;
+  if (
+    name.includes("auth") ||
+    name.includes("next-auth") ||
+    name.includes("passport") ||
+    name.includes("jose") ||
+    name.includes("jsonwebtoken")
+  )
+    return 5.2;
   // AI / schema
   if (name.includes("openai") || name === "zod" || name.includes("ai-sdk")) return 4.4;
   // Framework runtimes
-  if (["next", "astro", "svelte", "nuxt", "@remix-run/node",
-       "express", "fastify", "hono"].some(f => name.includes(f))) return 4.2;
+  if (
+    ["next", "astro", "svelte", "nuxt", "@remix-run/node", "express", "fastify", "hono"].some((f) =>
+      name.includes(f),
+    )
+  )
+    return 4.2;
   return 2.8;
 }
 
@@ -1594,17 +1857,26 @@ function isCodeFile(path: string): boolean {
 }
 
 function isMarkdownFile(path: string): boolean {
-  return [".md", ".mdx"].includes(extname(path).toLowerCase()) || basename(path).toLowerCase().startsWith("readme");
+  return (
+    [".md", ".mdx"].includes(extname(path).toLowerCase()) ||
+    basename(path).toLowerCase().startsWith("readme")
+  );
 }
 
 function isLikelyCliSurface(file: LocalRepositoryGraphSourceFile): boolean {
   const lower = file.path.toLowerCase();
-  return lower.includes("cli") || lower.includes("readme") || lower.startsWith("docs/") || /\bcommand\b|--[a-z]/i.test(file.text);
+  return (
+    lower.includes("cli") ||
+    lower.includes("readme") ||
+    lower.startsWith("docs/") ||
+    /\bcommand\b|--[a-z]/i.test(file.text)
+  );
 }
 
 function extractExportedSymbols(text: string): ExportedSymbol[] {
   const symbols = new Map<string, ExportedSymbol>();
-  const declarationPattern = /\bexport\s+(?:declare\s+)?(?:async\s+)?(class|function|interface|type|const|let|var|enum)\s+([A-Za-z_$][\w$]*)/g;
+  const declarationPattern =
+    /\bexport\s+(?:declare\s+)?(?:async\s+)?(class|function|interface|type|const|let|var|enum)\s+([A-Za-z_$][\w$]*)/g;
   for (const match of text.matchAll(declarationPattern)) {
     const kind = match[1];
     const name = match[2];
@@ -1613,7 +1885,8 @@ function extractExportedSymbols(text: string): ExportedSymbol[] {
     }
   }
 
-  const defaultPattern = /\bexport\s+default\s+(?:async\s+)?(?:class|function)?\s*([A-Za-z_$][\w$]*)/g;
+  const defaultPattern =
+    /\bexport\s+default\s+(?:async\s+)?(?:class|function)?\s*([A-Za-z_$][\w$]*)/g;
   for (const match of text.matchAll(defaultPattern)) {
     const name = match[1];
     if (name && isMeaningfulSymbolName(name)) {
@@ -1628,7 +1901,11 @@ function extractExportedSymbols(text: string): ExportedSymbol[] {
       continue;
     }
     for (const entry of exportList.split(",")) {
-      const name = entry.trim().split(/\s+as\s+/i).at(-1)?.trim();
+      const name = entry
+        .trim()
+        .split(/\s+as\s+/i)
+        .at(-1)
+        ?.trim();
       if (name && isMeaningfulSymbolName(name)) {
         symbols.set(name, { name, kind: "named export" });
       }
@@ -1666,12 +1943,7 @@ function cleanHeading(value: string): string | undefined {
 }
 
 function readPackageDependencies(value: unknown): PackageDependency[] {
-  const groups = [
-    "dependencies",
-    "peerDependencies",
-    "optionalDependencies",
-    "devDependencies"
-  ];
+  const groups = ["dependencies", "peerDependencies", "optionalDependencies", "devDependencies"];
   const dependencies: PackageDependency[] = [];
   for (const group of groups) {
     const record = recordFromRecord(value, group);
@@ -1684,7 +1956,11 @@ function readPackageDependencies(value: unknown): PackageDependency[] {
       }
     }
   }
-  return dependencies.sort((left, right) => dependencySortScore(right.name) - dependencySortScore(left.name) || left.name.localeCompare(right.name));
+  return dependencies.sort(
+    (left, right) =>
+      dependencySortScore(right.name) - dependencySortScore(left.name) ||
+      left.name.localeCompare(right.name),
+  );
 }
 
 function readPackageScripts(value: unknown): Array<{ name: string; command: string }> {
@@ -1693,8 +1969,12 @@ function readPackageScripts(value: unknown): Array<{ name: string; command: stri
     return [];
   }
   return Object.entries(scripts)
-    .flatMap(([name, command]) => typeof command === "string" ? [{ name, command }] : [])
-    .sort((left, right) => scriptSortScore(right.name) - scriptSortScore(left.name) || left.name.localeCompare(right.name));
+    .flatMap(([name, command]) => (typeof command === "string" ? [{ name, command }] : []))
+    .sort(
+      (left, right) =>
+        scriptSortScore(right.name) - scriptSortScore(left.name) ||
+        left.name.localeCompare(right.name),
+    );
 }
 
 function dependencySortScore(name: string): number {
@@ -1703,8 +1983,12 @@ function dependencySortScore(name: string): number {
   if (name === "zod" || name.includes("jose") || name.includes("jsonwebtoken")) return 80;
   if (name.includes("openai") || name.includes("ai-sdk")) return 75;
   if (name.includes("auth") || name.includes("next-auth") || name.includes("passport")) return 72;
-  if (name === "pg" || name.includes("sqlite") || name === "mysql2" || name === "better-sqlite3") return 65;
-  if (["next", "astro", "svelte", "nuxt", "hono", "express", "fastify"].some(f => name.includes(f))) return 50;
+  if (name === "pg" || name.includes("sqlite") || name === "mysql2" || name === "better-sqlite3")
+    return 65;
+  if (
+    ["next", "astro", "svelte", "nuxt", "hono", "express", "fastify"].some((f) => name.includes(f))
+  )
+    return 50;
   if (name.includes("vite") || name.includes("react")) return 45;
   return 10;
 }
@@ -1755,7 +2039,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function matchAllUnique(text: string, pattern: RegExp): string[] {
-  return Array.from(new Set(Array.from(text.matchAll(pattern)).flatMap((match) => match[0] ? [match[0]] : [])));
+  return Array.from(
+    new Set(Array.from(text.matchAll(pattern)).flatMap((match) => (match[0] ? [match[0]] : []))),
+  );
 }
 
 function sourcePathsFromAttributes(attributes: unknown): string[] {
@@ -1790,7 +2076,9 @@ function flattenSets(sets: Array<Set<string> | undefined>): Set<string> {
 }
 
 function sortedStrings(values: Iterable<string>): string[] {
-  return Array.from(new Set(values)).filter(Boolean).sort((left, right) => left.localeCompare(right));
+  return Array.from(new Set(values))
+    .filter(Boolean)
+    .sort((left, right) => left.localeCompare(right));
 }
 
 function mergeDescription(left: string, right: string): string {

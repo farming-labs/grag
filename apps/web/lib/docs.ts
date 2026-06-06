@@ -11,7 +11,7 @@ const docOrder = [
   "STORAGE_CONFIGURATION.md",
   "STORAGE_AND_RETRIEVAL.md",
   "GITHUB_SAAS.md",
-  "REPO_DEMO.md"
+  "REPO_DEMO.md",
 ];
 
 const packageRoot = resolvePackageRoot();
@@ -38,7 +38,7 @@ type PackageManifest = {
 function resolvePackageRoot() {
   const candidates = [
     path.resolve(process.cwd(), "..", "..", "packages", "grag"),
-    path.resolve(process.cwd(), "packages", "grag")
+    path.resolve(process.cwd(), "packages", "grag"),
   ];
 
   const match = candidates.find((candidate) => existsSync(path.join(candidate, "package.json")));
@@ -89,7 +89,7 @@ async function docEntryFromFile(filename: string): Promise<DocEntry> {
     filename,
     title: titleFromContent(content, titleFromSlug(slug)),
     description: descriptionFromContent(content),
-    href: `/docs/${slug}`
+    href: `/docs/${slug}`,
   };
 }
 
@@ -124,7 +124,7 @@ export async function getAdjacentDocs(slug: string) {
 
   return {
     previous: index > 0 ? docs[index - 1] : null,
-    next: index >= 0 && index < docs.length - 1 ? docs[index + 1] : null
+    next: index >= 0 && index < docs.length - 1 ? docs[index + 1] : null,
   };
 }
 
@@ -135,7 +135,7 @@ export async function getPackageManifest(): Promise<PackageManifest> {
   return {
     name: manifest.name,
     version: manifest.version,
-    description: manifest.description
+    description: manifest.description,
   };
 }
 

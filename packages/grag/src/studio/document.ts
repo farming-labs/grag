@@ -6,7 +6,7 @@ import type {
   GraphRagSnapshot,
   JsonObject,
   Relationship,
-  TextUnit
+  TextUnit,
 } from "../model.js";
 
 export interface BuildDocumentGraphOptions {
@@ -142,7 +142,7 @@ const stopWords = new Set([
   "while",
   "with",
   "would",
-  "your"
+  "your",
 ]);
 
 const knownTerms = [
@@ -178,7 +178,7 @@ const knownTerms = [
   "studio",
   "support workflow",
   "text unit",
-  "vector recall"
+  "vector recall",
 ];
 
 const communityBuckets: CommunityBucket[] = [
@@ -188,7 +188,7 @@ const communityBuckets: CommunityBucket[] = [
   { id: "community-storage", title: "Relational Storage", community: 3 },
   { id: "community-studio", title: "Studio Interface", community: 4 },
   { id: "community-support", title: "Support Operations", community: 5 },
-  { id: "community-concepts", title: "Document Concepts", community: 6 }
+  { id: "community-concepts", title: "Document Concepts", community: 6 },
 ];
 
 export function exampleSupportDocument(): string {
@@ -197,7 +197,7 @@ export function exampleSupportDocument(): string {
 
 export function buildGraphRagSnapshotFromExtraction(
   extraction: DocumentGraphExtraction,
-  options: BuildExtractedDocumentGraphOptions = {}
+  options: BuildExtractedDocumentGraphOptions = {},
 ): GraphRagSnapshot {
   const title = cleanEntityTitle(options.title || extraction.title || "Uploaded document");
   const sourcePath = options.sourcePath?.trim() || title;
@@ -205,23 +205,26 @@ export function buildGraphRagSnapshotFromExtraction(
   const extractedTextUnits = extraction.textUnits
     .filter((unit) => unit.text.trim().length > 0)
     .slice(0, 80);
-  const textUnits = extractedTextUnits.length > 0
-    ? extractedTextUnits.map((unit, index): TextUnit => ({
-      id: `tu-${index + 1}`,
-      humanReadableId: unit.title.trim() || `${sourcePath}#${index + 1}`,
-      text: normalizeWhitespace(unit.text),
-      entityIds: [],
-      relationshipIds: [],
-      covariateIds: [],
-      nTokens: tokenize(unit.text).length,
-      documentId: "doc-uploaded",
-      attributes: {
-        sourcePath,
-        section: index + 1,
-        generatedBy
-      }
-    }))
-    : createTextUnits(options.sourceText || extraction.summary || title, sourcePath);
+  const textUnits =
+    extractedTextUnits.length > 0
+      ? extractedTextUnits.map(
+          (unit, index): TextUnit => ({
+            id: `tu-${index + 1}`,
+            humanReadableId: unit.title.trim() || `${sourcePath}#${index + 1}`,
+            text: normalizeWhitespace(unit.text),
+            entityIds: [],
+            relationshipIds: [],
+            covariateIds: [],
+            nTokens: tokenize(unit.text).length,
+            documentId: "doc-uploaded",
+            attributes: {
+              sourcePath,
+              section: index + 1,
+              generatedBy,
+            },
+          }),
+        )
+      : createTextUnits(options.sourceText || extraction.summary || title, sourcePath);
   const communityIdByEntityKey = new Map<string, string>();
   extraction.communities.slice(0, 24).forEach((community, index) => {
     const communityId = `community-ai-${slugify(community.title) || index + 1}`;
@@ -261,15 +264,15 @@ export function buildGraphRagSnapshotFromExtraction(
         sourcePath,
         sourcePaths: [sourcePath],
         extraction: "openai-document-upload",
-        generatedBy
-      }
+        generatedBy,
+      },
     });
   });
 
   if (entityMap.size === 0) {
     return buildDocumentGraphRagSnapshot(options.sourceText || extraction.summary || title, {
       title,
-      sourcePath
+      sourcePath,
     });
   }
 
@@ -290,25 +293,34 @@ export function buildGraphRagSnapshotFromExtraction(
         targetEntityId: target.id,
         sourcePath,
         sourcePaths: [sourcePath],
-        generatedBy
+        generatedBy,
       };
-      return [{
-        id: `rel-ai-${index + 1}`,
-        humanReadableId: `${source.title} -> ${target.title}`,
-        source: source.title,
-        target: target.title,
-        description: relationship.description.trim() || `${source.title} is related to ${target.title}.`,
-        weight: Math.max(1, Math.round(Number(relationship.weight || 1) * 100) / 100),
-        combinedDegree: textUnitIds.length,
-        rank: Math.max(1, Number(relationship.weight || 1)),
-        textUnitIds,
-        attributes
-      }];
+      return [
+        {
+          id: `rel-ai-${index + 1}`,
+          humanReadableId: `${source.title} -> ${target.title}`,
+          source: source.title,
+          target: target.title,
+          description:
+            relationship.description.trim() || `${source.title} is related to ${target.title}.`,
+          weight: Math.max(1, Math.round(Number(relationship.weight || 1) * 100) / 100),
+          combinedDegree: textUnitIds.length,
+          rank: Math.max(1, Number(relationship.weight || 1)),
+          textUnitIds,
+          attributes,
+        },
+      ];
     });
 
   for (const relationship of relationships) {
-    const sourceId = typeof relationship.attributes?.sourceEntityId === "string" ? relationship.attributes.sourceEntityId : "";
-    const targetId = typeof relationship.attributes?.targetEntityId === "string" ? relationship.attributes.targetEntityId : "";
+    const sourceId =
+      typeof relationship.attributes?.sourceEntityId === "string"
+        ? relationship.attributes.sourceEntityId
+        : "";
+    const targetId =
+      typeof relationship.attributes?.targetEntityId === "string"
+        ? relationship.attributes.targetEntityId
+        : "";
     const source = entities.find((entity) => entity.id === sourceId);
     const target = entities.find((entity) => entity.id === targetId);
     if (source) {
@@ -321,16 +333,34 @@ export function buildGraphRagSnapshotFromExtraction(
 
   for (const textUnit of textUnits) {
     textUnit.entityIds = entities
-      .filter((entity) => entity.textUnitIds.includes(textUnit.id) || textContainsTerm(textUnit.text, entity.title))
+      .filter(
+        (entity) =>
+          entity.textUnitIds.includes(textUnit.id) || textContainsTerm(textUnit.text, entity.title),
+      )
       .map((entity) => entity.id);
     textUnit.relationshipIds = relationships
       .filter((relationship) => relationship.textUnitIds.includes(textUnit.id))
       .map((relationship) => relationship.id);
   }
 
-  const communities = createExtractedCommunities(extraction.communities, entities, relationships, textUnits, generatedBy);
-  const communityReports = createExtractedCommunityReports(extraction.communities, communities, entities, relationships, textUnits, generatedBy);
-  const documentText = normalizeWhitespace(options.sourceText || textUnits.map((unit) => unit.text).join("\n\n"));
+  const communities = createExtractedCommunities(
+    extraction.communities,
+    entities,
+    relationships,
+    textUnits,
+    generatedBy,
+  );
+  const communityReports = createExtractedCommunityReports(
+    extraction.communities,
+    communities,
+    entities,
+    relationships,
+    textUnits,
+    generatedBy,
+  );
+  const documentText = normalizeWhitespace(
+    options.sourceText || textUnits.map((unit) => unit.text).join("\n\n"),
+  );
   const document: GraphRagDocument = {
     id: "doc-uploaded",
     humanReadableId: sourcePath,
@@ -341,8 +371,8 @@ export function buildGraphRagSnapshotFromExtraction(
     attributes: {
       sourcePath,
       generatedBy,
-      summary: extraction.summary
-    }
+      summary: extraction.summary,
+    },
   };
 
   return {
@@ -353,36 +383,40 @@ export function buildGraphRagSnapshotFromExtraction(
     covariates: [],
     communities,
     communityReports,
-    embeddings: []
+    embeddings: [],
   };
 }
 
 export function buildDocumentGraphRagSnapshot(
   text: string,
-  options: BuildDocumentGraphOptions = {}
+  options: BuildDocumentGraphOptions = {},
 ): GraphRagSnapshot {
   const cleanText = normalizeWhitespace(text);
   const title = options.title?.trim() || inferTitle(cleanText) || "Uploaded document";
   const sourcePath = options.sourcePath?.trim() || title;
   const textUnits = createTextUnits(cleanText, sourcePath);
-  const candidates = extractCandidates(cleanText, textUnits)
-    .slice(0, Math.max(8, Math.min(options.maxEntities ?? 36, 80)));
+  const candidates = extractCandidates(cleanText, textUnits).slice(
+    0,
+    Math.max(8, Math.min(options.maxEntities ?? 36, 80)),
+  );
   const entities = createEntities(candidates, textUnits, sourcePath);
   const entityById = new Map(entities.map((entity) => [entity.id, entity]));
   const relationships = createRelationships(
     entities,
     textUnits,
     Math.max(8, Math.min(options.maxRelationships ?? 72, 160)),
-    sourcePath
+    sourcePath,
   );
 
   for (const relationship of relationships) {
-    const sourceId = typeof relationship.attributes?.sourceEntityId === "string"
-      ? relationship.attributes.sourceEntityId
-      : "";
-    const targetId = typeof relationship.attributes?.targetEntityId === "string"
-      ? relationship.attributes.targetEntityId
-      : "";
+    const sourceId =
+      typeof relationship.attributes?.sourceEntityId === "string"
+        ? relationship.attributes.sourceEntityId
+        : "";
+    const targetId =
+      typeof relationship.attributes?.targetEntityId === "string"
+        ? relationship.attributes.targetEntityId
+        : "";
     const source = entityById.get(sourceId);
     const target = entityById.get(targetId);
     if (source) {
@@ -404,8 +438,8 @@ export function buildDocumentGraphRagSnapshot(
     textUnitIds: textUnits.map((unit) => unit.id),
     attributes: {
       sourcePath,
-      generatedBy: "@farming-labs/grag/studio"
-    }
+      generatedBy: "@farming-labs/grag/studio",
+    },
   };
 
   return {
@@ -416,15 +450,19 @@ export function buildDocumentGraphRagSnapshot(
     covariates: [],
     communities,
     communityReports,
-    embeddings: []
+    embeddings: [],
   };
 }
 
 function indexedTextUnitIds(indexes: number[], textUnits: TextUnit[]): string[] {
-  return Array.from(new Set(indexes
-    .filter((index) => Number.isInteger(index) && index >= 0 && index < textUnits.length)
-    .map((index) => textUnits[index]?.id)
-    .filter((id): id is string => Boolean(id))));
+  return Array.from(
+    new Set(
+      indexes
+        .filter((index) => Number.isInteger(index) && index >= 0 && index < textUnits.length)
+        .map((index) => textUnits[index]?.id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  );
 }
 
 function createExtractedCommunities(
@@ -432,39 +470,48 @@ function createExtractedCommunities(
   entities: Entity[],
   relationships: Relationship[],
   textUnits: TextUnit[],
-  generatedBy: string
+  generatedBy: string,
 ): Community[] {
   const entityByKey = new Map(entities.map((entity) => [normalizeKey(entity.title), entity]));
-  const communities: Community[] = extractedCommunities
-    .slice(0, 24)
-    .flatMap((community, index) => {
-      const entityIds = Array.from(new Set(community.entityTitles
-        .map((title) => entityByKey.get(normalizeKey(title))?.id)
-        .filter((id): id is string => Boolean(id))));
-      if (entityIds.length === 0) {
-        return [];
+  const communities: Community[] = extractedCommunities.slice(0, 24).flatMap((community, index) => {
+    const entityIds = Array.from(
+      new Set(
+        community.entityTitles
+          .map((title) => entityByKey.get(normalizeKey(title))?.id)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    );
+    if (entityIds.length === 0) {
+      return [];
+    }
+
+    const entityIdSet = new Set(entityIds);
+    const relationshipIds = relationships
+      .filter((relationship) => {
+        const sourceId =
+          typeof relationship.attributes?.sourceEntityId === "string"
+            ? relationship.attributes.sourceEntityId
+            : "";
+        const targetId =
+          typeof relationship.attributes?.targetEntityId === "string"
+            ? relationship.attributes.targetEntityId
+            : "";
+        return entityIdSet.has(sourceId) || entityIdSet.has(targetId);
+      })
+      .map((relationship) => relationship.id);
+    const textUnitIds = textUnits
+      .filter((unit) => unit.entityIds.some((entityId) => entityIdSet.has(entityId)))
+      .map((unit) => unit.id);
+    const id = `community-ai-${slugify(community.title) || index + 1}`;
+
+    for (const entity of entities) {
+      if (entityIds.includes(entity.id)) {
+        entity.communityIds = [id];
       }
+    }
 
-      const entityIdSet = new Set(entityIds);
-      const relationshipIds = relationships
-        .filter((relationship) => {
-          const sourceId = typeof relationship.attributes?.sourceEntityId === "string" ? relationship.attributes.sourceEntityId : "";
-          const targetId = typeof relationship.attributes?.targetEntityId === "string" ? relationship.attributes.targetEntityId : "";
-          return entityIdSet.has(sourceId) || entityIdSet.has(targetId);
-        })
-        .map((relationship) => relationship.id);
-      const textUnitIds = textUnits
-        .filter((unit) => unit.entityIds.some((entityId) => entityIdSet.has(entityId)))
-        .map((unit) => unit.id);
-      const id = `community-ai-${slugify(community.title) || index + 1}`;
-
-      for (const entity of entities) {
-        if (entityIds.includes(entity.id)) {
-          entity.communityIds = [id];
-        }
-      }
-
-      return [{
+    return [
+      {
         id,
         humanReadableId: community.title,
         title: community.title,
@@ -478,11 +525,12 @@ function createExtractedCommunities(
         covariateIds: [],
         attributes: {
           generatedBy,
-          summary: community.summary
+          summary: community.summary,
         },
-        size: entityIds.length
-      }];
-    });
+        size: entityIds.length,
+      },
+    ];
+  });
 
   const assignedEntityIds = new Set(communities.flatMap((community) => community.entityIds));
   const unassigned = entities.filter((entity) => !assignedEntityIds.has(entity.id));
@@ -490,14 +538,16 @@ function createExtractedCommunities(
     const generated = createCommunities(unassigned, relationships, textUnits);
     const offset = communities.length;
     generated.forEach((community, index) => {
-      const id = community.id.startsWith("community-ai-") ? community.id : `${community.id}-${offset + index}`;
+      const id = community.id.startsWith("community-ai-")
+        ? community.id
+        : `${community.id}-${offset + index}`;
       communities.push({
         ...community,
         id,
         community: offset + index,
         attributes: {
-          generatedBy
-        }
+          generatedBy,
+        },
       });
       for (const entity of entities) {
         if (community.entityIds.includes(entity.id)) {
@@ -507,7 +557,9 @@ function createExtractedCommunities(
     });
   }
 
-  return communities.length > 0 ? communities : createCommunities(entities, relationships, textUnits);
+  return communities.length > 0
+    ? communities
+    : createCommunities(entities, relationships, textUnits);
 }
 
 function createExtractedCommunityReports(
@@ -516,9 +568,11 @@ function createExtractedCommunityReports(
   entities: Entity[],
   relationships: Relationship[],
   textUnits: TextUnit[],
-  generatedBy: string
+  generatedBy: string,
 ): CommunityReport[] {
-  const extractedByTitle = new Map(extractedCommunities.map((community) => [normalizeKey(community.title), community]));
+  const extractedByTitle = new Map(
+    extractedCommunities.map((community) => [normalizeKey(community.title), community]),
+  );
 
   return createCommunityReports(communities, entities, relationships, textUnits).map((report) => {
     const extracted = extractedByTitle.get(normalizeKey(report.title.replace(/\s+report$/i, "")));
@@ -527,8 +581,8 @@ function createExtractedCommunityReports(
         ...report,
         ratingExplanation: "Generated from OpenAI-assisted document upload extraction.",
         attributes: {
-          generatedBy
-        }
+          generatedBy,
+        },
       };
     }
 
@@ -538,8 +592,8 @@ function createExtractedCommunityReports(
       fullContent: [extracted.summary, report.fullContent].filter(Boolean).join("\n\n"),
       ratingExplanation: "Generated from OpenAI-assisted document upload extraction.",
       attributes: {
-        generatedBy
-      }
+        generatedBy,
+      },
     };
   });
 }
@@ -579,8 +633,8 @@ function createTextUnits(text: string, sourcePath: string): TextUnit[] {
     documentId: "doc-uploaded",
     attributes: {
       sourcePath,
-      section: index + 1
-    }
+      section: index + 1,
+    },
   }));
 }
 
@@ -610,7 +664,10 @@ function extractCandidates(text: string, textUnits: TextUnit[]): Candidate[] {
     }
   }
 
-  const phraseMatches = text.match(/@[a-z0-9][a-z0-9/_-]+|[a-z0-9]+(?:[-_/][a-z0-9]+)+|[A-Z][A-Za-z0-9]+(?:\s+[A-Z][A-Za-z0-9]+){0,3}|[a-z]+[A-Z][A-Za-z0-9]+|[a-z0-9]+(?:\.[a-z0-9]+)+/g) ?? [];
+  const phraseMatches =
+    text.match(
+      /@[a-z0-9][a-z0-9/_-]+|[a-z0-9]+(?:[-_/][a-z0-9]+)+|[A-Z][A-Za-z0-9]+(?:\s+[A-Z][A-Za-z0-9]+){0,3}|[a-z]+[A-Z][A-Za-z0-9]+|[a-z0-9]+(?:\.[a-z0-9]+)+/g,
+    ) ?? [];
   for (const phrase of phraseMatches) {
     const normalized = phrase.replace(/^#+\s*/, "").trim();
     if (isUsefulPhrase(normalized)) {
@@ -631,11 +688,24 @@ function extractCandidates(text: string, textUnits: TextUnit[]): Candidate[] {
   }
 
   return Array.from(candidates.values())
-    .filter((candidate) => candidate.frequency > 1 || candidate.score >= 2.4 || candidate.title.includes("@"))
-    .sort((left, right) => right.score - left.score || right.frequency - left.frequency || left.title.localeCompare(right.title));
+    .filter(
+      (candidate) =>
+        candidate.frequency > 1 || candidate.score >= 2.4 || candidate.title.includes("@"),
+    )
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        right.frequency - left.frequency ||
+        left.title.localeCompare(right.title),
+    );
 }
 
-function addCandidate(candidates: Map<string, Candidate>, title: string, score: number, frequency: number): void {
+function addCandidate(
+  candidates: Map<string, Candidate>,
+  title: string,
+  score: number,
+  frequency: number,
+): void {
   const cleanTitle = cleanEntityTitle(title);
   if (!isUsefulPhrase(cleanTitle)) {
     return;
@@ -656,7 +726,7 @@ function addCandidate(candidates: Map<string, Candidate>, title: string, score: 
     title: cleanTitle,
     key,
     score,
-    frequency
+    frequency,
   });
 }
 
@@ -670,7 +740,10 @@ function cleanEntityTitle(value: string): string {
 }
 
 function normalizeKey(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9@]+/g, " ").trim();
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9@]+/g, " ")
+    .trim();
 }
 
 function isUsefulPhrase(value: string): boolean {
@@ -709,7 +782,11 @@ function titleCase(value: string): string {
     .join(" ");
 }
 
-function createEntities(candidates: Candidate[], textUnits: TextUnit[], sourcePath: string): Entity[] {
+function createEntities(
+  candidates: Candidate[],
+  textUnits: TextUnit[],
+  sourcePath: string,
+): Entity[] {
   const entities = candidates.map((candidate, index) => {
     const textUnitIds = textUnits
       .filter((unit) => textContainsTerm(unit.text, candidate.title))
@@ -732,8 +809,8 @@ function createEntities(candidates: Candidate[], textUnits: TextUnit[], sourcePa
       attributes: {
         sourcePath,
         sourcePaths: [sourcePath],
-        extraction: "document-upload"
-      }
+        extraction: "document-upload",
+      },
     };
   });
 
@@ -762,13 +839,41 @@ function classifyType(title: string): string {
   if (key.includes("@") || key.includes("package") || key.includes("grag") || key.includes("orm")) {
     return "Package";
   }
-  if (matchesAny(key, ["postgres", "sqlite", "mysql", "database", "relational", "table", "schema", "migration", "pgvector", "storage", "kysely"])) {
+  if (
+    matchesAny(key, [
+      "postgres",
+      "sqlite",
+      "mysql",
+      "database",
+      "relational",
+      "table",
+      "schema",
+      "migration",
+      "pgvector",
+      "storage",
+      "kysely",
+    ])
+  ) {
     return "Storage";
   }
-  if (matchesAny(key, ["retrieval", "query", "search", "vector", "embedding", "context", "citation", "recall", "rerank"])) {
+  if (
+    matchesAny(key, [
+      "retrieval",
+      "query",
+      "search",
+      "vector",
+      "embedding",
+      "context",
+      "citation",
+      "recall",
+      "rerank",
+    ])
+  ) {
     return "Retrieval";
   }
-  if (matchesAny(key, ["graph", "entity", "relationship", "community", "node", "edge", "indexing"])) {
+  if (
+    matchesAny(key, ["graph", "entity", "relationship", "community", "node", "edge", "indexing"])
+  ) {
     return "Graph";
   }
   if (matchesAny(key, ["studio", "visual", "preview", "cli", "upload", "dashboard", "api"])) {
@@ -777,7 +882,18 @@ function classifyType(title: string): string {
   if (matchesAny(key, ["ingest", "chunk", "extract", "pipeline", "worker", "queue", "nightly"])) {
     return "Pipeline";
   }
-  if (matchesAny(key, ["ticket", "incident", "support", "customer", "deploy", "runbook", "workflow", "operation"])) {
+  if (
+    matchesAny(key, [
+      "ticket",
+      "incident",
+      "support",
+      "customer",
+      "deploy",
+      "runbook",
+      "workflow",
+      "operation",
+    ])
+  ) {
     return "Support";
   }
   return "Concept";
@@ -832,14 +948,17 @@ function createRelationships(
   entities: Entity[],
   textUnits: TextUnit[],
   maxRelationships: number,
-  sourcePath: string
+  sourcePath: string,
 ): Relationship[] {
-  const pairMap = new Map<string, {
-    sourceId: string;
-    targetId: string;
-    weight: number;
-    textUnitIds: Set<string>;
-  }>();
+  const pairMap = new Map<
+    string,
+    {
+      sourceId: string;
+      targetId: string;
+      weight: number;
+      textUnitIds: Set<string>;
+    }
+  >();
 
   for (const unit of textUnits) {
     const entityIds = unit.entityIds.slice(0, 12);
@@ -860,7 +979,7 @@ function createRelationships(
             sourceId,
             targetId,
             weight: 1,
-            textUnitIds: new Set([unit.id])
+            textUnitIds: new Set([unit.id]),
           });
         }
       }
@@ -869,7 +988,9 @@ function createRelationships(
 
   const entityById = new Map(entities.map((entity) => [entity.id, entity]));
   const relationships = Array.from(pairMap.values())
-    .sort((left, right) => right.weight - left.weight || left.sourceId.localeCompare(right.sourceId))
+    .sort(
+      (left, right) => right.weight - left.weight || left.sourceId.localeCompare(right.sourceId),
+    )
     .slice(0, maxRelationships)
     .map((pair, index) => {
       const source = entityById.get(pair.sourceId);
@@ -879,7 +1000,7 @@ function createRelationships(
         sourceEntityId: pair.sourceId,
         targetEntityId: pair.targetId,
         sourcePath,
-        sourcePaths: [sourcePath]
+        sourcePaths: [sourcePath],
       };
       return {
         id: `rel-${index + 1}`,
@@ -891,7 +1012,7 @@ function createRelationships(
         combinedDegree: textUnitIds.length,
         rank: pair.weight,
         textUnitIds,
-        attributes
+        attributes,
       };
     });
 
@@ -907,7 +1028,7 @@ function createRelationships(
 function createCommunities(
   entities: Entity[],
   relationships: Relationship[],
-  textUnits: TextUnit[]
+  textUnits: TextUnit[],
 ): Community[] {
   const buckets = communityBuckets
     .map((bucket) => {
@@ -917,8 +1038,14 @@ function createCommunities(
       const entityIdSet = new Set(entityIds);
       const relationshipIds = relationships
         .filter((relationship) => {
-          const sourceId = typeof relationship.attributes?.sourceEntityId === "string" ? relationship.attributes.sourceEntityId : "";
-          const targetId = typeof relationship.attributes?.targetEntityId === "string" ? relationship.attributes.targetEntityId : "";
+          const sourceId =
+            typeof relationship.attributes?.sourceEntityId === "string"
+              ? relationship.attributes.sourceEntityId
+              : "";
+          const targetId =
+            typeof relationship.attributes?.targetEntityId === "string"
+              ? relationship.attributes.targetEntityId
+              : "";
           return entityIdSet.has(sourceId) || entityIdSet.has(targetId);
         })
         .map((relationship) => relationship.id);
@@ -939,40 +1066,46 @@ function createCommunities(
         textUnitIds,
         covariateIds: [],
         attributes: {
-          generatedBy: "document-upload"
+          generatedBy: "document-upload",
         },
-        size: entityIds.length
+        size: entityIds.length,
       };
     })
     .filter((community) => community.entityIds.length > 0);
 
-  return buckets.length > 0 ? buckets : [{
-    id: "community-concepts",
-    humanReadableId: "Document Concepts",
-    title: "Document Concepts",
-    community: 6,
-    level: 0,
-    parent: null,
-    children: [],
-    entityIds: entities.map((entity) => entity.id),
-    relationshipIds: relationships.map((relationship) => relationship.id),
-    textUnitIds: textUnits.map((unit) => unit.id),
-    covariateIds: [],
-    attributes: {
-      generatedBy: "document-upload"
-    },
-    size: entities.length
-  }];
+  return buckets.length > 0
+    ? buckets
+    : [
+        {
+          id: "community-concepts",
+          humanReadableId: "Document Concepts",
+          title: "Document Concepts",
+          community: 6,
+          level: 0,
+          parent: null,
+          children: [],
+          entityIds: entities.map((entity) => entity.id),
+          relationshipIds: relationships.map((relationship) => relationship.id),
+          textUnitIds: textUnits.map((unit) => unit.id),
+          covariateIds: [],
+          attributes: {
+            generatedBy: "document-upload",
+          },
+          size: entities.length,
+        },
+      ];
 }
 
 function createCommunityReports(
   communities: Community[],
   entities: Entity[],
   relationships: Relationship[],
-  textUnits: TextUnit[]
+  textUnits: TextUnit[],
 ): CommunityReport[] {
   const entityById = new Map(entities.map((entity) => [entity.id, entity]));
-  const relationshipById = new Map(relationships.map((relationship) => [relationship.id, relationship]));
+  const relationshipById = new Map(
+    relationships.map((relationship) => [relationship.id, relationship]),
+  );
   const textUnitById = new Map(textUnits.map((unit) => [unit.id, unit]));
 
   return communities.map((community) => {
@@ -992,9 +1125,15 @@ function createCommunityReports(
       .join(" ");
     const summary = [
       `${community.title} groups ${community.entityIds.length} extracted entities from the uploaded document.`,
-      topEntities.length ? `Representative entities: ${topEntities.map((entity) => entity.title).join(", ")}.` : "",
-      topRelationships.length ? `Key links: ${topRelationships.map((relationship) => `${relationship.source} -> ${relationship.target}`).join("; ")}.` : ""
-    ].filter(Boolean).join(" ");
+      topEntities.length
+        ? `Representative entities: ${topEntities.map((entity) => entity.title).join(", ")}.`
+        : "",
+      topRelationships.length
+        ? `Key links: ${topRelationships.map((relationship) => `${relationship.source} -> ${relationship.target}`).join("; ")}.`
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
 
     return {
       id: `report-${community.id}`,
@@ -1010,12 +1149,12 @@ function createCommunityReports(
       ratingExplanation: "Generated from deterministic document upload extraction.",
       findings: topEntities.slice(0, 3).map((entity) => ({
         summary: entity.title,
-        explanation: entity.description ?? ""
+        explanation: entity.description ?? "",
       })),
       attributes: {
-        generatedBy: "document-upload"
+        generatedBy: "document-upload",
       },
-      size: community.entityIds.length
+      size: community.entityIds.length,
     };
   });
 }

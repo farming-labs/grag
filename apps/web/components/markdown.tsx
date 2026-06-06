@@ -11,11 +11,7 @@ type Block =
 export function Markdown({ content }: { content: string }) {
   const blocks = parseMarkdown(content);
 
-  return (
-    <div className="markdown">
-      {blocks.map((block, index) => renderBlock(block, index))}
-    </div>
-  );
+  return <div className="markdown">{blocks.map((block, index) => renderBlock(block, index))}</div>;
 }
 
 function parseMarkdown(content: string): Block[] {
@@ -50,7 +46,11 @@ function parseMarkdown(content: string): Block[] {
 
     const heading = trimmed.match(/^(#{1,4})\s+(.+)$/);
     if (heading) {
-      blocks.push({ type: "heading", depth: heading[1]?.length ?? 1, text: heading[2]?.trim() ?? "" });
+      blocks.push({
+        type: "heading",
+        depth: heading[1]?.length ?? 1,
+        text: heading[2]?.trim() ?? "",
+      });
       index += 1;
       continue;
     }
@@ -183,9 +183,14 @@ function renderInline(text: string, keyPrefix: string): ReactNode[] {
       const external = href.startsWith("http://") || href.startsWith("https://");
 
       nodes.push(
-        <a key={key} href={href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined}>
+        <a
+          key={key}
+          href={href}
+          target={external ? "_blank" : undefined}
+          rel={external ? "noreferrer" : undefined}
+        >
           {link?.[1] ?? href}
-        </a>
+        </a>,
       );
     }
 

@@ -86,10 +86,13 @@ export interface DocumentSourceConfig extends DataSourceMeta {
 // ---------------------------------------------------------------------------
 
 export type { RelationalRow };
-export type DatabaseRowsLoader<Row extends RelationalRow = RelationalRow> =
-  () => readonly Row[] | Promise<readonly Row[]>;
+export type DatabaseRowsLoader<Row extends RelationalRow = RelationalRow> = () =>
+  | readonly Row[]
+  | Promise<readonly Row[]>;
 
-export interface DatabaseSourceConfig<Row extends RelationalRow = RelationalRow> extends DataSourceMeta {
+export interface DatabaseSourceConfig<
+  Row extends RelationalRow = RelationalRow,
+> extends DataSourceMeta {
   type: "database";
 
   /**

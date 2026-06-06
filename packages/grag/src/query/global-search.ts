@@ -29,28 +29,30 @@ export class GlobalSearchEngine {
 
   async search(query: string, options: GlobalSearchOptions = {}): Promise<GlobalSearchResult> {
     const reports = await this.store.listCommunityReports(
-      options.reportLevel === undefined ? undefined : { level: options.reportLevel }
+      options.reportLevel === undefined ? undefined : { level: options.reportLevel },
     );
     const contextChunks = buildCommunityContext(
       reports,
-      options.maxContextChars === undefined ? undefined : { maxChunkChars: options.maxContextChars }
+      options.maxContextChars === undefined
+        ? undefined
+        : { maxChunkChars: options.maxContextChars },
     );
-    const mapResponses = await mapLimit(
-      contextChunks,
-      options.concurrency ?? 4,
-      async (chunk) => completionContent(await this.model.complete(createMapMessages(query, chunk.text), { responseFormat: "json" }))
+    const mapResponses = await mapLimit(contextChunks, options.concurrency ?? 4, async (chunk) =>
+      completionContent(
+        await this.model.complete(createMapMessages(query, chunk.text), { responseFormat: "json" }),
+      ),
     );
     const answer = completionContent(
       await this.model.complete(createReduceMessages(query, mapResponses, options.responseType), {
-        responseFormat: "text"
-      })
+        responseFormat: "text",
+      }),
     );
 
     return {
       answer,
       mapResponses,
       contextChunks,
-      reports
+      reports,
     };
   }
 }
@@ -60,25 +62,28 @@ function createMapMessages(query: string, context: string) {
     {
       role: "system" as const,
       content:
-        "You answer questions using only the supplied community reports. Return concise JSON with keys answer, points, and confidence."
+        "You answer questions using only the supplied community reports. Return concise JSON with keys answer, points, and confidence.",
     },
     {
       role: "user" as const,
-      content: `Question:\n${query}\n\nCommunity reports:\n${context}`
-    }
+      content: `Question:\n${query}\n\nCommunity reports:\n${context}`,
+    },
   ];
 }
 
-function createReduceMessages(query: string, mapResponses: readonly string[], responseType = "multiple paragraphs") {
+function createReduceMessages(
+  query: string,
+  mapResponses: readonly string[],
+  responseType = "multiple paragraphs",
+) {
   return [
     {
       role: "system" as const,
-      content: `Combine partial GraphRAG map responses into one grounded answer. Return ${responseType}.`
+      content: `Combine partial GraphRAG map responses into one grounded answer. Return ${responseType}.`,
     },
     {
       role: "user" as const,
-      content: `Question:\n${query}\n\nPartial answers:\n${mapResponses.join("\n\n---\n\n")}`
-    }
+      content: `Question:\n${query}\n\nPartial answers:\n${mapResponses.join("\n\n---\n\n")}`,
+    },
   ];
 }
-

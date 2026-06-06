@@ -7,14 +7,17 @@ export async function loadRepoSource(config: RepoSourceConfig): Promise<GraphRag
   const targetCount = config.maxFiles ?? "all";
   // When include/exclude filters are active, scan a wider pool so filtering
   // doesn't leave us with too few files after pruning.
-  const scanCount = targetCount === "all"
-    ? "all"
-    : config.include || config.exclude ? Math.max(targetCount * 6, 240) : targetCount;
+  const scanCount =
+    targetCount === "all"
+      ? "all"
+      : config.include || config.exclude
+        ? Math.max(targetCount * 6, 240)
+        : targetCount;
   const scanned = await scanRepository({
     source: config.url,
     provider: "auto",
     maxFiles: scanCount,
-    ...(config.maxFileBytes !== undefined ? { maxFileBytes: config.maxFileBytes } : {})
+    ...(config.maxFileBytes !== undefined ? { maxFileBytes: config.maxFileBytes } : {}),
   });
 
   try {
@@ -49,8 +52,8 @@ export async function loadRepoSource(config: RepoSourceConfig): Promise<GraphRag
         sourceLabel,
         fileKind: file.kind,
         bytes: file.bytes,
-        sourceProvider: scanned.provider
-      }
+        sourceProvider: scanned.provider,
+      },
     }));
   } finally {
     await scanned.cleanup();

@@ -40,7 +40,7 @@ export function SidebarThemeToggle({ variant = "text" }: SidebarThemeToggleProps
     const observer = new MutationObserver(syncTheme);
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ["class"]
+      attributeFilter: ["class"],
     });
 
     return () => observer.disconnect();
@@ -75,7 +75,7 @@ export function SidebarThemeToggle({ variant = "text" }: SidebarThemeToggleProps
         onClick={toggle}
         style={{
           borderColor: "var(--color-fd-border)",
-          color: "var(--color-fd-muted-foreground)"
+          color: "var(--color-fd-muted-foreground)",
         }}
         title={isDark ? "Switch to light mode" : "Switch to dark mode"}
         type="button"
@@ -85,7 +85,7 @@ export function SidebarThemeToggle({ variant = "text" }: SidebarThemeToggleProps
           style={{
             background: !isDark ? "var(--color-fd-foreground)" : "transparent",
             borderColor: "var(--color-fd-border)",
-            color: !isDark ? "var(--color-fd-background)" : "var(--color-fd-muted-foreground)"
+            color: !isDark ? "var(--color-fd-background)" : "var(--color-fd-muted-foreground)",
           }}
         >
           <SunIcon aria-hidden="true" size={12} />
@@ -96,7 +96,7 @@ export function SidebarThemeToggle({ variant = "text" }: SidebarThemeToggleProps
           style={{
             background: isDark ? "var(--color-fd-foreground)" : "transparent",
             borderColor: "var(--color-fd-border)",
-            color: isDark ? "var(--color-fd-background)" : "var(--color-fd-muted-foreground)"
+            color: isDark ? "var(--color-fd-background)" : "var(--color-fd-muted-foreground)",
           }}
         >
           <MoonIcon aria-hidden="true" size={12} />
@@ -115,7 +115,11 @@ export function SidebarThemeToggle({ variant = "text" }: SidebarThemeToggleProps
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}
       type="button"
     >
-      {isDark ? <MoonIcon aria-hidden="true" size={12} /> : <SunIcon aria-hidden="true" size={12} />}
+      {isDark ? (
+        <MoonIcon aria-hidden="true" size={12} />
+      ) : (
+        <SunIcon aria-hidden="true" size={12} />
+      )}
       <span>{isDark ? "Dark" : "Light"}</span>
     </button>
   );

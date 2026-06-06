@@ -34,11 +34,7 @@ The service exposes:
 For repo-backed products, build an index once and persist it into the service store:
 
 ```ts
-import {
-  createGraphRagService,
-  indexRepository,
-  type GraphRagStore
-} from "@farming-labs/grag";
+import { createGraphRagService, indexRepository, type GraphRagStore } from "@farming-labs/grag";
 
 export async function indexRepositoryForTenant(input: {
   source: string;
@@ -51,14 +47,14 @@ export async function indexRepositoryForTenant(input: {
     provider: "auto",
     remote: {
       ...(input.ref ? { ref: input.ref } : {}),
-      ...(input.token ? { token: input.token } : {})
+      ...(input.token ? { token: input.token } : {}),
     },
     scan: {
-      maxFiles: "all"
+      maxFiles: "all",
     },
     extraction: {
-      provider: "local"
-    }
+      provider: "local",
+    },
   });
 
   const grag = createGraphRagService({ store: input.store });
@@ -66,7 +62,7 @@ export async function indexRepositoryForTenant(input: {
 
   return {
     files: indexed.files.map((file) => file.path),
-    stats: await grag.stats()
+    stats: await grag.stats(),
   };
 }
 ```
@@ -87,13 +83,13 @@ Postgres through Kysely:
 import {
   SqlGraphRagStore,
   applyGraphRagMigrations,
-  createGraphRagService
+  createGraphRagService,
 } from "@farming-labs/grag";
 
 await applyGraphRagMigrations(db, "postgres");
 
 const grag = createGraphRagService({
-  store: new SqlGraphRagStore({ db })
+  store: new SqlGraphRagStore({ db }),
 });
 ```
 
@@ -102,18 +98,15 @@ Portable storage through `@farming-labs/orm`:
 ```ts
 import { createOrm } from "@farming-labs/orm";
 import { createGraphRagService } from "@farming-labs/grag";
-import {
-  OrmGraphRagStore,
-  graphRagOrmSchema
-} from "@farming-labs/grag/orm";
+import { OrmGraphRagStore, graphRagOrmSchema } from "@farming-labs/grag/orm";
 
 const orm = createOrm({
   schema: graphRagOrmSchema,
-  driver: postgresDriver
+  driver: postgresDriver,
 });
 
 const grag = createGraphRagService({
-  store: new OrmGraphRagStore({ orm })
+  store: new OrmGraphRagStore({ orm }),
 });
 ```
 
@@ -124,7 +117,7 @@ For a production dashboard or API, prefer `ask` and `searchGraph` because they r
 ```ts
 const result = await grag.ask("How does the docs generator use repo metadata?", {
   limit: 12,
-  responseStyle: "one paragraph, then bullets, with citations"
+  responseStyle: "one paragraph, then bullets, with citations",
 });
 
 return {
@@ -133,7 +126,7 @@ return {
   hits: result.hits,
   graph: result.graph,
   stats: result.stats,
-  timings: result.timings
+  timings: result.timings,
 };
 ```
 
@@ -142,13 +135,13 @@ Use `searchGraph` when you only need evidence:
 ```ts
 const result = await grag.searchGraph("storage migrations", {
   includeTextSearch: true,
-  limit: 8
+  limit: 8,
 });
 
 return {
   sources: result.citations,
   evidence: result.hits,
-  highlight: result.graph
+  highlight: result.graph,
 };
 ```
 
@@ -157,13 +150,13 @@ The lower-level retrieval method is still available when you want the raw snapsh
 ```ts
 const result = await grag.retrieve("How does the docs generator use repo metadata?", {
   useBasicSearch: true,
-  limit: 8
+  limit: 8,
 });
 
 return {
   context: result.context,
   hits: result.hits,
-  stats: result.stats
+  stats: result.stats,
 };
 ```
 

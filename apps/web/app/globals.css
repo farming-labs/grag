@@ -33,7 +33,9 @@
   --pixel-shadow: rgba(248, 245, 236, 0.08);
   --font-display: var(--font-geist-sans), "Inter", "Avenir Next", "Segoe UI", system-ui, sans-serif;
   --font-body: var(--font-geist-sans), "Inter", "Avenir Next", "Segoe UI", system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), "Berkeley Mono", "SFMono-Regular", "Cascadia Code", Menlo, Consolas, monospace;
+  --font-mono:
+    var(--font-geist-mono), "Berkeley Mono", "SFMono-Regular", "Cascadia Code", Menlo, Consolas,
+    monospace;
   --radius: 0px;
 }
 
@@ -125,12 +127,14 @@
   background: transparent !important;
 }
 
-#nd-docs-layout :is(aside#nd-sidebar, aside#nd-sidebar-mobile, .fd-sidebar)
+#nd-docs-layout
+  :is(aside#nd-sidebar, aside#nd-sidebar-mobile, .fd-sidebar)
   :is(a, button):not([data-sidebar-control]):not([data-theme-toggle]) {
   border-radius: 0 !important;
 }
 
-#nd-docs-layout :is(aside#nd-sidebar, aside#nd-sidebar-mobile, .fd-sidebar)
+#nd-docs-layout
+  :is(aside#nd-sidebar, aside#nd-sidebar-mobile, .fd-sidebar)
   :is(a, button):not([data-sidebar-control]):not([data-theme-toggle]):hover,
 #nd-docs-layout :is(aside#nd-sidebar, aside#nd-sidebar-mobile, .fd-sidebar) a[data-active="true"],
 #nd-docs-layout :is(aside#nd-sidebar, aside#nd-sidebar-mobile, .fd-sidebar) a[aria-current="page"] {
@@ -677,7 +681,15 @@ h3 {
   border-radius: 0 !important;
 }
 
-#nd-docs-layout :is(.fd-table-wrapper th, .fd-table-wrapper td, .fd-docs-content th, .fd-docs-content td, .prose th, .prose td) {
+#nd-docs-layout
+  :is(
+    .fd-table-wrapper th,
+    .fd-table-wrapper td,
+    .fd-docs-content th,
+    .fd-docs-content td,
+    .prose th,
+    .prose td
+  ) {
   border-color: var(--color-fd-border) !important;
 }
 

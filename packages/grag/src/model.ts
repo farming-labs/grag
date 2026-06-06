@@ -11,8 +11,8 @@ export const jsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
     z.boolean(),
     z.null(),
     z.array(jsonValueSchema),
-    z.record(z.string(), jsonValueSchema)
-  ])
+    z.record(z.string(), jsonValueSchema),
+  ]),
 );
 
 export const jsonObjectSchema: z.ZodType<JsonObject> = z.record(z.string(), jsonValueSchema);
@@ -21,11 +21,11 @@ export const humanReadableIdSchema = z.union([z.string(), z.number()]);
 
 export const identifiedSchema = z.object({
   id: z.string().min(1),
-  humanReadableId: humanReadableIdSchema.nullish()
+  humanReadableId: humanReadableIdSchema.nullish(),
 });
 
 export const namedSchema = identifiedSchema.extend({
-  title: z.string().min(1)
+  title: z.string().min(1),
 });
 
 export const documentSchema = namedSchema.extend({
@@ -34,7 +34,7 @@ export const documentSchema = namedSchema.extend({
   textUnitIds: z.array(z.string()).default([]),
   attributes: jsonObjectSchema.nullish(),
   createdAt: z.string().nullish(),
-  rawData: jsonObjectSchema.nullish()
+  rawData: jsonObjectSchema.nullish(),
 });
 
 export const textUnitSchema = identifiedSchema.extend({
@@ -44,7 +44,7 @@ export const textUnitSchema = identifiedSchema.extend({
   covariateIds: z.array(z.string()).default([]),
   nTokens: z.number().int().nonnegative().nullish(),
   documentId: z.string().nullish(),
-  attributes: jsonObjectSchema.nullish()
+  attributes: jsonObjectSchema.nullish(),
 });
 
 export const entitySchema = namedSchema.extend({
@@ -57,7 +57,7 @@ export const entitySchema = namedSchema.extend({
   frequency: z.number().int().nonnegative().nullish(),
   degree: z.number().int().nonnegative().nullish(),
   rank: z.number().nullish(),
-  attributes: jsonObjectSchema.nullish()
+  attributes: jsonObjectSchema.nullish(),
 });
 
 export const relationshipSchema = identifiedSchema.extend({
@@ -69,7 +69,7 @@ export const relationshipSchema = identifiedSchema.extend({
   combinedDegree: z.number().int().nonnegative().nullish(),
   rank: z.number().nullish(),
   textUnitIds: z.array(z.string()).default([]),
-  attributes: jsonObjectSchema.nullish()
+  attributes: jsonObjectSchema.nullish(),
 });
 
 export const covariateSchema = identifiedSchema.extend({
@@ -84,7 +84,7 @@ export const covariateSchema = identifiedSchema.extend({
   endDate: z.string().nullish(),
   sourceText: z.string().nullish(),
   textUnitIds: z.array(z.string()).default([]),
-  attributes: jsonObjectSchema.nullish()
+  attributes: jsonObjectSchema.nullish(),
 });
 
 export const communitySchema = namedSchema.extend({
@@ -98,12 +98,12 @@ export const communitySchema = namedSchema.extend({
   covariateIds: z.array(z.string()).default([]),
   attributes: jsonObjectSchema.nullish(),
   period: z.string().nullish(),
-  size: z.number().int().nonnegative().nullish()
+  size: z.number().int().nonnegative().nullish(),
 });
 
 export const findingSchema = z.object({
   summary: z.string(),
-  explanation: z.string().nullish()
+  explanation: z.string().nullish(),
 });
 
 export const communityReportSchema = namedSchema.extend({
@@ -120,7 +120,7 @@ export const communityReportSchema = namedSchema.extend({
   fullContentEmbedding: z.array(z.number()).nullish(),
   attributes: jsonObjectSchema.nullish(),
   period: z.string().nullish(),
-  size: z.number().int().nonnegative().nullish()
+  size: z.number().int().nonnegative().nullish(),
 });
 
 export const embeddingTargetKindSchema = z.enum([
@@ -129,7 +129,7 @@ export const embeddingTargetKindSchema = z.enum([
   "entity",
   "relationship",
   "community",
-  "community_report"
+  "community_report",
 ]);
 
 export const embeddingRecordSchema = identifiedSchema.extend({
@@ -140,7 +140,7 @@ export const embeddingRecordSchema = identifiedSchema.extend({
   dimensions: z.number().int().positive().nullish(),
   text: z.string().nullish(),
   metadata: jsonObjectSchema.nullish(),
-  createdAt: z.string().nullish()
+  createdAt: z.string().nullish(),
 });
 
 export const graphRagSnapshotSchema = z.object({
@@ -151,7 +151,7 @@ export const graphRagSnapshotSchema = z.object({
   covariates: z.array(covariateSchema).default([]),
   communities: z.array(communitySchema).default([]),
   communityReports: z.array(communityReportSchema).default([]),
-  embeddings: z.array(embeddingRecordSchema).default([])
+  embeddings: z.array(embeddingRecordSchema).default([]),
 });
 
 export type HumanReadableId = z.infer<typeof humanReadableIdSchema>;
@@ -181,7 +181,7 @@ export const graphRagTableNames = [
   "covariates",
   "communities",
   "communityReports",
-  "embeddings"
+  "embeddings",
 ] as const;
 
 export type GraphRagTableName = (typeof graphRagTableNames)[number];
