@@ -770,15 +770,13 @@ function parseRepositoryFileLimitFromUnknown(value: unknown): RepositoryFileLimi
 
 function createRepoService(useOpenAI: boolean | "auto", model?: string): GraphRagService {
   const shouldUseModel = useOpenAI !== false && Boolean(process.env.OPENAI_API_KEY);
-  return createMemoryGraphRagService({
-    ...(shouldUseModel
+  return createMemoryGraphRagService((shouldUseModel
       ? {
           model: new OpenAiChatModel({
             ...(model ? { model } : {}),
           }),
         }
-      : {}),
-  });
+      : {}));
 }
 
 function writeJson(response: ServerResponse, status: number, payload: unknown): void {

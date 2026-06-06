@@ -151,9 +151,7 @@ try {
 } catch (error) {
   console.log(`Model answer failed: ${error instanceof Error ? error.message : String(error)}`);
   console.log("Retrying in extractive mode.");
-  const fallbackService = createMemoryGraphRagService({
-    ...(embeddingModel ? { embeddingModel } : {}),
-  });
+  const fallbackService = createMemoryGraphRagService((embeddingModel ? { embeddingModel } : {}));
   await fallbackService.ingestSnapshot(await service.snapshot());
   result = await fallbackService.ask(query, {
     limit: 8,

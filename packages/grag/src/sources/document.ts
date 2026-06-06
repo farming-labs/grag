@@ -50,7 +50,7 @@ function inlineToDocument(
     text: inline.text,
     textUnitIds: [],
     attributes: {
-      ...(inline.attributes ?? {}),
+      ...inline.attributes,
       ...(sourceLabel !== undefined ? { sourceLabel } : {}),
     },
   };

@@ -71,7 +71,7 @@ export function chunkDocument(
       relationshipIds: [],
       covariateIds: [],
       attributes: {
-        ...(document.attributes ?? {}),
+        ...document.attributes,
         documentTitle: document.title,
         chunkOrdinal: ordinal,
         startWord: start,

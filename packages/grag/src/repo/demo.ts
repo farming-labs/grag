@@ -762,7 +762,7 @@ function annotateRepositorySnapshot(
     documents: snapshot.documents.map((document) => ({
       ...document,
       attributes: {
-        ...(document.attributes ?? {}),
+        ...document.attributes,
         ...baseAttributes,
         indexedFiles,
       },
@@ -770,35 +770,35 @@ function annotateRepositorySnapshot(
     textUnits: snapshot.textUnits.map((textUnit) => ({
       ...textUnit,
       attributes: {
-        ...(textUnit.attributes ?? {}),
+        ...textUnit.attributes,
         ...baseAttributes,
       },
     })),
     entities: snapshot.entities.map((entity) => ({
       ...entity,
       attributes: {
-        ...(entity.attributes ?? {}),
+        ...entity.attributes,
         ...baseAttributes,
       },
     })),
     relationships: snapshot.relationships.map((relationship) => ({
       ...relationship,
       attributes: {
-        ...(relationship.attributes ?? {}),
+        ...relationship.attributes,
         ...baseAttributes,
       },
     })),
     communities: snapshot.communities.map((community) => ({
       ...community,
       attributes: {
-        ...(community.attributes ?? {}),
+        ...community.attributes,
         ...baseAttributes,
       },
     })),
     communityReports: snapshot.communityReports.map((report) => ({
       ...report,
       attributes: {
-        ...(report.attributes ?? {}),
+        ...report.attributes,
         ...baseAttributes,
       },
     })),
@@ -816,7 +816,7 @@ async function runCommand(
     const child = spawn(command, args, {
       env: {
         ...process.env,
-        ...(options.env ?? {}),
+        ...options.env,
       },
       stdio: ["ignore", "pipe", "pipe"],
     });

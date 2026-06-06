@@ -383,7 +383,7 @@ export class GraphRagRetriever {
       options.textLimit ?? options.basicSearch?.limit ?? plannedLimit,
     );
     return {
-      ...(options.basicSearch ?? {}),
+      ...options.basicSearch,
       limit: textLimit,
       ...(options.basicSearch?.embeddingModel
         ? {}
@@ -1004,7 +1004,7 @@ function sourceKindBoost(sourcePaths: readonly string[], plan: GraphRagQueryPlan
     score -= 4.5;
   }
   if (
-    /package\.json$/.test(joined) &&
+    joined.endsWith('package.json') &&
     (plan.scope === "flow" || plan.intent === "impact" || plan.intent === "why")
   ) {
     score -= 2.2;

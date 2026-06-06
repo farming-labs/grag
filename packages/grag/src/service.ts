@@ -317,7 +317,7 @@ function toDocument(input: IngestTextDocumentInput): GraphRagDocument {
     text: input.text,
     textUnitIds: [],
     attributes: {
-      ...(input.attributes ?? {}),
+      ...input.attributes,
       sourcePath,
     },
   };

@@ -22,7 +22,7 @@ export async function loadDatabaseSource<Row extends RelationalRow>(
   return docs.map((doc, index) => ({
     ...doc,
     attributes: {
-      ...(doc.attributes ?? {}),
+      ...doc.attributes,
       sourceKind: "database",
       sourceTable: config.tableName,
       sourceRowId: rowId(rows[index], index, config.idColumn),

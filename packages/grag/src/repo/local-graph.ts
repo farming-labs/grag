@@ -1514,7 +1514,7 @@ function upsertEntity(
     }
     existing.attributes = {
       ...existing.attributes,
-      ...(input.attributes ?? {}),
+      ...input.attributes,
     };
     return;
   }
