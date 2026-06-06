@@ -14,18 +14,18 @@ A complete TypeScript implementation of the Microsoft GraphRAG data model and qu
 
 ### Microsoft GraphRAG (Python)
 
-| Capability | Microsoft GraphRAG | @farming-labs/grag |
-|---|---|---|
-| Language | Python only | TypeScript / Node.js |
-| Storage | Parquet / CSV files | Postgres, SQLite, MySQL, in-memory |
-| LLM provider lock-in | Azure OpenAI / OpenAI | Any: OpenAI, Anthropic/Claude, Azure, local |
-| GraphRAG data model | ✅ full | ✅ full, same artifact names |
-| Community detection | Leiden (external) | Label propagation (built-in, zero deps) |
-| Visual studio | None | ✅ grag studio — graph canvas, search panel |
-| CLI exploration | Limited | ✅ grag repo, grag retrieve, grag preview |
-| Incremental indexing | Rebuild-from-scratch | ✅ upsert-based, watermark-ready |
-| TypeScript types + Zod | ❌ | ✅ runtime-validated schemas |
-| npm install | ❌ | ✅ |
+| Capability             | Microsoft GraphRAG    | @farming-labs/grag                          |
+| ---------------------- | --------------------- | ------------------------------------------- |
+| Language               | Python only           | TypeScript / Node.js                        |
+| Storage                | Parquet / CSV files   | Postgres, SQLite, MySQL, in-memory          |
+| LLM provider lock-in   | Azure OpenAI / OpenAI | Any: OpenAI, Anthropic/Claude, Azure, local |
+| GraphRAG data model    | ✅ full               | ✅ full, same artifact names                |
+| Community detection    | Leiden (external)     | Label propagation (built-in, zero deps)     |
+| Visual studio          | None                  | ✅ grag studio — graph canvas, search panel |
+| CLI exploration        | Limited               | ✅ grag repo, grag retrieve, grag preview   |
+| Incremental indexing   | Rebuild-from-scratch  | ✅ upsert-based, watermark-ready            |
+| TypeScript types + Zod | ❌                    | ✅ runtime-validated schemas                |
+| npm install            | ❌                    | ✅                                          |
 
 **Gap filled:** Every TypeScript backend that wants GraphRAG must use Python as a sidecar or rebuild the data model by hand. This package closes that gap entirely.
 
@@ -124,7 +124,11 @@ Every artifact stored at every phase is fully linked — neighborhoods, local se
 
 ```ts
 import { MemoryGraphRagStore } from "@farming-labs/grag";
-import { createOpenAiPipeline, OpenAiChatModel, GlobalSearchEngine } from "@farming-labs/grag/openai";
+import {
+  createOpenAiPipeline,
+  OpenAiChatModel,
+  GlobalSearchEngine,
+} from "@farming-labs/grag/openai";
 
 const store = new MemoryGraphRagStore();
 const pipeline = createOpenAiPipeline({ store });
@@ -151,12 +155,12 @@ Turns any local or remote Git repository into a queryable knowledge graph. Usefu
 
 ### 9. Multiple storage adapters
 
-| Store | Use case |
-|---|---|
-| `MemoryGraphRagStore` | Tests and prototypes — zero setup |
-| `SqlGraphRagStore` | Postgres / SQLite / MySQL via Kysely |
-| `OrmGraphRagStore` | Via `@farming-labs/orm` — swap drivers without changing schema |
-| Custom | Implement `GraphRagStore` (11 methods) and use any backend |
+| Store                 | Use case                                                       |
+| --------------------- | -------------------------------------------------------------- |
+| `MemoryGraphRagStore` | Tests and prototypes — zero setup                              |
+| `SqlGraphRagStore`    | Postgres / SQLite / MySQL via Kysely                           |
+| `OrmGraphRagStore`    | Via `@farming-labs/orm` — swap drivers without changing schema |
+| Custom                | Implement `GraphRagStore` (11 methods) and use any backend     |
 
 ### 10. Incremental indexing
 
@@ -166,13 +170,13 @@ Every store method is `upsert`-based. Re-indexing a document that changed is a p
 
 ## What is still on the roadmap
 
-| Feature | Status |
-|---|---|
-| Postgres `pgvector` adapter | Planned — JSON vector fallback works today |
-| Microsoft GraphRAG parquet/CSV import | Planned |
-| Streaming global/local search | Planned |
-| Leiden algorithm for community detection | Planned (label propagation is the default) |
-| Incremental sync watermarks for relational sources | Planned |
+| Feature                                            | Status                                     |
+| -------------------------------------------------- | ------------------------------------------ |
+| Postgres `pgvector` adapter                        | Planned — JSON vector fallback works today |
+| Microsoft GraphRAG parquet/CSV import              | Planned                                    |
+| Streaming global/local search                      | Planned                                    |
+| Leiden algorithm for community detection           | Planned (label propagation is the default) |
+| Incremental sync watermarks for relational sources | Planned                                    |
 
 ---
 

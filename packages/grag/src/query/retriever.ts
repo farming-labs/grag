@@ -4,7 +4,7 @@ import {
   type ChatMessage,
   type ChatModel,
   type ChatOptions,
-  type EmbeddingModel
+  type EmbeddingModel,
 } from "../llm.js";
 import type { Entity, GraphRagSnapshot, JsonObject, Relationship, TextUnit } from "../model.js";
 import type { GraphRagStore } from "../storage/types.js";
@@ -12,12 +12,12 @@ import { basicSearch, type BasicSearchOptions } from "./basic-search.js";
 import {
   retrieveFromGraphRagSnapshot,
   type GraphRagRetrievalHit,
-  type GraphRagRetrievalHitKind
+  type GraphRagRetrievalHitKind,
 } from "../studio/retrieval.js";
 import {
   planGraphRagQuery,
   summarizeGraphRagQueryPlan,
-  type GraphRagQueryPlan
+  type GraphRagQueryPlan,
 } from "./planner.js";
 
 export type GraphRagHitChannel = "graph" | "lexical" | "neighbor" | "reference" | "vector";
@@ -185,8 +185,8 @@ export class GraphRagRetriever {
       {
         stage: "plan",
         detail: summarizeGraphRagQueryPlan(plan),
-        count: plan.entities.length
-      }
+        count: plan.entities.length,
+      },
     ];
     const snapshotStarted = Date.now();
     const snapshot = await this.store.getSnapshot();
@@ -195,91 +195,111 @@ export class GraphRagRetriever {
       stage: "load_snapshot",
       detail: "Loaded GraphRAG snapshot from the configured store.",
       count: snapshot.textUnits.length,
-      durationMs: loadSnapshotMs
+      durationMs: loadSnapshotMs,
     });
     const limit = normalizeLimit(options.limit);
 
     const graphStarted = Date.now();
-    const graphLimit = normalizeLimit(options.graphLimit ?? Math.ceil(limit * plan.searchFocus.graphLimitMultiplier));
+    const graphLimit = normalizeLimit(
+      options.graphLimit ?? Math.ceil(limit * plan.searchFocus.graphLimitMultiplier),
+    );
     const graphResult = retrieveFromGraphRagSnapshot(snapshot, query, {
-      limit: graphLimit
+      limit: graphLimit,
     });
     const graphSearchMs = Date.now() - graphStarted;
     trace.push({
       stage: "graph_search",
       detail: `Searched entities, relationships, text units, and community reports with graph limit ${graphLimit}.`,
       count: graphResult.hits.length,
-      durationMs: graphSearchMs
+      durationMs: graphSearchMs,
     });
 
     const textStarted = Date.now();
     const includeTextSearch = options.includeTextSearch ?? plan.searchFocus.includeTextSearch;
-    const textHits = includeTextSearch === false
-      ? []
-      : await basicSearch(this.store, query, this.basicSearchOptions(options, limit, plan));
+    const textHits =
+      includeTextSearch === false
+        ? []
+        : await basicSearch(this.store, query, this.basicSearchOptions(options, limit, plan));
     const textSearchMs = Date.now() - textStarted;
     trace.push({
       stage: includeTextSearch === false ? "text_search_skipped" : "text_search",
-      detail: includeTextSearch === false
-        ? "Skipped direct text-unit search for this query."
-        : "Searched text units directly with lexical or vector search.",
+      detail:
+        includeTextSearch === false
+          ? "Skipped direct text-unit search for this query."
+          : "Searched text units directly with lexical or vector search.",
       count: textHits.length,
-      durationMs: textSearchMs
+      durationMs: textSearchMs,
     });
 
     const referenceStarted = Date.now();
     const referenceHits = referenceSearch(snapshot, query, plan, normalizeLimit(limit * 3));
     trace.push({
       stage: "reference_search",
-      detail: "Resolved exact code references, source-path aliases, and high-salience query phrases.",
+      detail:
+        "Resolved exact code references, source-path aliases, and high-salience query phrases.",
       count: referenceHits.length,
-      durationMs: Date.now() - referenceStarted
+      durationMs: Date.now() - referenceStarted,
     });
 
     const neighborStarted = Date.now();
-    const neighborHits = expandNeighborHits(snapshot, [
-      ...graphResult.hits.map((hit) => fromGraphHit(hit)),
-      ...textHits.map((hit) => fromTextUnitHit(hit.textUnit, hit.score, hit.scoreType)),
-      ...referenceHits
-    ], query, plan, normalizeLimit(limit * 4));
+    const neighborHits = expandNeighborHits(
+      snapshot,
+      [
+        ...graphResult.hits.map((hit) => fromGraphHit(hit)),
+        ...textHits.map((hit) => fromTextUnitHit(hit.textUnit, hit.score, hit.scoreType)),
+        ...referenceHits,
+      ],
+      query,
+      plan,
+      normalizeLimit(limit * 4),
+    );
     trace.push({
       stage: "neighbor_expand",
-      detail: "Expanded from seed hits into graph-linked entities, relationships, and related source chunks.",
+      detail:
+        "Expanded from seed hits into graph-linked entities, relationships, and related source chunks.",
       count: neighborHits.length,
-      durationMs: Date.now() - neighborStarted
+      durationMs: Date.now() - neighborStarted,
     });
 
-    const hits = mergeHits([
-      ...graphResult.hits.map((hit) => fromGraphHit(hit)),
-      ...textHits.map((hit) => fromTextUnitHit(hit.textUnit, hit.score, hit.scoreType)),
-      ...referenceHits,
-      ...neighborHits
-    ], limit, plan);
+    const hits = mergeHits(
+      [
+        ...graphResult.hits.map((hit) => fromGraphHit(hit)),
+        ...textHits.map((hit) => fromTextUnitHit(hit.textUnit, hit.score, hit.scoreType)),
+        ...referenceHits,
+        ...neighborHits,
+      ],
+      limit,
+      plan,
+    );
     trace.push({
       stage: "merge",
       detail: "Merged graph, lexical, and vector channels into ranked hits.",
-      count: hits.length
+      count: hits.length,
     });
     const { citations, citationIdsByHitId } = buildCitations(hits);
     trace.push({
       stage: "citations",
       detail: "Grouped hits by source path into answer citations.",
-      count: citations.length
+      count: citations.length,
     });
     const hitsWithCitations = hits.map((hit) => ({
       ...hit,
-      citationIds: citationIdsByHitId.get(hit.id) ?? []
+      citationIds: citationIdsByHitId.get(hit.id) ?? [],
     }));
     const context = buildDashboardContext(
       hitsWithCitations,
       citations,
-      options.maxContextChars ?? plan.searchFocus.maxContextChars ?? defaultContextChars
+      options.maxContextChars ?? plan.searchFocus.maxContextChars ?? defaultContextChars,
     );
     const graph = buildGraphSelection(snapshot, hitsWithCitations, options);
     trace.push({
       stage: "graph_selection",
       detail: "Selected graph nodes, edges, communities, and text units for UI highlighting.",
-      count: graph.entityIds.length + graph.relationshipIds.length + graph.textUnitIds.length + graph.communityIds.length
+      count:
+        graph.entityIds.length +
+        graph.relationshipIds.length +
+        graph.textUnitIds.length +
+        graph.communityIds.length,
     });
 
     return {
@@ -301,16 +321,16 @@ export class GraphRagRetriever {
           relationships: snapshot.relationships.length,
           communities: snapshot.communities.length,
           communityReports: snapshot.communityReports.length,
-          embeddings: snapshot.embeddings.length
-        }
+          embeddings: snapshot.embeddings.length,
+        },
       },
       timings: {
         loadSnapshotMs,
         graphSearchMs,
         textSearchMs,
-        totalMs: Date.now() - started
+        totalMs: Date.now() - started,
       },
-      trace
+      trace,
     };
   }
 
@@ -319,13 +339,15 @@ export class GraphRagRetriever {
     const model = options.model ?? this.model;
     if (!model) {
       if (options.requireModel) {
-        throw new Error("GraphRagRetriever.ask requires a ChatModel. Pass model or set requireModel to false.");
+        throw new Error(
+          "GraphRagRetriever.ask requires a ChatModel. Pass model or set requireModel to false.",
+        );
       }
 
       return {
         ...search,
         answer: buildExtractiveAnswer(search),
-        mode: "extractive"
+        mode: "extractive",
       };
     }
 
@@ -333,28 +355,41 @@ export class GraphRagRetriever {
       return {
         ...search,
         answer: "I could not find enough graph evidence to answer that from the current index.",
-        mode: "model"
+        mode: "model",
       };
     }
 
-    const completion = await model.complete(buildAnswerMessages(query, search, options), chatOptions(options));
+    const completion = await model.complete(
+      buildAnswerMessages(query, search, options),
+      chatOptions(options),
+    );
     const usage = typeof completion === "string" ? undefined : completion.usage;
 
     return {
       ...search,
       answer: completionContent(completion),
       mode: "model",
-      ...(usage ? { usage } : {})
+      ...(usage ? { usage } : {}),
     };
   }
 
-  private basicSearchOptions(options: GraphRagSearchOptions, limit: number, plan?: GraphRagQueryPlan): BasicSearchOptions {
+  private basicSearchOptions(
+    options: GraphRagSearchOptions,
+    limit: number,
+    plan?: GraphRagQueryPlan,
+  ): BasicSearchOptions {
     const plannedLimit = plan ? Math.ceil(limit * plan.searchFocus.textLimitMultiplier) : limit;
-    const textLimit = normalizeLimit(options.textLimit ?? options.basicSearch?.limit ?? plannedLimit);
+    const textLimit = normalizeLimit(
+      options.textLimit ?? options.basicSearch?.limit ?? plannedLimit,
+    );
     return {
-      ...(options.basicSearch ?? {}),
+      ...options.basicSearch,
       limit: textLimit,
-      ...(options.basicSearch?.embeddingModel ? {} : this.embeddingModel ? { embeddingModel: this.embeddingModel } : {})
+      ...(options.basicSearch?.embeddingModel
+        ? {}
+        : this.embeddingModel
+          ? { embeddingModel: this.embeddingModel }
+          : {}),
     };
   }
 }
@@ -373,11 +408,15 @@ function fromGraphHit(hit: GraphRagRetrievalHit): MutableSearchHit {
     channels: new Set(["graph"]),
     sourcePaths: new Set(hit.sourcePaths),
     entityIds: new Set(hit.entityIds),
-    relationshipIds: new Set(hit.relationshipIds)
+    relationshipIds: new Set(hit.relationshipIds),
   };
 }
 
-function fromTextUnitHit(textUnit: TextUnit, score: number, scoreType: "vector" | "lexical"): MutableSearchHit {
+function fromTextUnitHit(
+  textUnit: TextUnit,
+  score: number,
+  scoreType: "vector" | "lexical",
+): MutableSearchHit {
   return {
     id: textUnit.id,
     kind: "text_unit",
@@ -387,7 +426,7 @@ function fromTextUnitHit(textUnit: TextUnit, score: number, scoreType: "vector" 
     channels: new Set([scoreType]),
     sourcePaths: new Set(sourcePathsFromAttributes(textUnit.attributes)),
     entityIds: new Set(textUnit.entityIds),
-    relationshipIds: new Set(textUnit.relationshipIds)
+    relationshipIds: new Set(textUnit.relationshipIds),
   };
 }
 
@@ -395,17 +434,21 @@ function referenceSearch(
   snapshot: GraphRagSnapshot,
   query: string,
   plan: GraphRagQueryPlan,
-  limit: number
+  limit: number,
 ): MutableSearchHit[] {
   const anchors = buildQueryAnchors(query, plan);
   const terms = importantQueryTerms(query);
   const textUnitHits = snapshot.textUnits
     .map((textUnit) => ({
       textUnit,
-      score: scoreTextUnitReference(textUnit, anchors, terms, plan)
+      score: scoreTextUnitReference(textUnit, anchors, terms, plan),
     }))
     .filter((entry) => entry.score >= 1.4)
-    .sort((left, right) => right.score - left.score || textUnitTitle(left.textUnit).localeCompare(textUnitTitle(right.textUnit)))
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        textUnitTitle(left.textUnit).localeCompare(textUnitTitle(right.textUnit)),
+    )
     .slice(0, limit)
     .map((entry) => ({
       id: entry.textUnit.id,
@@ -416,7 +459,7 @@ function referenceSearch(
       channels: new Set<GraphRagHitChannel>(["reference"]),
       sourcePaths: new Set(sourcePathsFromAttributes(entry.textUnit.attributes)),
       entityIds: new Set(entry.textUnit.entityIds),
-      relationshipIds: new Set(entry.textUnit.relationshipIds)
+      relationshipIds: new Set(entry.textUnit.relationshipIds),
     }));
 
   return textUnitHits
@@ -429,13 +472,15 @@ function expandNeighborHits(
   seeds: readonly MutableSearchHit[],
   query: string,
   plan: GraphRagQueryPlan,
-  limit: number
+  limit: number,
 ): MutableSearchHit[] {
   const anchors = buildQueryAnchors(query, plan);
   const terms = importantQueryTerms(query);
   const textUnitById = new Map(snapshot.textUnits.map((textUnit) => [textUnit.id, textUnit]));
   const entityById = new Map(snapshot.entities.map((entity) => [entity.id, entity]));
-  const relationshipsById = new Map(snapshot.relationships.map((relationship) => [relationship.id, relationship]));
+  const relationshipsById = new Map(
+    snapshot.relationships.map((relationship) => [relationship.id, relationship]),
+  );
   const relationshipsByEntityId = new Map<string, Relationship[]>();
   const seedTextUnitIds = new Set<string>();
   const seedEntityIds = new Set<string>();
@@ -502,10 +547,14 @@ function expandNeighborHits(
     .filter((textUnit): textUnit is TextUnit => Boolean(textUnit))
     .map((textUnit) => ({
       textUnit,
-      score: 0.72 + scoreTextUnitReference(textUnit, anchors, terms, plan) * 0.7
+      score: 0.72 + scoreTextUnitReference(textUnit, anchors, terms, plan) * 0.7,
     }))
     .filter((entry) => entry.score >= 1.15)
-    .sort((left, right) => right.score - left.score || textUnitTitle(left.textUnit).localeCompare(textUnitTitle(right.textUnit)))
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        textUnitTitle(left.textUnit).localeCompare(textUnitTitle(right.textUnit)),
+    )
     .slice(0, limit)
     .map((entry) => ({
       id: entry.textUnit.id,
@@ -516,14 +565,14 @@ function expandNeighborHits(
       channels: new Set<GraphRagHitChannel>(["neighbor"]),
       sourcePaths: new Set(sourcePathsFromAttributes(entry.textUnit.attributes)),
       entityIds: new Set(entry.textUnit.entityIds),
-      relationshipIds: new Set(entry.textUnit.relationshipIds)
+      relationshipIds: new Set(entry.textUnit.relationshipIds),
     }));
 }
 
 function mergeHits(
   hits: readonly MutableSearchHit[],
   limit: number,
-  plan: GraphRagQueryPlan
+  plan: GraphRagQueryPlan,
 ): Array<Omit<GraphRagSearchHit, "citationIds">> {
   const merged = new Map<string, MutableSearchHit>();
   for (const hit of hits) {
@@ -552,9 +601,14 @@ function mergeHits(
       channels: sortedStrings(hit.channels) as GraphRagHitChannel[],
       sourcePaths: sortedStrings(hit.sourcePaths),
       entityIds: sortedStrings(hit.entityIds),
-      relationshipIds: sortedStrings(hit.relationshipIds)
+      relationshipIds: sortedStrings(hit.relationshipIds),
     }))
-    .sort((left, right) => right.score - left.score || channelRank(right.channels) - channelRank(left.channels) || left.title.localeCompare(right.title))
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        channelRank(right.channels) - channelRank(left.channels) ||
+        left.title.localeCompare(right.title),
+    )
     .slice(0, limit);
 }
 
@@ -584,7 +638,9 @@ function plannedHitScore(hit: MutableSearchHit, plan: GraphRagQueryPlan): number
   for (const entity of plan.entities) {
     const needle = entity.value.toLowerCase();
     const titleMatch = hit.title.toLowerCase().includes(needle);
-    const sourceMatch = Array.from(hit.sourcePaths).some((sourcePath) => sourcePath.toLowerCase().includes(needle));
+    const sourceMatch = Array.from(hit.sourcePaths).some((sourcePath) =>
+      sourcePath.toLowerCase().includes(needle),
+    );
     if (titleMatch || sourceMatch) {
       score += 0.24 * entity.confidence;
     }
@@ -603,7 +659,7 @@ function scoreTextUnitReference(
   textUnit: TextUnit,
   anchors: readonly QueryAnchor[],
   terms: readonly string[],
-  plan: GraphRagQueryPlan
+  plan: GraphRagQueryPlan,
 ): number {
   const title = textUnitTitle(textUnit);
   const sourcePaths = sourcePathsFromAttributes(textUnit.attributes);
@@ -636,7 +692,9 @@ function scoreTextUnitReference(
   if (
     terms.includes("session") &&
     (terms.includes("cookie") || terms.includes("prefix")) &&
-    !/\b(cookie|cookies|session|sessiontoken|setsessioncookie|getsessioncookie|deletesessioncookie)\b/.test(`${sourceHaystack} ${contentHaystack}`)
+    !/\b(cookie|cookies|session|sessiontoken|setsessioncookie|getsessioncookie|deletesessioncookie)\b/.test(
+      `${sourceHaystack} ${contentHaystack}`,
+    )
   ) {
     score -= 8;
   }
@@ -645,7 +703,12 @@ function scoreTextUnitReference(
     score += 1.2;
   }
 
-  if (plan.scope === "flow" && sourcePaths.some((path) => /\/(?:api|plugins|adapters|db|oauth2|cookies|integrations)\//.test(path))) {
+  if (
+    plan.scope === "flow" &&
+    sourcePaths.some((path) =>
+      /\/(?:api|plugins|adapters|db|oauth2|cookies|integrations)\//.test(path),
+    )
+  ) {
     score += 0.8;
   }
 
@@ -656,15 +719,12 @@ function scoreEntityReference(
   entity: Entity,
   anchors: readonly QueryAnchor[],
   terms: readonly string[],
-  plan: GraphRagQueryPlan
+  plan: GraphRagQueryPlan,
 ): number {
   const sourcePaths = sourcePathsFromAttributes(entity.attributes);
-  const haystack = normalizeSearchText([
-    entity.title,
-    entity.type ?? "",
-    entity.description ?? "",
-    sourcePaths.join(" ")
-  ].join(" "));
+  const haystack = normalizeSearchText(
+    [entity.title, entity.type ?? "", entity.description ?? "", sourcePaths.join(" ")].join(" "),
+  );
   let score = sourceKindBoost(sourcePaths, plan) * 0.72 + Number(entity.rank ?? 0) * 0.03;
 
   for (const anchor of anchors) {
@@ -722,32 +782,59 @@ function addDomainAnchors(anchors: QueryAnchor[], terms: readonly string[]): voi
   }
 
   if (has("session") && (has("cookie") || has("cookies"))) {
-    addMany([
-      "cookies/index",
-      "cookies/check-cookies",
-      "cookies/cookie-utils",
-      "sessionToken",
-      "setSessionCookie",
-      "getSessionCookie",
-      "deleteSessionCookie",
-      "integrations/next-js"
-    ], 4.2);
+    addMany(
+      [
+        "cookies/index",
+        "cookies/check-cookies",
+        "cookies/cookie-utils",
+        "sessionToken",
+        "setSessionCookie",
+        "getSessionCookie",
+        "deleteSessionCookie",
+        "integrations/next-js",
+      ],
+      4.2,
+    );
   }
 
   if (has("plugin") && (has("client") || has("api") || has("apis"))) {
-    addMany(["client/plugins/infer-plugin", "client/plugins/index", "client/plugins", "infer-plugin", "BetterAuthClientPlugin"], 2.65);
+    addMany(
+      [
+        "client/plugins/infer-plugin",
+        "client/plugins/index",
+        "client/plugins",
+        "infer-plugin",
+        "BetterAuthClientPlugin",
+      ],
+      2.65,
+    );
   }
 
   if (has("prisma") && (has("schema") || has("model") || has("adapter"))) {
     addMany(["prisma-adapter", "prisma.ts", "generators/prisma", "getAuthTables"], 2.2);
   }
 
-  if (has("drizzle") && (has("schema") || has("model") || has("adapter") || has("generation") || has("generate"))) {
-    addMany(["drizzle-adapter", "generators/drizzle", "generateDrizzleSchema", "commands/generate"], 2.75);
+  if (
+    has("drizzle") &&
+    (has("schema") || has("model") || has("adapter") || has("generation") || has("generate"))
+  ) {
+    addMany(
+      ["drizzle-adapter", "generators/drizzle", "generateDrizzleSchema", "commands/generate"],
+      2.75,
+    );
   }
 
   if (has("kysely") && (has("migration") || has("migrate") || has("adapter") || has("schema"))) {
-    addMany(["kysely-adapter", "generators/kysely", "db/get-migration", "getMigrations", "generateMigrations"], 2.9);
+    addMany(
+      [
+        "kysely-adapter",
+        "generators/kysely",
+        "db/get-migration",
+        "getMigrations",
+        "generateMigrations",
+      ],
+      2.9,
+    );
   }
 
   if (has("session") && (has("schema") || has("table") || has("change"))) {
@@ -755,7 +842,16 @@ function addDomainAnchors(anchors: QueryAnchor[], terms: readonly string[]): voi
   }
 
   if (has("organization") && (has("invitation") || has("invite") || has("permission"))) {
-    addMany(["organization/routes", "crud-invites", "crud-members", "has-permission", "organization/access"], 2.2);
+    addMany(
+      [
+        "organization/routes",
+        "crud-invites",
+        "crud-members",
+        "has-permission",
+        "organization/access",
+      ],
+      2.2,
+    );
   }
 
   if (has("migrate") || has("migration")) {
@@ -764,7 +860,16 @@ function addDomainAnchors(anchors: QueryAnchor[], terms: readonly string[]): voi
   }
 
   if (has("callback") && (has("social") || has("provider") || has("account"))) {
-    addMany(["routes/callback", "oauth2/link-account", "link-account", "routes/sign-in", "setSessionCookie"], 2.45);
+    addMany(
+      [
+        "routes/callback",
+        "oauth2/link-account",
+        "link-account",
+        "routes/sign-in",
+        "setSessionCookie",
+      ],
+      2.45,
+    );
   }
 }
 
@@ -783,20 +888,22 @@ function pushAnchor(anchors: QueryAnchor[], value: string, weight: number): void
   anchors.push({
     value,
     normalized,
-    weight
+    weight,
   });
 }
 
 function importantQueryTerms(query: string): string[] {
-  return Array.from(new Set(
-    query
-      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-      .toLowerCase()
-      .split(/[^a-z0-9]+/)
-      .map(stemQueryTerm)
-      .filter((term) => term.length >= 2)
-      .filter((term) => !QUERY_STOPWORDS.has(term))
-  )).slice(0, 20);
+  return Array.from(
+    new Set(
+      query
+        .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+        .toLowerCase()
+        .split(/[^a-z0-9]+/)
+        .map(stemQueryTerm)
+        .filter((term) => term.length >= 2)
+        .filter((term) => !QUERY_STOPWORDS.has(term)),
+    ),
+  ).slice(0, 20);
 }
 
 const QUERY_STOPWORDS = new Set([
@@ -832,7 +939,7 @@ const QUERY_STOPWORDS = new Set([
   "where",
   "which",
   "why",
-  "with"
+  "with",
 ]);
 
 function stemQueryTerm(term: string): string {
@@ -870,7 +977,7 @@ function normalizeSearchText(value: string): string {
 function camelCasePhrase(value: string): string {
   const parts = value.split(/\s+/).filter(Boolean);
   return parts
-    .map((part, index) => index === 0 ? part : `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .map((part, index) => (index === 0 ? part : `${part.charAt(0).toUpperCase()}${part.slice(1)}`))
     .join("");
 }
 
@@ -896,13 +1003,19 @@ function sourceKindBoost(sourcePaths: readonly string[], plan: GraphRagQueryPlan
   if (/\.github\//.test(joined)) {
     score -= 4.5;
   }
-  if (/package\.json$/.test(joined) && (plan.scope === "flow" || plan.intent === "impact" || plan.intent === "why")) {
+  if (
+    joined.endsWith("package.json") &&
+    (plan.scope === "flow" || plan.intent === "impact" || plan.intent === "why")
+  ) {
     score -= 2.2;
   }
   if (/\.(?:test|spec)\.[tj]sx?$|\/test\//.test(joined)) {
     score -= 1.15;
   }
-  if (/docs\/content\//.test(joined) && (plan.scope === "flow" || plan.intent === "impact" || plan.intent === "where")) {
+  if (
+    /docs\/content\//.test(joined) &&
+    (plan.scope === "flow" || plan.intent === "impact" || plan.intent === "where")
+  ) {
     score -= 0.72;
   }
   if (/examples\//.test(joined) && (plan.scope === "flow" || plan.intent === "where")) {
@@ -922,8 +1035,12 @@ function textUnitTitle(textUnit: TextUnit): string {
 
 function entityIdsForRelationship(relationship: Relationship): string[] {
   return [
-    typeof relationship.attributes?.sourceEntityId === "string" ? relationship.attributes.sourceEntityId : "",
-    typeof relationship.attributes?.targetEntityId === "string" ? relationship.attributes.targetEntityId : ""
+    typeof relationship.attributes?.sourceEntityId === "string"
+      ? relationship.attributes.sourceEntityId
+      : "",
+    typeof relationship.attributes?.targetEntityId === "string"
+      ? relationship.attributes.targetEntityId
+      : "",
   ].filter(Boolean);
 }
 
@@ -937,7 +1054,7 @@ function cloneMutableHit(hit: MutableSearchHit): MutableSearchHit {
     channels: new Set(hit.channels),
     sourcePaths: new Set(hit.sourcePaths),
     entityIds: new Set(hit.entityIds),
-    relationshipIds: new Set(hit.relationshipIds)
+    relationshipIds: new Set(hit.relationshipIds),
   };
 }
 
@@ -957,7 +1074,7 @@ function buildCitations(hits: ReadonlyArray<Omit<GraphRagSearchHit, "citationIds
       snippets: [],
       hitIds: new Set(),
       entityIds: new Set(),
-      relationshipIds: new Set()
+      relationshipIds: new Set(),
     };
     seed.hitIds.add(hit.id);
     for (const sourcePath of hit.sourcePaths) seed.sourcePaths.add(sourcePath);
@@ -980,7 +1097,7 @@ function buildCitations(hits: ReadonlyArray<Omit<GraphRagSearchHit, "citationIds
       snippets: seed.snippets,
       hitIds: sortedStrings(seed.hitIds),
       entityIds: sortedStrings(seed.entityIds),
-      relationshipIds: sortedStrings(seed.relationshipIds)
+      relationshipIds: sortedStrings(seed.relationshipIds),
     };
   });
 
@@ -998,11 +1115,12 @@ function buildCitations(hits: ReadonlyArray<Omit<GraphRagSearchHit, "citationIds
 function buildDashboardContext(
   hits: readonly GraphRagSearchHit[],
   citations: readonly GraphRagCitation[],
-  maxChars: number
+  maxChars: number,
 ): string {
   const citationById = new Map(citations.map((citation) => [citation.id, citation]));
   const blocks = hits.map((hit, index) => {
-    const citationLabels = hit.citationIds.length > 0 ? hit.citationIds.map((id) => `[${id}]`).join(" ") : "[uncited]";
+    const citationLabels =
+      hit.citationIds.length > 0 ? hit.citationIds.map((id) => `[${id}]`).join(" ") : "[uncited]";
     const sourcePaths = hit.citationIds
       .flatMap((id) => citationById.get(id)?.sourcePaths ?? [])
       .slice(0, 4);
@@ -1010,8 +1128,10 @@ function buildDashboardContext(
     return [
       `${index + 1}. ${citationLabels} ${hit.kind} ${hit.title} (${hit.score})`,
       hit.text,
-      sources
-    ].filter(Boolean).join("\n");
+      sources,
+    ]
+      .filter(Boolean)
+      .join("\n");
   });
   return truncate(blocks.join("\n\n"), Math.max(1_000, maxChars));
 }
@@ -1019,14 +1139,16 @@ function buildDashboardContext(
 function buildGraphSelection(
   snapshot: GraphRagSnapshot,
   hits: readonly GraphRagSearchHit[],
-  options: GraphRagSearchOptions
+  options: GraphRagSearchOptions,
 ): GraphRagGraphSelection {
   const entityIds = new Set<string>();
   const relationshipIds = new Set<string>();
   const textUnitIds = new Set<string>();
   const communityIds = new Set<string>();
   const entityById = new Map(snapshot.entities.map((entity) => [entity.id, entity]));
-  const relationshipById = new Map(snapshot.relationships.map((relationship) => [relationship.id, relationship]));
+  const relationshipById = new Map(
+    snapshot.relationships.map((relationship) => [relationship.id, relationship]),
+  );
   const maxEntities = boundedCount(options.maxGraphEntities, 64);
   const maxRelationships = boundedCount(options.maxGraphRelationships, 96);
   const maxTextUnits = boundedCount(options.maxGraphTextUnits, 24);
@@ -1044,23 +1166,29 @@ function buildGraphSelection(
         communityIds.add(communityId);
       }
     }
-    for (const relationshipId of rankRelationshipIds(hit.relationshipIds, relationshipById).slice(0, 24)) {
+    for (const relationshipId of rankRelationshipIds(hit.relationshipIds, relationshipById).slice(
+      0,
+      24,
+    )) {
       relationshipIds.add(relationshipId);
     }
   }
 
   return {
     entityIds: rankEntityIds(sortedStrings(entityIds), entityById).slice(0, maxEntities),
-    relationshipIds: rankRelationshipIds(sortedStrings(relationshipIds), relationshipById).slice(0, maxRelationships),
+    relationshipIds: rankRelationshipIds(sortedStrings(relationshipIds), relationshipById).slice(
+      0,
+      maxRelationships,
+    ),
     textUnitIds: sortedStrings(textUnitIds).slice(0, maxTextUnits),
-    communityIds: sortedStrings(communityIds)
+    communityIds: sortedStrings(communityIds),
   };
 }
 
 function buildAnswerMessages(
   query: string,
   search: GraphRagSearchResult,
-  options: GraphRagAskOptions
+  options: GraphRagAskOptions,
 ): ChatMessage[] {
   const style = options.responseStyle ?? "a concise dashboard-ready answer with citations";
   const extra = options.systemPrompt ? `\n\nAdditional instruction:\n${options.systemPrompt}` : "";
@@ -1072,8 +1200,10 @@ function buildAnswerMessages(
         "Answer only from the supplied graph context.",
         "Cite evidence with bracketed citation ids like [S1].",
         "If the context is insufficient, say what is missing instead of guessing.",
-        extra
-      ].filter(Boolean).join("\n")
+        extra,
+      ]
+        .filter(Boolean)
+        .join("\n"),
     },
     {
       role: "user",
@@ -1082,9 +1212,9 @@ function buildAnswerMessages(
         `Question plan:\n${summarizeGraphRagQueryPlan(search.plan)}`,
         `Response style:\n${style}`,
         `Graph context:\n${search.context}`,
-        `Available citations:\n${search.citations.map((citation) => `${citation.id}: ${citation.title} (${citation.sourcePaths.join(", ") || "no source path"})`).join("\n")}`
-      ].join("\n\n")
-    }
+        `Available citations:\n${search.citations.map((citation) => `${citation.id}: ${citation.title} (${citation.sourcePaths.join(", ") || "no source path"})`).join("\n")}`,
+      ].join("\n\n"),
+    },
   ];
 }
 
@@ -1095,7 +1225,8 @@ function buildExtractiveAnswer(search: GraphRagSearchResult): string {
 
   const terms = importantQueryTerms(search.query);
   const topHits = search.hits.slice(0, 6).map((hit) => {
-    const citation = hit.citationIds.length > 0 ? ` ${hit.citationIds.map((id) => `[${id}]`).join(" ")}` : "";
+    const citation =
+      hit.citationIds.length > 0 ? ` ${hit.citationIds.map((id) => `[${id}]`).join(" ")}` : "";
     const source = hit.sourcePaths[0] ?? hit.title;
     const channels = hit.channels.length > 0 ? ` via ${hit.channels.join("+")}` : "";
     return `- ${source}${channels}: ${relevantEvidenceSnippet(hit.text, terms, 360)}${citation}`;
@@ -1104,14 +1235,14 @@ function buildExtractiveAnswer(search: GraphRagSearchResult): string {
     `Found ${search.hits.length} relevant GraphRAG result${search.hits.length === 1 ? "" : "s"} for "${search.query}".`,
     `Plan: ${summarizeGraphRagQueryPlan(search.plan)}.`,
     "Strongest evidence:",
-    ...topHits
+    ...topHits,
   ].join("\n");
 }
 
 function chatOptions(options: GraphRagAskOptions): ChatOptions {
   return {
     ...(options.temperature !== undefined ? { temperature: options.temperature } : {}),
-    ...(options.maxTokens !== undefined ? { maxTokens: options.maxTokens } : {})
+    ...(options.maxTokens !== undefined ? { maxTokens: options.maxTokens } : {}),
   };
 }
 
@@ -1121,15 +1252,19 @@ function sourcePathsFromAttributes(attributes: JsonObject | null | undefined): s
   }
 
   const sourcePath = typeof attributes.sourcePath === "string" ? [attributes.sourcePath] : [];
-  return Array.from(new Set([
-    ...arrayOfStrings(attributes.sourcePaths),
-    ...arrayOfStrings(attributes.evidenceFiles),
-    ...sourcePath
-  ]));
+  return Array.from(
+    new Set([
+      ...arrayOfStrings(attributes.sourcePaths),
+      ...arrayOfStrings(attributes.evidenceFiles),
+      ...sourcePath,
+    ]),
+  );
 }
 
 function arrayOfStrings(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : [];
+  return Array.isArray(value)
+    ? value.filter((entry): entry is string => typeof entry === "string")
+    : [];
 }
 
 function normalizeLimit(value: number | undefined): number {
@@ -1148,30 +1283,40 @@ function channelRank(channels: readonly GraphRagHitChannel[]): number {
   return 0;
 }
 
-function rankEntityIds(
-  ids: readonly string[],
-  entityById: ReadonlyMap<string, Entity>
-): string[] {
+function rankEntityIds(ids: readonly string[], entityById: ReadonlyMap<string, Entity>): string[] {
   return [...ids].sort((left, right) => {
     const leftEntity = entityById.get(left);
     const rightEntity = entityById.get(right);
     const leftScore = Number(leftEntity?.rank ?? 0) + Number(leftEntity?.degree ?? 0) * 0.08;
     const rightScore = Number(rightEntity?.rank ?? 0) + Number(rightEntity?.degree ?? 0) * 0.08;
-    return rightScore - leftScore || (leftEntity?.title ?? left).localeCompare(rightEntity?.title ?? right);
+    return (
+      rightScore - leftScore ||
+      (leftEntity?.title ?? left).localeCompare(rightEntity?.title ?? right)
+    );
   });
 }
 
 function rankRelationshipIds(
   ids: readonly string[],
-  relationshipById: ReadonlyMap<string, Relationship>
+  relationshipById: ReadonlyMap<string, Relationship>,
 ): string[] {
   return [...ids].sort((left, right) => {
     const leftRelationship = relationshipById.get(left);
     const rightRelationship = relationshipById.get(right);
-    const leftScore = Number(leftRelationship?.rank ?? 0) + Number(leftRelationship?.weight ?? 0) + Number(leftRelationship?.combinedDegree ?? 0) * 0.04;
-    const rightScore = Number(rightRelationship?.rank ?? 0) + Number(rightRelationship?.weight ?? 0) + Number(rightRelationship?.combinedDegree ?? 0) * 0.04;
-    const leftTitle = leftRelationship ? `${leftRelationship.source} ${leftRelationship.target}` : left;
-    const rightTitle = rightRelationship ? `${rightRelationship.source} ${rightRelationship.target}` : right;
+    const leftScore =
+      Number(leftRelationship?.rank ?? 0) +
+      Number(leftRelationship?.weight ?? 0) +
+      Number(leftRelationship?.combinedDegree ?? 0) * 0.04;
+    const rightScore =
+      Number(rightRelationship?.rank ?? 0) +
+      Number(rightRelationship?.weight ?? 0) +
+      Number(rightRelationship?.combinedDegree ?? 0) * 0.04;
+    const leftTitle = leftRelationship
+      ? `${leftRelationship.source} ${leftRelationship.target}`
+      : left;
+    const rightTitle = rightRelationship
+      ? `${rightRelationship.source} ${rightRelationship.target}`
+      : right;
     return rightScore - leftScore || leftTitle.localeCompare(rightTitle);
   });
 }
@@ -1210,7 +1355,7 @@ function relevantEvidenceSnippet(text: string, terms: readonly string[], length:
     .map((line, index) => ({
       line,
       index,
-      score: normalizedTerms.filter((term) => normalizeSearchText(line).includes(term)).length
+      score: normalizedTerms.filter((term) => normalizeSearchText(line).includes(term)).length,
     }))
     .filter((entry) => entry.score > 0)
     .sort((left, right) => right.score - left.score || left.index - right.index)
@@ -1230,5 +1375,7 @@ function roundScore(value: number): number {
 }
 
 function sortedStrings(values: Iterable<string>): string[] {
-  return Array.from(new Set(values)).filter(Boolean).sort((left, right) => left.localeCompare(right));
+  return Array.from(new Set(values))
+    .filter(Boolean)
+    .sort((left, right) => left.localeCompare(right));
 }

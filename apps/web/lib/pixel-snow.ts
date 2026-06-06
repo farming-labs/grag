@@ -7,7 +7,7 @@ import {
   ShaderMaterial,
   Vector2,
   Vector3,
-  WebGLRenderer
+  WebGLRenderer,
 } from "three";
 
 const vertexShader = `
@@ -183,8 +183,8 @@ export function mountPixelSnow(
     gamma = 0.4545,
     density = 0.3,
     variant = "square",
-    direction = 125
-  }: PixelSnowOptions = {}
+    direction = 125,
+  }: PixelSnowOptions = {},
 ) {
   const parsedColor = new Color(color);
   const scene = new Scene();
@@ -195,7 +195,7 @@ export function mountPixelSnow(
     premultipliedAlpha: false,
     powerPreference: "high-performance",
     stencil: false,
-    depth: false
+    depth: false,
   });
   const geometry = new PlaneGeometry(2, 2);
   const material = new ShaderMaterial({
@@ -215,9 +215,9 @@ export function mountPixelSnow(
       uGamma: { value: gamma },
       uDensity: { value: density },
       uVariant: { value: variant === "round" ? 1 : variant === "snowflake" ? 2 : 0 },
-      uDirection: { value: (direction * Math.PI) / 180 }
+      uDirection: { value: (direction * Math.PI) / 180 },
     },
-    transparent: true
+    transparent: true,
   });
   const mesh = new Mesh(geometry, material);
   let animationFrame = 0;

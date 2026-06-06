@@ -21,7 +21,10 @@ export interface ChatCompletion {
 }
 
 export interface ChatModel {
-  complete(messages: readonly ChatMessage[], options?: ChatOptions): Promise<string | ChatCompletion>;
+  complete(
+    messages: readonly ChatMessage[],
+    options?: ChatOptions,
+  ): Promise<string | ChatCompletion>;
 }
 
 export interface EmbeddingModel {

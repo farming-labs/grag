@@ -10,9 +10,12 @@ import type { Community } from "../src/model.js";
 // Stub ChatModel that returns canned JSON responses
 function stubChatModel(response: unknown): ChatModel {
   return {
-    async complete(_messages: readonly ChatMessage[], _options?: ChatOptions): Promise<ChatCompletion> {
+    async complete(
+      _messages: readonly ChatMessage[],
+      _options?: ChatOptions,
+    ): Promise<ChatCompletion> {
       return { content: JSON.stringify(response) };
-    }
+    },
   };
 }
 
@@ -21,11 +24,20 @@ describe("OpenAiGraphExtractor", () => {
     const model = stubChatModel({
       entities: [
         { title: "Postgres", type: "TECHNOLOGY", description: "Relational database." },
-        { title: "GraphRAG", type: "CONCEPT", description: "Graph retrieval-augmented generation." }
+        {
+          title: "GraphRAG",
+          type: "CONCEPT",
+          description: "Graph retrieval-augmented generation.",
+        },
       ],
       relationships: [
-        { source: "Postgres", target: "GraphRAG", description: "Stores graph artifacts.", weight: 5 }
-      ]
+        {
+          source: "Postgres",
+          target: "GraphRAG",
+          description: "Stores graph artifacts.",
+          weight: 5,
+        },
+      ],
     });
 
     const extractor = new OpenAiGraphExtractor({ model });
@@ -35,7 +47,7 @@ describe("OpenAiGraphExtractor", () => {
       text: "Postgres stores GraphRAG artifacts.",
       entityIds: [],
       relationshipIds: [],
-      covariateIds: []
+      covariateIds: [],
     });
 
     expect(result.entities).toHaveLength(2);
@@ -50,8 +62,8 @@ describe("OpenAiGraphExtractor", () => {
     const model = stubChatModel({
       entities: [{ title: "Postgres", type: "TECHNOLOGY", description: "Database." }],
       relationships: [
-        { source: "Postgres", target: "UnknownEntity", description: "Some link.", weight: 3 }
-      ]
+        { source: "Postgres", target: "UnknownEntity", description: "Some link.", weight: 3 },
+      ],
     });
 
     const extractor = new OpenAiGraphExtractor({ model });
@@ -61,7 +73,7 @@ describe("OpenAiGraphExtractor", () => {
       text: "Postgres is a database.",
       entityIds: [],
       relationshipIds: [],
-      covariateIds: []
+      covariateIds: [],
     });
 
     expect(result.entities).toHaveLength(1);
@@ -72,7 +84,7 @@ describe("OpenAiGraphExtractor", () => {
     const model: ChatModel = {
       async complete() {
         return { content: "not json at all" };
-      }
+      },
     };
 
     const extractor = new OpenAiGraphExtractor({ model });
@@ -82,7 +94,7 @@ describe("OpenAiGraphExtractor", () => {
       text: "Some text.",
       entityIds: [],
       relationshipIds: [],
-      covariateIds: []
+      covariateIds: [],
     });
 
     expect(result.entities).toHaveLength(0);
@@ -96,17 +108,24 @@ describe("LabelPropagationCommunityDetector", () => {
     const entities = [
       { id: "e1", title: "Postgres", type: "TECHNOLOGY", textUnitIds: [], communityIds: [] },
       { id: "e2", title: "Kysely", type: "TECHNOLOGY", textUnitIds: [], communityIds: [] },
-      { id: "e3", title: "Redis", type: "TECHNOLOGY", textUnitIds: [], communityIds: [] }
+      { id: "e3", title: "Redis", type: "TECHNOLOGY", textUnitIds: [], communityIds: [] },
     ];
     const relationships = [
-      { id: "r1", source: "Postgres", target: "Kysely", description: "ORM", weight: 3, textUnitIds: [] }
+      {
+        id: "r1",
+        source: "Postgres",
+        target: "Kysely",
+        description: "ORM",
+        weight: 3,
+        textUnitIds: [],
+      },
       // Redis is isolated
     ];
 
     const communities = await detector.detect({
       entities,
       relationships,
-      textUnits: []
+      textUnits: [],
     });
 
     expect(communities.length).toBeGreaterThanOrEqual(2);
@@ -125,7 +144,7 @@ describe("LabelPropagationCommunityDetector", () => {
     const detector = new LabelPropagationCommunityDetector();
     const entities = [
       { id: "e1", title: "A", textUnitIds: [], communityIds: [] },
-      { id: "e2", title: "B", textUnitIds: [], communityIds: [] }
+      { id: "e2", title: "B", textUnitIds: [], communityIds: [] },
     ];
     const communities = await detector.detect({ entities, relationships: [], textUnits: [] });
     const numbers = communities.map((c) => c.community).sort((a, b) => a - b);
@@ -139,9 +158,9 @@ describe("OpenAiCommunityReporter", () => {
       title: "Storage Layer",
       summary: "This community covers the storage infrastructure.",
       findings: [
-        { summary: "Postgres is central", explanation: "All artifacts flow through Postgres." }
+        { summary: "Postgres is central", explanation: "All artifacts flow through Postgres." },
       ],
-      rank: 8
+      rank: 8,
     });
 
     const reporter = new OpenAiCommunityReporter({ model });
@@ -154,7 +173,7 @@ describe("OpenAiCommunityReporter", () => {
       entityIds: ["e1"],
       relationshipIds: [],
       textUnitIds: [],
-      covariateIds: []
+      covariateIds: [],
     };
 
     const report = await reporter.report({
@@ -162,7 +181,7 @@ describe("OpenAiCommunityReporter", () => {
       entities: [],
       relationships: [],
       covariates: [],
-      textUnits: []
+      textUnits: [],
     });
 
     expect(report.title).toBe("Storage Layer");
@@ -176,7 +195,7 @@ describe("OpenAiCommunityReporter", () => {
     const model: ChatModel = {
       async complete() {
         return { content: "oops" };
-      }
+      },
     };
 
     const reporter = new OpenAiCommunityReporter({ model });
@@ -189,7 +208,7 @@ describe("OpenAiCommunityReporter", () => {
       entityIds: [],
       relationshipIds: [],
       textUnitIds: [],
-      covariateIds: []
+      covariateIds: [],
     };
 
     const report = await reporter.report({
@@ -197,7 +216,7 @@ describe("OpenAiCommunityReporter", () => {
       entities: [],
       relationships: [],
       covariates: [],
-      textUnits: []
+      textUnits: [],
     });
 
     expect(report.title).toBe("Fallback Community");
@@ -210,18 +229,18 @@ describe("createOpenAiPipeline", () => {
     const extractionResponse = {
       entities: [
         { title: "Docs Infra", type: "PRODUCT", description: "Documentation infrastructure." },
-        { title: "GraphRAG", type: "TECHNOLOGY", description: "Graph retrieval system." }
+        { title: "GraphRAG", type: "TECHNOLOGY", description: "Graph retrieval system." },
       ],
       relationships: [
-        { source: "Docs Infra", target: "GraphRAG", description: "Uses for retrieval.", weight: 7 }
-      ]
+        { source: "Docs Infra", target: "GraphRAG", description: "Uses for retrieval.", weight: 7 },
+      ],
     };
 
     const reportResponse = {
       title: "Docs Infra Community",
       summary: "Documentation and retrieval systems.",
       findings: [{ summary: "GraphRAG powers docs", explanation: "Used for search." }],
-      rank: 7
+      rank: 7,
     };
 
     let callCount = 0;
@@ -229,7 +248,7 @@ describe("createOpenAiPipeline", () => {
       async complete(): Promise<ChatCompletion> {
         callCount += 1;
         return { content: JSON.stringify(callCount === 1 ? extractionResponse : reportResponse) };
-      }
+      },
     };
 
     const store = new MemoryGraphRagStore();
@@ -237,7 +256,8 @@ describe("createOpenAiPipeline", () => {
     // Override the chat model by constructing manually (no API key needed for stubs)
     const { StandardGraphRagPipeline } = await import("../src/pipeline/standard.js");
     const { OpenAiGraphExtractor } = await import("../src/openai/extractor.js");
-    const { LabelPropagationCommunityDetector } = await import("../src/openai/community-detector.js");
+    const { LabelPropagationCommunityDetector } =
+      await import("../src/openai/community-detector.js");
     const { OpenAiCommunityReporter } = await import("../src/openai/community-reporter.js");
 
     const pipeline = new StandardGraphRagPipeline({
@@ -245,12 +265,24 @@ describe("createOpenAiPipeline", () => {
       graphExtractor: new OpenAiGraphExtractor({ model }),
       communityDetector: new LabelPropagationCommunityDetector(),
       communityReporter: new OpenAiCommunityReporter({ model }),
-      embeddingModel: { async embed(texts) { return texts.map(() => [0.1, 0.2, 0.3]); } }
+      embeddingModel: {
+        async embed(texts) {
+          return texts.map(() => [0.1, 0.2, 0.3]);
+        },
+      },
     });
 
     const result = await pipeline.indexDocuments(
-      [{ id: "doc_1", title: "Docs Guide", type: "text", text: "Docs infra uses GraphRAG for retrieval.", textUnitIds: [] }],
-      { chunkSize: 20, chunkOverlap: 0 }
+      [
+        {
+          id: "doc_1",
+          title: "Docs Guide",
+          type: "text",
+          text: "Docs infra uses GraphRAG for retrieval.",
+          textUnitIds: [],
+        },
+      ],
+      { chunkSize: 20, chunkOverlap: 0 },
     );
 
     expect(result.entities.length).toBeGreaterThan(0);

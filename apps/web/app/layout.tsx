@@ -7,22 +7,22 @@ import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
-  subsets: ["latin"]
+  subsets: ["latin"],
 });
 
 const geistSansDocs = Geist({
   variable: "--fd-font-sans",
-  subsets: ["latin"]
+  subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
-  subsets: ["latin"]
+  subsets: ["latin"],
 });
 
 const geistMonoDocs = Geist_Mono({
   variable: "--fd-font-mono",
-  subsets: ["latin"]
+  subsets: ["latin"],
 });
 
 const themeScript = `
@@ -43,9 +43,11 @@ const themeScript = `
 export const metadata: Metadata = {
   title: {
     default: "@farming-labs/grag Docs",
-    template: docsConfig.metadata?.titleTemplate ?? "%s | @farming-labs/grag"
+    template: docsConfig.metadata?.titleTemplate ?? "%s | @farming-labs/grag",
   },
-  description: docsConfig.metadata?.description ?? "Documentation for the @farming-labs/grag TypeScript GraphRAG package."
+  description:
+    docsConfig.metadata?.description ??
+    "Documentation for the @farming-labs/grag TypeScript GraphRAG package.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -28,20 +28,24 @@ export class LocalSearchEngine {
     const [entities, relationships, textUnits] = await Promise.all([
       this.store.listEntities({ limit: maxEntityLoad }),
       this.store.listRelationships({ limit: maxRelationshipLoad }),
-      this.store.listTextUnits()
+      this.store.listTextUnits(),
     ]);
-    const context = buildLocalContext(query, { entities, relationships, textUnits }, contextOptions);
+    const context = buildLocalContext(
+      query,
+      { entities, relationships, textUnits },
+      contextOptions,
+    );
     const answer = completionContent(
       await this.model.complete([
         {
           role: "system",
-          content: "Answer using the graph context. Cite entity names and source text when useful."
+          content: "Answer using the graph context. Cite entity names and source text when useful.",
         },
         {
           role: "user",
-          content: `Question:\n${query}\n\nGraph context:\n${context}`
-        }
-      ])
+          content: `Question:\n${query}\n\nGraph context:\n${context}`,
+        },
+      ]),
     );
 
     return { answer, context };

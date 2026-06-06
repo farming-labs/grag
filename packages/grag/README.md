@@ -32,12 +32,12 @@ import {
   MemoryGraphRagStore,
   chunkDocuments,
   createGraphRagService,
-  relationalRowsToDocuments
+  relationalRowsToDocuments,
 } from "@farming-labs/grag";
 
 const rows = [
   { id: 1, customer: "Acme", body: "The billing export failed after migration." },
-  { id: 2, customer: "Globex", body: "Password reset worked." }
+  { id: 2, customer: "Globex", body: "Password reset worked." },
 ];
 
 const documents = relationalRowsToDocuments({
@@ -45,7 +45,7 @@ const documents = relationalRowsToDocuments({
   rows,
   idColumn: "id",
   titleColumn: "customer",
-  textColumn: "body"
+  textColumn: "body",
 });
 
 const graph = chunkDocuments(documents);
@@ -71,15 +71,12 @@ const loader = new DataSourceLoader([
     label: "Production support tickets",
     tableName: "support_tickets",
     loadRows: () =>
-      db.selectFrom("support_tickets")
-        .selectAll()
-        .where("status", "!=", "spam")
-        .execute(),
+      db.selectFrom("support_tickets").selectAll().where("status", "!=", "spam").execute(),
     idColumn: "id",
     titleColumn: "subject",
     textColumn: "body",
-    attributeColumns: ["customer", "priority", "status", "created_at"]
-  })
+    attributeColumns: ["customer", "priority", "status", "created_at"],
+  }),
 ]);
 
 const { documents, textUnits } = await loader.load();
@@ -94,13 +91,13 @@ import { Pool } from "pg";
 import {
   SqlGraphRagStore,
   applyGraphRagMigrations,
-  type GraphRagSqlDatabase
+  type GraphRagSqlDatabase,
 } from "@farming-labs/grag";
 
 const db = new Kysely<GraphRagSqlDatabase>({
   dialect: new PostgresDialect({
-    pool: new Pool({ connectionString: process.env.DATABASE_URL })
-  })
+    pool: new Pool({ connectionString: process.env.DATABASE_URL }),
+  }),
 });
 
 await applyGraphRagMigrations(db, "postgres");
@@ -117,11 +114,11 @@ import { OpenAiChatModel, OpenAiEmbeddingModel } from "@farming-labs/grag/openai
 const grag = createGraphRagService({
   store,
   model: new OpenAiChatModel(),
-  embeddingModel: new OpenAiEmbeddingModel()
+  embeddingModel: new OpenAiEmbeddingModel(),
 });
 
 const result = await grag.ask("How does retrieval work?", {
-  responseStyle: "short answer with citations"
+  responseStyle: "short answer with citations",
 });
 ```
 

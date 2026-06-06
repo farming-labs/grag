@@ -93,7 +93,7 @@ const STOPWORDS = new Set([
   "where",
   "which",
   "why",
-  "with"
+  "with",
 ]);
 
 const COMMON_NON_ENV_TOKENS = new Set([
@@ -121,14 +121,15 @@ const COMMON_NON_ENV_TOKENS = new Set([
   "URL",
   "UUID",
   "XML",
-  "YAML"
+  "YAML",
 ]);
 
 const FILE_REFERENCE_PATTERN =
   /(?:^|[\s("'`])([@a-zA-Z0-9_.-]+(?:\/[@a-zA-Z0-9_.-]+)+\.(?:cjs|css|go|html|java|js|jsx|json|md|mdx|mjs|php|prisma|py|rb|rs|scss|sql|toml|ts|tsx|yaml|yml))(?:[:#][a-zA-Z0-9_.-]+)?/g;
 const ROUTE_PATTERN = /(?:^|\s)(\/(?:api\/)?[a-zA-Z0-9_./:[\]-]{2,})(?=$|\s|[),.])/g;
 const ENV_PATTERN = /\b[A-Z][A-Z0-9_]{2,}\b/g;
-const PACKAGE_PATTERN = /(?:^|\s)(@[a-z0-9][a-z0-9-]*\/[a-z0-9][a-z0-9-]*|[a-z0-9][a-z0-9-]*(?:\.[a-z0-9][a-z0-9-]*)+)(?=$|\s|[),.])/g;
+const PACKAGE_PATTERN =
+  /(?:^|\s)(@[a-z0-9][a-z0-9-]*\/[a-z0-9][a-z0-9-]*|[a-z0-9][a-z0-9-]*(?:\.[a-z0-9][a-z0-9-]*)+)(?=$|\s|[),.])/g;
 const BACKTICK_PATTERN = /`([^`]{2,120})`/g;
 const SYMBOL_PATTERN = /\b[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)?\b/g;
 
@@ -144,7 +145,7 @@ export function planGraphRagQuery(query: string): GraphRagQueryPlan {
     scope,
     entities,
     searchFocus,
-    steps: buildPlanSteps(intent, scope, entities, searchFocus)
+    steps: buildPlanSteps(intent, scope, entities, searchFocus),
   };
 }
 
@@ -158,30 +159,49 @@ export function summarizeGraphRagQueryPlan(plan: GraphRagQueryPlan): string {
     `scope=${plan.scope}`,
     `entities=${entities}`,
     `includeTextSearch=${plan.searchFocus.includeTextSearch}`,
-    `preferCommunityReports=${plan.searchFocus.preferCommunityReports}`
+    `preferCommunityReports=${plan.searchFocus.preferCommunityReports}`,
   ].join("; ");
 }
 
 function classifyIntent(query: string): GraphRagQueryIntent {
   const lower = query.toLowerCase();
 
-  if (/\b(stack\s*trace|exception|crash|bug|broken|failing|failed|error|root cause|race condition|memory leak|null pointer)\b/.test(lower)) {
+  if (
+    /\b(stack\s*trace|exception|crash|bug|broken|failing|failed|error|root cause|race condition|memory leak|null pointer)\b/.test(
+      lower,
+    )
+  ) {
     return "debug";
   }
 
-  if (/\b(impact|blast radius|depends on|dependency|dependencies|downstream|upstream|affected|what breaks|callers|called by|likely impacted|if .+ changes?)\b/.test(lower)) {
+  if (
+    /\b(impact|blast radius|depends on|dependency|dependencies|downstream|upstream|affected|what breaks|callers|called by|likely impacted|if .+ changes?)\b/.test(
+      lower,
+    )
+  ) {
     return "impact";
   }
 
-  if (/^\s*(where|which file|which module|find|locate)\b/.test(lower) || /\b(defined|definition|usage|usages|lives|located)\b/.test(lower)) {
+  if (
+    /^\s*(where|which file|which module|find|locate)\b/.test(lower) ||
+    /\b(defined|definition|usage|usages|lives|located)\b/.test(lower)
+  ) {
     return "where";
   }
 
-  if (/^\s*why\b/.test(lower) || /\b(rationale|reason|decision|tradeoff|why was|why is)\b/.test(lower)) {
+  if (
+    /^\s*why\b/.test(lower) ||
+    /\b(rationale|reason|decision|tradeoff|why was|why is)\b/.test(lower)
+  ) {
     return "why";
   }
 
-  if (/^\s*(how|explain)\b/.test(lower) || /\b(what happens|flow|works|implemented|execution|lifecycle|call chain|control flow|data flow|command runs?|decides whether)\b/.test(lower)) {
+  if (
+    /^\s*(how|explain)\b/.test(lower) ||
+    /\b(what happens|flow|works|implemented|execution|lifecycle|call chain|control flow|data flow|command runs?|decides whether)\b/.test(
+      lower,
+    )
+  ) {
     return "how";
   }
 
@@ -189,7 +209,11 @@ function classifyIntent(query: string): GraphRagQueryIntent {
     return "build";
   }
 
-  if (/\b(overview|summarize|summary|architecture|major concepts|themes|whole repo|entire repo|system design)\b/.test(lower)) {
+  if (
+    /\b(overview|summarize|summary|architecture|major concepts|themes|whole repo|entire repo|system design)\b/.test(
+      lower,
+    )
+  ) {
     return "global";
   }
 
@@ -200,7 +224,10 @@ function classifyIntent(query: string): GraphRagQueryIntent {
   return "unknown";
 }
 
-function inferScope(intent: GraphRagQueryIntent, entities: readonly GraphRagQueryEntity[]): GraphRagQueryScope {
+function inferScope(
+  intent: GraphRagQueryIntent,
+  entities: readonly GraphRagQueryEntity[],
+): GraphRagQueryScope {
   if (intent === "global") {
     return "global";
   }
@@ -209,21 +236,27 @@ function inferScope(intent: GraphRagQueryIntent, entities: readonly GraphRagQuer
     return "flow";
   }
 
-  if (intent === "where" || entities.some((entity) => entity.kind === "path" || entity.kind === "symbol")) {
+  if (
+    intent === "where" ||
+    entities.some((entity) => entity.kind === "path" || entity.kind === "symbol")
+  ) {
     return "node";
   }
 
   return "local";
 }
 
-function searchFocusFor(intent: GraphRagQueryIntent, scope: GraphRagQueryScope): GraphRagQuerySearchFocus {
+function searchFocusFor(
+  intent: GraphRagQueryIntent,
+  scope: GraphRagQueryScope,
+): GraphRagQuerySearchFocus {
   if (scope === "global") {
     return {
       includeTextSearch: true,
       graphLimitMultiplier: 1.8,
       textLimitMultiplier: 0.8,
       maxContextChars: 16_000,
-      preferCommunityReports: true
+      preferCommunityReports: true,
     };
   }
 
@@ -233,7 +266,7 @@ function searchFocusFor(intent: GraphRagQueryIntent, scope: GraphRagQueryScope):
       graphLimitMultiplier: 2.2,
       textLimitMultiplier: 1.1,
       maxContextChars: 18_000,
-      preferCommunityReports: false
+      preferCommunityReports: false,
     };
   }
 
@@ -243,7 +276,7 @@ function searchFocusFor(intent: GraphRagQueryIntent, scope: GraphRagQueryScope):
       graphLimitMultiplier: 1.6,
       textLimitMultiplier: 1.4,
       maxContextChars: 12_000,
-      preferCommunityReports: false
+      preferCommunityReports: false,
     };
   }
 
@@ -253,7 +286,7 @@ function searchFocusFor(intent: GraphRagQueryIntent, scope: GraphRagQueryScope):
       graphLimitMultiplier: 1.5,
       textLimitMultiplier: 1,
       maxContextChars: 14_000,
-      preferCommunityReports: true
+      preferCommunityReports: true,
     };
   }
 
@@ -262,7 +295,7 @@ function searchFocusFor(intent: GraphRagQueryIntent, scope: GraphRagQueryScope):
     graphLimitMultiplier: scope === "flow" ? 1.8 : 1.2,
     textLimitMultiplier: 1.2,
     maxContextChars: 12_000,
-    preferCommunityReports: false
+    preferCommunityReports: false,
   };
 }
 
@@ -270,7 +303,7 @@ function buildPlanSteps(
   intent: GraphRagQueryIntent,
   scope: GraphRagQueryScope,
   entities: readonly GraphRagQueryEntity[],
-  searchFocus: GraphRagQuerySearchFocus
+  searchFocus: GraphRagQuerySearchFocus,
 ): string[] {
   const steps = [
     `Classify the question as ${intent}/${scope}.`,
@@ -283,7 +316,7 @@ function buildPlanSteps(
     searchFocus.includeTextSearch
       ? "Run direct text-unit search beside graph retrieval."
       : "Use graph retrieval only.",
-    "Merge hits, build citations, and return graph highlights."
+    "Merge hits, build citations, and return graph highlights.",
   ];
 
   return steps;
@@ -328,7 +361,7 @@ function addRegexEntities(
   query: string,
   pattern: RegExp,
   kind: GraphRagQueryEntityKind,
-  confidence: number
+  confidence: number,
 ): void {
   for (const match of query.matchAll(pattern)) {
     const value = normalizeEntityValue(match[1] ?? match[0] ?? "");
@@ -345,10 +378,12 @@ function addEntity(
   entities: GraphRagQueryEntity[],
   kind: GraphRagQueryEntityKind,
   value: string,
-  confidence: number
+  confidence: number,
 ): void {
   const key = `${kind}:${value.toLowerCase()}`;
-  const existing = entities.find((entity) => `${entity.kind}:${entity.value.toLowerCase()}` === key);
+  const existing = entities.find(
+    (entity) => `${entity.kind}:${entity.value.toLowerCase()}` === key,
+  );
   if (existing) {
     existing.confidence = Math.max(existing.confidence, confidence);
     return;
@@ -357,7 +392,7 @@ function addEntity(
   entities.push({
     kind,
     value,
-    confidence: round(confidence)
+    confidence: round(confidence),
   });
 }
 
@@ -385,7 +420,11 @@ function looksLikeSymbol(value: string): boolean {
     return value.split(".").every((part) => /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(part));
   }
 
-  return /^[A-Z][A-Za-z0-9_$]*$/.test(value) || /[a-z][A-Z]/.test(value) || /^[a-z]+[A-Z][A-Za-z0-9_$]*$/.test(value);
+  return (
+    /^[A-Z][A-Za-z0-9_$]*$/.test(value) ||
+    /[a-z][A-Z]/.test(value) ||
+    /^[a-z]+[A-Z][A-Za-z0-9_$]*$/.test(value)
+  );
 }
 
 function symbolConfidence(value: string): number {

@@ -12,13 +12,13 @@ export function useMDXComponents(components?: MDXComponents): MDXComponents {
   return getMDXComponents(
     {
       ...(docsConfig.components as MDXComponents),
-      ...components
+      ...components,
     },
     {
       onCopyClick: docsConfig.onCopyClick,
       theme: docsConfig.theme,
       icons: promptIconRegistry,
-      openDocsProviders: promptOpenDocsProviders
-    }
+      openDocsProviders: promptOpenDocsProviders,
+    },
   );
 }

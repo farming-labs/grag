@@ -2,28 +2,28 @@ import { chunkDocuments, type ChunkDocumentOptions } from "./ingest/chunk.js";
 import {
   relationalRowsToDocuments,
   type RelationalRow,
-  type RelationalRowsToDocumentsOptions
+  type RelationalRowsToDocumentsOptions,
 } from "./ingest/relational.js";
 import type { ChatModel, EmbeddingModel } from "./llm.js";
-import type {
-  GraphRagDocument,
-  GraphRagSnapshot,
-  PartialGraphRagSnapshot
-} from "./model.js";
+import type { GraphRagDocument, GraphRagSnapshot, PartialGraphRagSnapshot } from "./model.js";
 import { StandardGraphRagPipeline } from "./pipeline/standard.js";
 import type {
   StandardGraphRagIndexOptions,
   StandardGraphRagIndexResult,
-  StandardGraphRagPipelineOptions
+  StandardGraphRagPipelineOptions,
 } from "./pipeline/types.js";
 import { basicSearch, type BasicSearchHit, type BasicSearchOptions } from "./query/basic-search.js";
 import { buildLocalContext, type LocalContextOptions } from "./query/context.js";
-import { GlobalSearchEngine, type GlobalSearchOptions, type GlobalSearchResult } from "./query/global-search.js";
+import {
+  GlobalSearchEngine,
+  type GlobalSearchOptions,
+  type GlobalSearchResult,
+} from "./query/global-search.js";
 import { LocalSearchEngine, type LocalSearchResult } from "./query/local-search.js";
 import {
   loadGraphRagNeighborhood,
   type GraphRagNeighborhood,
-  type GraphRagNeighborhoodOptions
+  type GraphRagNeighborhoodOptions,
 } from "./query/neighborhood.js";
 import {
   GraphRagRetriever,
@@ -31,7 +31,7 @@ import {
   type GraphRagAskResult,
   type GraphRagRetrieverOptions,
   type GraphRagSearchOptions,
-  type GraphRagSearchResult
+  type GraphRagSearchResult,
 } from "./query/retriever.js";
 import { MemoryGraphRagStore } from "./storage/memory.js";
 import type { GraphRagStore } from "./storage/types.js";
@@ -39,7 +39,7 @@ import { buildDocumentGraphRagSnapshot } from "./studio/document.js";
 import {
   retrieveFromGraphRagSnapshot,
   type GraphRagRetrievalResult,
-  type RetrieveGraphRagSnapshotOptions
+  type RetrieveGraphRagSnapshotOptions,
 } from "./studio/retrieval.js";
 import { createStableId } from "./utils/ids.js";
 
@@ -102,14 +102,19 @@ export class GraphRagService {
 
   async ingestDocuments(
     documents: readonly GraphRagDocument[],
-    options: IngestDocumentsOptions = {}
+    options: IngestDocumentsOptions = {},
   ): Promise<GraphRagSnapshot> {
     if (options.mode === "document-graph") {
       for (const document of documents) {
-        await this.store.upsertGraph(buildDocumentGraphRagSnapshot(document.text, {
-          title: document.title,
-          sourcePath: document.attributes?.sourcePath?.toString() ?? document.humanReadableId?.toString() ?? document.id
-        }));
+        await this.store.upsertGraph(
+          buildDocumentGraphRagSnapshot(document.text, {
+            title: document.title,
+            sourcePath:
+              document.attributes?.sourcePath?.toString() ??
+              document.humanReadableId?.toString() ??
+              document.id,
+          }),
+        );
       }
       return this.snapshot();
     }
@@ -117,40 +122,34 @@ export class GraphRagService {
     const { documents: linkedDocuments, textUnits } = chunkDocuments(documents, options);
     await this.store.upsertGraph({
       documents: linkedDocuments,
-      textUnits
+      textUnits,
     });
     return this.snapshot();
   }
 
   async ingestTextDocuments(
     input: IngestTextDocumentInput | readonly IngestTextDocumentInput[],
-    options: IngestDocumentsOptions = { mode: "document-graph" }
+    options: IngestDocumentsOptions = { mode: "document-graph" },
   ): Promise<GraphRagSnapshot> {
     const documents = (Array.isArray(input) ? input : [input]).map((entry) => toDocument(entry));
     return this.ingestDocuments(documents, options);
   }
 
   async ingestRows<Row extends RelationalRow>(
-    options: RelationalRowsToDocumentsOptions<Row> & IngestDocumentsOptions
+    options: RelationalRowsToDocumentsOptions<Row> & IngestDocumentsOptions,
   ): Promise<GraphRagSnapshot> {
-    const {
-      chunkSize,
-      overlap,
-      tokenCounter,
-      mode,
-      ...documentOptions
-    } = options;
+    const { chunkSize, overlap, tokenCounter, mode, ...documentOptions } = options;
     return this.ingestDocuments(relationalRowsToDocuments(documentOptions), {
       ...(chunkSize === undefined ? {} : { chunkSize }),
       ...(overlap === undefined ? {} : { overlap }),
       ...(tokenCounter === undefined ? {} : { tokenCounter }),
-      ...(mode === undefined ? {} : { mode })
+      ...(mode === undefined ? {} : { mode }),
     });
   }
 
   async retrieve(
     query: string,
-    options: GraphRagServiceRetrieveOptions = {}
+    options: GraphRagServiceRetrieveOptions = {},
   ): Promise<GraphRagServiceRetrieveResult> {
     const snapshot = await this.snapshot();
     const result = retrieveFromGraphRagSnapshot(snapshot, query, options);
@@ -158,11 +157,15 @@ export class GraphRagService {
       return result;
     }
 
-    const basicSearchHits = await basicSearch(this.store, query, this.basicSearchOptions(options.basicSearch));
+    const basicSearchHits = await basicSearch(
+      this.store,
+      query,
+      this.basicSearchOptions(options.basicSearch),
+    );
 
     return {
       ...result,
-      basicSearchHits
+      basicSearchHits,
     };
   }
 
@@ -176,11 +179,14 @@ export class GraphRagService {
     return new GraphRagRetriever({
       store: this.store,
       ...(model ? { model } : {}),
-      ...(embeddingModel ? { embeddingModel } : {})
+      ...(embeddingModel ? { embeddingModel } : {}),
     });
   }
 
-  async searchGraph(query: string, options: GraphRagSearchOptions = {}): Promise<GraphRagSearchResult> {
+  async searchGraph(
+    query: string,
+    options: GraphRagSearchOptions = {},
+  ): Promise<GraphRagSearchResult> {
     return this.retriever().search(query, options);
   }
 
@@ -192,7 +198,7 @@ export class GraphRagService {
     const [entities, relationships, textUnits] = await Promise.all([
       this.store.listEntities(),
       this.store.listRelationships(),
-      this.store.listTextUnits()
+      this.store.listTextUnits(),
     ]);
     return buildLocalContext(query, { entities, relationships, textUnits }, options);
   }
@@ -228,9 +234,13 @@ export class GraphRagService {
   async indexWithPipeline(
     documents: readonly GraphRagDocument[] | readonly IngestTextDocumentInput[],
     pipelineOptions: Omit<StandardGraphRagPipelineOptions, "store">,
-    indexOptions: StandardGraphRagIndexOptions = {}
+    indexOptions: StandardGraphRagIndexOptions = {},
   ): Promise<StandardGraphRagIndexResult> {
-    const docs = documents.map((d) => ("text" in d && !("type" in d) ? toDocument(d as IngestTextDocumentInput) : d as GraphRagDocument));
+    const docs = documents.map((d) =>
+      "text" in d && !("type" in d)
+        ? toDocument(d as IngestTextDocumentInput)
+        : (d as GraphRagDocument),
+    );
     const pipeline = new StandardGraphRagPipeline({ store: this.store, ...pipelineOptions });
     return pipeline.indexDocuments(docs, indexOptions);
   }
@@ -243,7 +253,10 @@ export class GraphRagService {
     return new LocalSearchEngine({ store: this.store, model: this.model }).search(query);
   }
 
-  async answerGlobal(query: string, options: GlobalSearchOptions = {}): Promise<GlobalSearchResult> {
+  async answerGlobal(
+    query: string,
+    options: GlobalSearchOptions = {},
+  ): Promise<GlobalSearchResult> {
     if (!this.model) {
       throw new Error("answerGlobal requires a ChatModel.");
     }
@@ -265,7 +278,7 @@ export class GraphRagService {
       covariates: snapshot.covariates.length,
       communities: snapshot.communities.length,
       communityReports: snapshot.communityReports.length,
-      embeddings: snapshot.embeddings.length
+      embeddings: snapshot.embeddings.length,
     };
   }
 
@@ -276,7 +289,7 @@ export class GraphRagService {
   private basicSearchOptions(options: BasicSearchOptions = {}): BasicSearchOptions {
     return {
       ...options,
-      ...(this.embeddingModel ? { embeddingModel: this.embeddingModel } : {})
+      ...(this.embeddingModel ? { embeddingModel: this.embeddingModel } : {}),
     };
   }
 }
@@ -286,11 +299,11 @@ export function createGraphRagService(options: GraphRagServiceOptions = {}): Gra
 }
 
 export function createMemoryGraphRagService(
-  options: Omit<GraphRagServiceOptions, "store"> = {}
+  options: Omit<GraphRagServiceOptions, "store"> = {},
 ): GraphRagService {
   return new GraphRagService({
     ...options,
-    store: new MemoryGraphRagStore()
+    store: new MemoryGraphRagStore(),
   });
 }
 
@@ -304,8 +317,8 @@ function toDocument(input: IngestTextDocumentInput): GraphRagDocument {
     text: input.text,
     textUnitIds: [],
     attributes: {
-      ...(input.attributes ?? {}),
-      sourcePath
-    }
+      ...input.attributes,
+      sourcePath,
+    },
   };
 }

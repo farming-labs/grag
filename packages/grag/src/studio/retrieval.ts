@@ -3,7 +3,7 @@ import type {
   Entity,
   GraphRagSnapshot,
   Relationship,
-  TextUnit
+  TextUnit,
 } from "../model.js";
 
 export type GraphRagRetrievalHitKind = "entity" | "relationship" | "text_unit" | "community_report";
@@ -37,14 +37,16 @@ export interface RetrieveGraphRagSnapshotOptions {
 }
 
 function tokenize(value: string): string[] {
-  return Array.from(new Set(
-    value
-      .toLowerCase()
-      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-      .replace(/[@./:_-]+/g, " ")
-      .split(/[^a-z0-9]+/)
-      .filter((token) => token.length >= 2)
-  )).slice(0, 16);
+  return Array.from(
+    new Set(
+      value
+        .toLowerCase()
+        .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+        .replace(/[@./:_-]+/g, " ")
+        .split(/[^a-z0-9]+/)
+        .filter((token) => token.length >= 2),
+    ),
+  ).slice(0, 16);
 }
 
 function sourcePathsFromAttributes(attributes: unknown): string[] {
@@ -92,7 +94,7 @@ function entityHit(entity: Entity, score: number): GraphRagRetrievalHit {
     text: [entity.type, entity.description].filter(Boolean).join(" - "),
     sourcePaths: sourcePathsFromAttributes(entity.attributes),
     entityIds: [entity.id],
-    relationshipIds: []
+    relationshipIds: [],
   };
 }
 
@@ -105,10 +107,14 @@ function relationshipHit(relationship: Relationship, score: number): GraphRagRet
     text: relationship.description ?? "",
     sourcePaths: sourcePathsFromAttributes(relationship.attributes),
     entityIds: [
-      typeof relationship.attributes?.sourceEntityId === "string" ? relationship.attributes.sourceEntityId : relationship.source,
-      typeof relationship.attributes?.targetEntityId === "string" ? relationship.attributes.targetEntityId : relationship.target
+      typeof relationship.attributes?.sourceEntityId === "string"
+        ? relationship.attributes.sourceEntityId
+        : relationship.source,
+      typeof relationship.attributes?.targetEntityId === "string"
+        ? relationship.attributes.targetEntityId
+        : relationship.target,
     ],
-    relationshipIds: [relationship.id]
+    relationshipIds: [relationship.id],
   };
 }
 
@@ -121,7 +127,7 @@ function textUnitHit(textUnit: TextUnit, score: number): GraphRagRetrievalHit {
     text: textUnit.text,
     sourcePaths: sourcePathsFromAttributes(textUnit.attributes),
     entityIds: textUnit.entityIds,
-    relationshipIds: textUnit.relationshipIds
+    relationshipIds: textUnit.relationshipIds,
   };
 }
 
@@ -134,7 +140,7 @@ function reportHit(report: CommunityReport, score: number): GraphRagRetrievalHit
     text: report.summary || report.fullContent,
     sourcePaths: [],
     entityIds: [],
-    relationshipIds: []
+    relationshipIds: [],
   };
 }
 
@@ -142,7 +148,8 @@ function buildContext(hits: readonly GraphRagRetrievalHit[]): string {
   return hits
     .slice(0, 8)
     .map((hit, index) => {
-      const sources = hit.sourcePaths.length > 0 ? `\nSources: ${hit.sourcePaths.slice(0, 4).join(", ")}` : "";
+      const sources =
+        hit.sourcePaths.length > 0 ? `\nSources: ${hit.sourcePaths.slice(0, 4).join(", ")}` : "";
       return `${index + 1}. [${hit.kind}] ${hit.title} (${hit.score})\n${hit.text}${sources}`;
     })
     .join("\n\n");
@@ -151,44 +158,46 @@ function buildContext(hits: readonly GraphRagRetrievalHit[]): string {
 export function retrieveFromGraphRagSnapshot(
   snapshot: GraphRagSnapshot,
   query: string,
-  options: RetrieveGraphRagSnapshotOptions = {}
+  options: RetrieveGraphRagSnapshotOptions = {},
 ): GraphRagRetrievalResult {
   const tokens = tokenize(query);
   const limit = Math.max(1, Math.min(options.limit ?? 12, 30));
   const entityHits = snapshot.entities
     .map((entity) => ({
       entity,
-      score: lexicalScore(tokens, [
-        entity.title,
-        entity.type ?? "",
-        entity.description ?? "",
-        ...sourcePathsFromAttributes(entity.attributes)
-      ].join(" "))
+      score: lexicalScore(
+        tokens,
+        [
+          entity.title,
+          entity.type ?? "",
+          entity.description ?? "",
+          ...sourcePathsFromAttributes(entity.attributes),
+        ].join(" "),
+      ),
     }))
     .filter((entry) => entry.score > 0)
     .map((entry) => entityHit(entry.entity, entry.score * 1.12));
   const relationshipHits = snapshot.relationships
     .map((relationship) => ({
       relationship,
-      score: lexicalScore(tokens, [
-        relationship.source,
-        relationship.target,
-        relationship.description ?? ""
-      ].join(" "))
+      score: lexicalScore(
+        tokens,
+        [relationship.source, relationship.target, relationship.description ?? ""].join(" "),
+      ),
     }))
     .filter((entry) => entry.score > 0)
     .map((entry) => relationshipHit(entry.relationship, entry.score));
   const textUnitHits = snapshot.textUnits
     .map((textUnit) => ({
       textUnit,
-      score: lexicalScore(tokens, textUnit.text)
+      score: lexicalScore(tokens, textUnit.text),
     }))
     .filter((entry) => entry.score > 0)
     .map((entry) => textUnitHit(entry.textUnit, entry.score * 1.2));
   const communityReportHits = snapshot.communityReports
     .map((report) => ({
       report,
-      score: lexicalScore(tokens, [report.title, report.summary, report.fullContent].join(" "))
+      score: lexicalScore(tokens, [report.title, report.summary, report.fullContent].join(" ")),
     }))
     .filter((entry) => entry.score > 0)
     .map((entry) => reportHit(entry.report, entry.score * 0.92));
@@ -205,7 +214,7 @@ export function retrieveFromGraphRagSnapshot(
       entityHits: entityHits.length,
       relationshipHits: relationshipHits.length,
       textUnitHits: textUnitHits.length,
-      communityReportHits: communityReportHits.length
-    }
+      communityReportHits: communityReportHits.length,
+    },
   };
 }

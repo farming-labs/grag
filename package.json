@@ -3,15 +3,18 @@
   "private": true,
   "description": "Monorepo for @farming-labs/grag and its documentation site.",
   "type": "module",
-  "packageManager": "pnpm@10.9.0",
   "scripts": {
     "build": "pnpm build:package && pnpm build:docs",
     "build:package": "pnpm --filter @farming-labs/grag build",
     "build:docs": "pnpm --filter @farming-labs/grag-docs build",
     "check": "pnpm --filter @farming-labs/grag check && pnpm --filter @farming-labs/grag-docs check",
-    "ci:local": "pnpm check && pnpm test && pnpm build && pnpm pack:package",
+    "ci:local": "pnpm format:check && pnpm lint && pnpm check && pnpm test && pnpm build && pnpm pack:package",
     "dev": "pnpm --filter @farming-labs/grag-docs dev",
     "docs:dev": "pnpm --filter @farming-labs/grag-docs dev",
+    "format": "oxfmt --ignore-path .oxfmtignore .",
+    "format:check": "oxfmt --ignore-path .oxfmtignore --check .",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
     "pack:package": "pnpm build:package && pnpm --filter @farming-labs/grag pack:dry-run",
     "publish:beta": "pnpm --filter @farming-labs/grag publish --access public --tag beta --no-git-checks",
     "publish:dry-run": "pnpm --filter @farming-labs/grag publish --dry-run --access public --tag next --no-git-checks",
@@ -26,6 +29,9 @@
     "test": "pnpm --filter @farming-labs/grag test"
   },
   "devDependencies": {
-    "bumpp": "^11.1.0"
-  }
+    "bumpp": "^11.1.0",
+    "oxfmt": "^0.35.0",
+    "oxlint": "1.50.0"
+  },
+  "packageManager": "pnpm@10.9.0"
 }

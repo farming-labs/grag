@@ -17,7 +17,7 @@ const defaultOverlap = 40;
 
 export function chunkDocuments(
   documents: readonly GraphRagDocument[],
-  options: ChunkDocumentOptions = {}
+  options: ChunkDocumentOptions = {},
 ): ChunkDocumentsResult {
   const textUnits: TextUnit[] = [];
   const nextDocuments: GraphRagDocument[] = [];
@@ -27,7 +27,7 @@ export function chunkDocuments(
     textUnits.push(...units);
     nextDocuments.push({
       ...document,
-      textUnitIds: units.map((unit) => unit.id)
+      textUnitIds: units.map((unit) => unit.id),
     });
   }
 
@@ -36,7 +36,7 @@ export function chunkDocuments(
 
 export function chunkDocument(
   document: GraphRagDocument,
-  options: ChunkDocumentOptions = {}
+  options: ChunkDocumentOptions = {},
 ): TextUnit[] {
   const chunkSize = options.chunkSize ?? defaultChunkSize;
   const overlap = options.overlap ?? defaultOverlap;
@@ -71,12 +71,12 @@ export function chunkDocument(
       relationshipIds: [],
       covariateIds: [],
       attributes: {
-        ...(document.attributes ?? {}),
+        ...document.attributes,
         documentTitle: document.title,
         chunkOrdinal: ordinal,
         startWord: start,
-        endWord: start + chunkWords.length
-      }
+        endWord: start + chunkWords.length,
+      },
     });
 
     if (start + chunkSize >= words.length) {

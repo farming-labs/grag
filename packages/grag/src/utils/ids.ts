@@ -5,10 +5,7 @@ export function createId(prefix?: string): string {
 }
 
 export function createStableId(parts: readonly unknown[], prefix?: string): string {
-  const hash = createHash("sha256")
-    .update(JSON.stringify(parts))
-    .digest("hex")
-    .slice(0, 32);
+  const hash = createHash("sha256").update(JSON.stringify(parts)).digest("hex").slice(0, 32);
 
   return prefix ? `${prefix}_${hash}` : hash;
 }

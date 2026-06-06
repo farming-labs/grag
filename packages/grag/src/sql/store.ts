@@ -20,20 +20,16 @@ import {
   type JsonObject,
   type PartialGraphRagSnapshot,
   type Relationship,
-  type TextUnit
+  type TextUnit,
 } from "../model.js";
 import { decodeJson, decodeJsonObject, encodeJson } from "../utils/json.js";
 import type {
   CommunityReportListOptions,
   EmbeddingListOptions,
   GraphRagStore,
-  ListOptions
+  ListOptions,
 } from "../storage/types.js";
-import type {
-  GraphRagInsertable,
-  GraphRagSqlDatabase,
-  GraphRagSelectable
-} from "./schema.js";
+import type { GraphRagInsertable, GraphRagSqlDatabase, GraphRagSelectable } from "./schema.js";
 
 type Executor = Kysely<GraphRagSqlDatabase> | Transaction<GraphRagSqlDatabase>;
 
@@ -47,7 +43,7 @@ function createdAt(value: string | null | undefined): string | undefined {
 
 function maybeLimitOffset<T extends { limit(limit: number): T; offset(offset: number): T }>(
   query: T,
-  options?: ListOptions
+  options?: ListOptions,
 ): T {
   let next = query;
   if (options?.offset !== undefined) {
@@ -59,11 +55,16 @@ function maybeLimitOffset<T extends { limit(limit: number): T; offset(offset: nu
   return next;
 }
 
-function links(ownerId: string, ownerColumn: string, valueColumn: string, values: readonly string[]) {
+function links(
+  ownerId: string,
+  ownerColumn: string,
+  valueColumn: string,
+  values: readonly string[],
+) {
   return values.map((value, position) => ({
     [ownerColumn]: ownerId,
     [valueColumn]: value,
-    position
+    position,
   }));
 }
 
@@ -115,7 +116,7 @@ export class SqlGraphRagStore implements GraphRagStore {
       covariates: await this.listCovariates(),
       communities: await this.listCommunities(),
       communityReports: await this.listCommunityReports(),
-      embeddings: await this.listEmbeddings()
+      embeddings: await this.listEmbeddings(),
     });
   }
 
@@ -130,7 +131,7 @@ export class SqlGraphRagStore implements GraphRagStore {
       await trx.insertInto("grag_documents").values(records.map(toDocumentRow)).execute();
 
       const rows = records.flatMap((document) =>
-        links(document.id, "document_id", "text_unit_id", document.textUnitIds)
+        links(document.id, "document_id", "text_unit_id", document.textUnitIds),
       );
       await insertDynamic(trx, "grag_document_text_units", rows);
     });
@@ -139,9 +140,13 @@ export class SqlGraphRagStore implements GraphRagStore {
   async listDocuments(options?: ListOptions): Promise<GraphRagDocument[]> {
     const rows = await maybeLimitOffset(
       this.db.selectFrom("grag_documents").selectAll().orderBy("id"),
-      options
+      options,
     ).execute();
-    const textUnitIds = await this.loadLinks("grag_document_text_units", "document_id", "text_unit_id");
+    const textUnitIds = await this.loadLinks(
+      "grag_document_text_units",
+      "document_id",
+      "text_unit_id",
+    );
 
     return rows.map((row) => fromDocumentRow(row, textUnitIds.get(row.id) ?? []));
   }
@@ -161,7 +166,10 @@ export class SqlGraphRagStore implements GraphRagStore {
       .orderBy("position")
       .execute();
 
-    return fromDocumentRow(document, rows.map((row) => row.text_unit_id));
+    return fromDocumentRow(
+      document,
+      rows.map((row) => row.text_unit_id),
+    );
   }
 
   async upsertTextUnits(textUnits: readonly TextUnit[]): Promise<void> {
@@ -171,7 +179,10 @@ export class SqlGraphRagStore implements GraphRagStore {
     await this.db.transaction().execute(async (trx) => {
       const ids = records.map((textUnit) => textUnit.id);
       await trx.deleteFrom("grag_text_unit_entities").where("text_unit_id", "in", ids).execute();
-      await trx.deleteFrom("grag_text_unit_relationships").where("text_unit_id", "in", ids).execute();
+      await trx
+        .deleteFrom("grag_text_unit_relationships")
+        .where("text_unit_id", "in", ids)
+        .execute();
       await trx.deleteFrom("grag_text_unit_covariates").where("text_unit_id", "in", ids).execute();
       await trx.deleteFrom("grag_text_units").where("id", "in", ids).execute();
       await trx.insertInto("grag_text_units").values(records.map(toTextUnitRow)).execute();
@@ -179,21 +190,23 @@ export class SqlGraphRagStore implements GraphRagStore {
       await insertDynamic(
         trx,
         "grag_text_unit_entities",
-        records.flatMap((textUnit) => links(textUnit.id, "text_unit_id", "entity_id", textUnit.entityIds))
+        records.flatMap((textUnit) =>
+          links(textUnit.id, "text_unit_id", "entity_id", textUnit.entityIds),
+        ),
       );
       await insertDynamic(
         trx,
         "grag_text_unit_relationships",
         records.flatMap((textUnit) =>
-          links(textUnit.id, "text_unit_id", "relationship_id", textUnit.relationshipIds)
-        )
+          links(textUnit.id, "text_unit_id", "relationship_id", textUnit.relationshipIds),
+        ),
       );
       await insertDynamic(
         trx,
         "grag_text_unit_covariates",
         records.flatMap((textUnit) =>
-          links(textUnit.id, "text_unit_id", "covariate_id", textUnit.covariateIds)
-        )
+          links(textUnit.id, "text_unit_id", "covariate_id", textUnit.covariateIds),
+        ),
       );
     });
   }
@@ -201,22 +214,26 @@ export class SqlGraphRagStore implements GraphRagStore {
   async listTextUnits(options?: ListOptions): Promise<TextUnit[]> {
     const rows = await maybeLimitOffset(
       this.db.selectFrom("grag_text_units").selectAll().orderBy("id"),
-      options
+      options,
     ).execute();
     const entityIds = await this.loadLinks("grag_text_unit_entities", "text_unit_id", "entity_id");
     const relationshipIds = await this.loadLinks(
       "grag_text_unit_relationships",
       "text_unit_id",
-      "relationship_id"
+      "relationship_id",
     );
-    const covariateIds = await this.loadLinks("grag_text_unit_covariates", "text_unit_id", "covariate_id");
+    const covariateIds = await this.loadLinks(
+      "grag_text_unit_covariates",
+      "text_unit_id",
+      "covariate_id",
+    );
 
     return rows.map((row) =>
       fromTextUnitRow(row, {
         entityIds: entityIds.get(row.id) ?? [],
         relationshipIds: relationshipIds.get(row.id) ?? [],
-        covariateIds: covariateIds.get(row.id) ?? []
-      })
+        covariateIds: covariateIds.get(row.id) ?? [],
+      }),
     );
   }
 
@@ -238,12 +255,16 @@ export class SqlGraphRagStore implements GraphRagStore {
       await insertDynamic(
         trx,
         "grag_entity_communities",
-        records.flatMap((entity) => links(entity.id, "entity_id", "community_id", entity.communityIds))
+        records.flatMap((entity) =>
+          links(entity.id, "entity_id", "community_id", entity.communityIds),
+        ),
       );
       await insertDynamic(
         trx,
         "grag_entity_text_units",
-        records.flatMap((entity) => links(entity.id, "entity_id", "text_unit_id", entity.textUnitIds))
+        records.flatMap((entity) =>
+          links(entity.id, "entity_id", "text_unit_id", entity.textUnitIds),
+        ),
       );
     });
   }
@@ -251,16 +272,20 @@ export class SqlGraphRagStore implements GraphRagStore {
   async listEntities(options?: ListOptions): Promise<Entity[]> {
     const rows = await maybeLimitOffset(
       this.db.selectFrom("grag_entities").selectAll().orderBy("title"),
-      options
+      options,
     ).execute();
-    const communityIds = await this.loadLinks("grag_entity_communities", "entity_id", "community_id");
+    const communityIds = await this.loadLinks(
+      "grag_entity_communities",
+      "entity_id",
+      "community_id",
+    );
     const textUnitIds = await this.loadLinks("grag_entity_text_units", "entity_id", "text_unit_id");
 
     return rows.map((row) =>
       fromEntityRow(row, {
         communityIds: communityIds.get(row.id) ?? [],
-        textUnitIds: textUnitIds.get(row.id) ?? []
-      })
+        textUnitIds: textUnitIds.get(row.id) ?? [],
+      }),
     );
   }
 
@@ -284,8 +309,8 @@ export class SqlGraphRagStore implements GraphRagStore {
         trx,
         "grag_relationship_text_units",
         records.flatMap((relationship) =>
-          links(relationship.id, "relationship_id", "text_unit_id", relationship.textUnitIds)
-        )
+          links(relationship.id, "relationship_id", "text_unit_id", relationship.textUnitIds),
+        ),
       );
     });
   }
@@ -293,9 +318,13 @@ export class SqlGraphRagStore implements GraphRagStore {
   async listRelationships(options?: ListOptions): Promise<Relationship[]> {
     const rows = await maybeLimitOffset(
       this.db.selectFrom("grag_relationships").selectAll().orderBy("source").orderBy("target"),
-      options
+      options,
     ).execute();
-    const textUnitIds = await this.loadLinks("grag_relationship_text_units", "relationship_id", "text_unit_id");
+    const textUnitIds = await this.loadLinks(
+      "grag_relationship_text_units",
+      "relationship_id",
+      "text_unit_id",
+    );
 
     return rows.map((row) => fromRelationshipRow(row, textUnitIds.get(row.id) ?? []));
   }
@@ -317,8 +346,8 @@ export class SqlGraphRagStore implements GraphRagStore {
         trx,
         "grag_covariate_text_units",
         records.flatMap((covariate) =>
-          links(covariate.id, "covariate_id", "text_unit_id", covariate.textUnitIds)
-        )
+          links(covariate.id, "covariate_id", "text_unit_id", covariate.textUnitIds),
+        ),
       );
     });
   }
@@ -326,9 +355,13 @@ export class SqlGraphRagStore implements GraphRagStore {
   async listCovariates(options?: ListOptions): Promise<Covariate[]> {
     const rows = await maybeLimitOffset(
       this.db.selectFrom("grag_covariates").selectAll().orderBy("id"),
-      options
+      options,
     ).execute();
-    const textUnitIds = await this.loadLinks("grag_covariate_text_units", "covariate_id", "text_unit_id");
+    const textUnitIds = await this.loadLinks(
+      "grag_covariate_text_units",
+      "covariate_id",
+      "text_unit_id",
+    );
 
     return rows.map((row) => fromCovariateRow(row, textUnitIds.get(row.id) ?? []));
   }
@@ -344,7 +377,10 @@ export class SqlGraphRagStore implements GraphRagStore {
     await this.db.transaction().execute(async (trx) => {
       const ids = records.map((community) => community.id);
       await trx.deleteFrom("grag_community_entities").where("community_id", "in", ids).execute();
-      await trx.deleteFrom("grag_community_relationships").where("community_id", "in", ids).execute();
+      await trx
+        .deleteFrom("grag_community_relationships")
+        .where("community_id", "in", ids)
+        .execute();
       await trx.deleteFrom("grag_community_text_units").where("community_id", "in", ids).execute();
       await trx.deleteFrom("grag_community_covariates").where("community_id", "in", ids).execute();
       await trx.deleteFrom("grag_communities").where("id", "in", ids).execute();
@@ -353,28 +389,30 @@ export class SqlGraphRagStore implements GraphRagStore {
       await insertDynamic(
         trx,
         "grag_community_entities",
-        records.flatMap((community) => links(community.id, "community_id", "entity_id", community.entityIds))
+        records.flatMap((community) =>
+          links(community.id, "community_id", "entity_id", community.entityIds),
+        ),
       );
       await insertDynamic(
         trx,
         "grag_community_relationships",
         records.flatMap((community) =>
-          links(community.id, "community_id", "relationship_id", community.relationshipIds)
-        )
+          links(community.id, "community_id", "relationship_id", community.relationshipIds),
+        ),
       );
       await insertDynamic(
         trx,
         "grag_community_text_units",
         records.flatMap((community) =>
-          links(community.id, "community_id", "text_unit_id", community.textUnitIds)
-        )
+          links(community.id, "community_id", "text_unit_id", community.textUnitIds),
+        ),
       );
       await insertDynamic(
         trx,
         "grag_community_covariates",
         records.flatMap((community) =>
-          links(community.id, "community_id", "covariate_id", community.covariateIds)
-        )
+          links(community.id, "community_id", "covariate_id", community.covariateIds),
+        ),
       );
     });
   }
@@ -382,24 +420,32 @@ export class SqlGraphRagStore implements GraphRagStore {
   async listCommunities(options?: ListOptions): Promise<Community[]> {
     const rows = await maybeLimitOffset(
       this.db.selectFrom("grag_communities").selectAll().orderBy("level").orderBy("community"),
-      options
+      options,
     ).execute();
     const entityIds = await this.loadLinks("grag_community_entities", "community_id", "entity_id");
     const relationshipIds = await this.loadLinks(
       "grag_community_relationships",
       "community_id",
-      "relationship_id"
+      "relationship_id",
     );
-    const textUnitIds = await this.loadLinks("grag_community_text_units", "community_id", "text_unit_id");
-    const covariateIds = await this.loadLinks("grag_community_covariates", "community_id", "covariate_id");
+    const textUnitIds = await this.loadLinks(
+      "grag_community_text_units",
+      "community_id",
+      "text_unit_id",
+    );
+    const covariateIds = await this.loadLinks(
+      "grag_community_covariates",
+      "community_id",
+      "covariate_id",
+    );
 
     return rows.map((row) =>
       fromCommunityRow(row, {
         entityIds: entityIds.get(row.id) ?? [],
         relationshipIds: relationshipIds.get(row.id) ?? [],
         textUnitIds: textUnitIds.get(row.id) ?? [],
-        covariateIds: covariateIds.get(row.id) ?? []
-      })
+        covariateIds: covariateIds.get(row.id) ?? [],
+      }),
     );
   }
 
@@ -414,7 +460,10 @@ export class SqlGraphRagStore implements GraphRagStore {
     await this.db.transaction().execute(async (trx) => {
       const ids = records.map((report) => report.id);
       await trx.deleteFrom("grag_community_reports").where("id", "in", ids).execute();
-      await trx.insertInto("grag_community_reports").values(records.map(toCommunityReportRow)).execute();
+      await trx
+        .insertInto("grag_community_reports")
+        .values(records.map(toCommunityReportRow))
+        .execute();
     });
   }
 
@@ -490,31 +539,40 @@ export class SqlGraphRagStore implements GraphRagStore {
 async function insertDynamic(
   db: Executor,
   table: keyof GraphRagSqlDatabase,
-  rows: readonly Record<string, unknown>[]
+  rows: readonly Record<string, unknown>[],
 ): Promise<void> {
   if (rows.length === 0) return;
-  await db.insertInto(table as never).values(rows as never).execute();
+  await db
+    .insertInto(table as never)
+    .values(rows as never)
+    .execute();
 }
 
-function withCreatedAt<T extends object>(row: T, value: string | null | undefined): T & { created_at?: string } {
+function withCreatedAt<T extends object>(
+  row: T,
+  value: string | null | undefined,
+): T & { created_at?: string } {
   return value ? { ...row, created_at: value } : row;
 }
 
 function toDocumentRow(document: GraphRagDocument): GraphRagInsertable<"grag_documents"> {
-  return withCreatedAt({
-    id: document.id,
-    human_readable_id: humanReadableId(document.humanReadableId),
-    title: document.title,
-    type: document.type,
-    text: document.text,
-    attributes_json: encodeJson(document.attributes),
-    raw_data_json: encodeJson(document.rawData)
-  }, document.createdAt);
+  return withCreatedAt(
+    {
+      id: document.id,
+      human_readable_id: humanReadableId(document.humanReadableId),
+      title: document.title,
+      type: document.type,
+      text: document.text,
+      attributes_json: encodeJson(document.attributes),
+      raw_data_json: encodeJson(document.rawData),
+    },
+    document.createdAt,
+  );
 }
 
 function fromDocumentRow(
   row: GraphRagSelectable<"grag_documents">,
-  textUnitIds: readonly string[]
+  textUnitIds: readonly string[],
 ): GraphRagDocument {
   return documentSchema.parse({
     id: row.id,
@@ -525,7 +583,7 @@ function fromDocumentRow(
     textUnitIds,
     attributes: decodeJsonObject(row.attributes_json),
     rawData: decodeJsonObject(row.raw_data_json),
-    createdAt: createdAt(row.created_at)
+    createdAt: createdAt(row.created_at),
   });
 }
 
@@ -536,13 +594,17 @@ function toTextUnitRow(textUnit: TextUnit) {
     text: textUnit.text,
     n_tokens: textUnit.nTokens ?? null,
     document_id: textUnit.documentId ?? null,
-    attributes_json: encodeJson(textUnit.attributes)
+    attributes_json: encodeJson(textUnit.attributes),
   };
 }
 
 function fromTextUnitRow(
   row: GraphRagSelectable<"grag_text_units">,
-  relations: { entityIds: readonly string[]; relationshipIds: readonly string[]; covariateIds: readonly string[] }
+  relations: {
+    entityIds: readonly string[];
+    relationshipIds: readonly string[];
+    covariateIds: readonly string[];
+  },
 ): TextUnit {
   return textUnitSchema.parse({
     id: row.id,
@@ -553,7 +615,7 @@ function fromTextUnitRow(
     attributes: decodeJsonObject(row.attributes_json),
     entityIds: relations.entityIds,
     relationshipIds: relations.relationshipIds,
-    covariateIds: relations.covariateIds
+    covariateIds: relations.covariateIds,
   });
 }
 
@@ -569,13 +631,13 @@ function toEntityRow(entity: Entity) {
     frequency: entity.frequency ?? null,
     degree: entity.degree ?? null,
     rank: entity.rank ?? null,
-    attributes_json: encodeJson(entity.attributes)
+    attributes_json: encodeJson(entity.attributes),
   };
 }
 
 function fromEntityRow(
   row: GraphRagSelectable<"grag_entities">,
-  relations: { communityIds: readonly string[]; textUnitIds: readonly string[] }
+  relations: { communityIds: readonly string[]; textUnitIds: readonly string[] },
 ): Entity {
   return entitySchema.parse({
     id: row.id,
@@ -590,7 +652,7 @@ function fromEntityRow(
     rank: row.rank,
     attributes: decodeJsonObject(row.attributes_json),
     communityIds: relations.communityIds,
-    textUnitIds: relations.textUnitIds
+    textUnitIds: relations.textUnitIds,
   });
 }
 
@@ -605,13 +667,13 @@ function toRelationshipRow(relationship: Relationship) {
     weight: relationship.weight,
     combined_degree: relationship.combinedDegree ?? null,
     rank: relationship.rank ?? null,
-    attributes_json: encodeJson(relationship.attributes)
+    attributes_json: encodeJson(relationship.attributes),
   };
 }
 
 function fromRelationshipRow(
   row: GraphRagSelectable<"grag_relationships">,
-  textUnitIds: readonly string[]
+  textUnitIds: readonly string[],
 ): Relationship {
   return relationshipSchema.parse({
     id: row.id,
@@ -624,7 +686,7 @@ function fromRelationshipRow(
     combinedDegree: row.combined_degree,
     rank: row.rank,
     attributes: decodeJsonObject(row.attributes_json),
-    textUnitIds
+    textUnitIds,
   });
 }
 
@@ -642,13 +704,13 @@ function toCovariateRow(covariate: Covariate) {
     start_date: covariate.startDate ?? null,
     end_date: covariate.endDate ?? null,
     source_text: covariate.sourceText ?? null,
-    attributes_json: encodeJson(covariate.attributes)
+    attributes_json: encodeJson(covariate.attributes),
   };
 }
 
 function fromCovariateRow(
   row: GraphRagSelectable<"grag_covariates">,
-  textUnitIds: readonly string[]
+  textUnitIds: readonly string[],
 ): Covariate {
   return covariateSchema.parse({
     id: row.id,
@@ -664,7 +726,7 @@ function fromCovariateRow(
     endDate: row.end_date,
     sourceText: row.source_text,
     attributes: decodeJsonObject(row.attributes_json),
-    textUnitIds
+    textUnitIds,
   });
 }
 
@@ -679,7 +741,7 @@ function toCommunityRow(community: Community) {
     title: community.title,
     attributes_json: encodeJson(community.attributes),
     period: community.period ?? null,
-    size: community.size ?? null
+    size: community.size ?? null,
   };
 }
 
@@ -690,7 +752,7 @@ function fromCommunityRow(
     relationshipIds: readonly string[];
     textUnitIds: readonly string[];
     covariateIds: readonly string[];
-  }
+  },
 ): Community {
   return communitySchema.parse({
     id: row.id,
@@ -706,7 +768,7 @@ function fromCommunityRow(
     entityIds: relations.entityIds,
     relationshipIds: relations.relationshipIds,
     textUnitIds: relations.textUnitIds,
-    covariateIds: relations.covariateIds
+    covariateIds: relations.covariateIds,
   });
 }
 
@@ -728,11 +790,13 @@ function toCommunityReportRow(report: CommunityReport) {
     full_content_embedding_json: encodeJson(report.fullContentEmbedding),
     attributes_json: encodeJson(report.attributes),
     period: report.period ?? null,
-    size: report.size ?? null
+    size: report.size ?? null,
   };
 }
 
-function fromCommunityReportRow(row: GraphRagSelectable<"grag_community_reports">): CommunityReport {
+function fromCommunityReportRow(
+  row: GraphRagSelectable<"grag_community_reports">,
+): CommunityReport {
   return communityReportSchema.parse({
     id: row.id,
     humanReadableId: row.human_readable_id,
@@ -750,22 +814,25 @@ function fromCommunityReportRow(row: GraphRagSelectable<"grag_community_reports"
     fullContentEmbedding: decodeJson<number[] | null>(row.full_content_embedding_json, null),
     attributes: decodeJsonObject(row.attributes_json),
     period: row.period,
-    size: row.size
+    size: row.size,
   });
 }
 
 function toEmbeddingRow(record: EmbeddingRecord) {
-  return withCreatedAt({
-    id: record.id,
-    human_readable_id: humanReadableId(record.humanReadableId),
-    target_kind: record.targetKind,
-    target_id: record.targetId,
-    vector_json: JSON.stringify(record.vector),
-    model: record.model ?? null,
-    dimensions: record.dimensions ?? record.vector.length,
-    text: record.text ?? null,
-    metadata_json: encodeJson(record.metadata)
-  }, record.createdAt);
+  return withCreatedAt(
+    {
+      id: record.id,
+      human_readable_id: humanReadableId(record.humanReadableId),
+      target_kind: record.targetKind,
+      target_id: record.targetId,
+      vector_json: JSON.stringify(record.vector),
+      model: record.model ?? null,
+      dimensions: record.dimensions ?? record.vector.length,
+      text: record.text ?? null,
+      metadata_json: encodeJson(record.metadata),
+    },
+    record.createdAt,
+  );
 }
 
 function fromEmbeddingRow(row: GraphRagSelectable<"grag_embeddings">): EmbeddingRecord {
@@ -779,6 +846,6 @@ function fromEmbeddingRow(row: GraphRagSelectable<"grag_embeddings">): Embedding
     dimensions: row.dimensions,
     text: row.text,
     metadata: decodeJsonObject(row.metadata_json),
-    createdAt: createdAt(row.created_at)
+    createdAt: createdAt(row.created_at),
   });
 }

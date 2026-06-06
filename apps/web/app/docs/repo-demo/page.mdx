@@ -4,6 +4,7 @@ title: "Repository Index"
 description: "Use the repo command to index local repositories or Git URLs and query them in Studio."
 icon: repo
 ---
+
 # Repository Index
 
 Use the `repo` command to build a repository index from any local repository or Git URL, ask a question over it, and optionally open the generated graph in Studio.
@@ -57,14 +58,14 @@ const indexed = await indexRepository({
   source: "microsoft/graphrag",
   provider: "github",
   remote: {
-    ref: "main"
+    ref: "main",
   },
   scan: {
-    maxFiles: "all"
+    maxFiles: "all",
   },
   extraction: {
-    provider: "local"
-  }
+    provider: "local",
+  },
 });
 ```
 

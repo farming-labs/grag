@@ -4,6 +4,7 @@ title: "GraphRAG Storage And Retrieval"
 description: "Understand the relational schema and graph retrieval helpers."
 icon: graph
 ---
+
 # GraphRAG Storage And Retrieval
 
 This package stores the GraphRAG artifact model as normalized relational tables. The same shape works through the Kysely SQL store and the `@farming-labs/orm` schema adapter.
@@ -60,7 +61,7 @@ Use the service API to read those neighborhoods without hand-writing joins:
 ```ts
 const neighborhood = await grag.neighborhood({
   entityIds: ["ent_postgres"],
-  includeCommunityReports: true
+  includeCommunityReports: true,
 });
 
 console.log(neighborhood.textUnits); // related chunks
@@ -72,7 +73,7 @@ Or only fetch the chunks:
 
 ```ts
 const chunks = await grag.relatedTextUnits({
-  relationshipIds: ["rel_storage_retrieval"]
+  relationshipIds: ["rel_storage_retrieval"],
 });
 ```
 

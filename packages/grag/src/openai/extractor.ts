@@ -18,7 +18,7 @@ const DEFAULT_ENTITY_TYPES = [
   "PRODUCT",
   "TECHNOLOGY",
   "DOCUMENT",
-  "PROCESS"
+  "PROCESS",
 ];
 
 const extractionSchema = z.object({
@@ -26,17 +26,17 @@ const extractionSchema = z.object({
     z.object({
       title: z.string(),
       type: z.string(),
-      description: z.string()
-    })
+      description: z.string(),
+    }),
   ),
   relationships: z.array(
     z.object({
       source: z.string(),
       target: z.string(),
       description: z.string(),
-      weight: z.number().optional()
-    })
-  )
+      weight: z.number().optional(),
+    }),
+  ),
 });
 
 export class OpenAiGraphExtractor implements GraphExtractor {
@@ -56,9 +56,9 @@ export class OpenAiGraphExtractor implements GraphExtractor {
       const completion = await this.model.complete(
         [
           { role: "system", content: this.systemPrompt },
-          { role: "user", content: textUnit.text }
+          { role: "user", content: textUnit.text },
         ],
-        { responseFormat: "json", temperature: 0 }
+        { responseFormat: "json", temperature: 0 },
       );
       raw = JSON.parse(completionContent(completion));
     } catch {
@@ -75,7 +75,7 @@ export class OpenAiGraphExtractor implements GraphExtractor {
       type: e.type.toUpperCase(),
       description: e.description,
       textUnitIds: [textUnit.id],
-      communityIds: []
+      communityIds: [],
     }));
 
     const entityTitleToId = new Map(entities.map((e) => [e.title.toLowerCase(), e.id]));
@@ -83,8 +83,7 @@ export class OpenAiGraphExtractor implements GraphExtractor {
     const relationships: Relationship[] = parsed.data.relationships
       .filter((r) => {
         return (
-          entityTitleToId.has(r.source.toLowerCase()) &&
-          entityTitleToId.has(r.target.toLowerCase())
+          entityTitleToId.has(r.source.toLowerCase()) && entityTitleToId.has(r.target.toLowerCase())
         );
       })
       .map((r) => ({
@@ -96,8 +95,8 @@ export class OpenAiGraphExtractor implements GraphExtractor {
         textUnitIds: [textUnit.id],
         attributes: {
           sourceEntityId: entityTitleToId.get(r.source.toLowerCase()) ?? "",
-          targetEntityId: entityTitleToId.get(r.target.toLowerCase()) ?? ""
-        }
+          targetEntityId: entityTitleToId.get(r.target.toLowerCase()) ?? "",
+        },
       }));
 
     return { entities, relationships };
@@ -120,6 +119,6 @@ function buildSystemPrompt(entityTypes: readonly string[]): string {
     "- source/target: must match an entity title exactly (case-sensitive)",
     "- weight: 1–10 strength of the relationship",
     "- Only extract entities and relationships clearly supported by the text.",
-    "- Preserve exact API names, file paths, function names, and table/column names as titles."
+    "- Preserve exact API names, file paths, function names, and table/column names as titles.",
   ].join("\n");
 }

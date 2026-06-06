@@ -5,7 +5,7 @@ import {
   createGraphRagService,
   loadDatabaseSource,
   source,
-  type RelationalRow
+  type RelationalRow,
 } from "../src/index.js";
 
 type SupportTicket = RelationalRow & {
@@ -29,12 +29,12 @@ describe("database sources", () => {
         body: [
           "Acme reports that the billing export fails after the Postgres migration.",
           "The generated CSV has a checksum mismatch in the invoice totals column.",
-          "The workaround is to rerun the export job after clearing the stale ledger cache."
+          "The workaround is to rerun the export job after clearing the stale ledger cache.",
         ].join(" "),
         severity: "sev1",
         status: "open",
         created_at: new Date("2026-05-12T10:15:00.000Z"),
-        tags: ["billing", "export", "migration"]
+        tags: ["billing", "export", "migration"],
       },
       {
         ticket_id: "TCK-1002",
@@ -44,7 +44,7 @@ describe("database sources", () => {
         severity: "sev3",
         status: "resolved",
         created_at: new Date("2026-05-14T08:30:00.000Z"),
-        tags: ["auth", "email"]
+        tags: ["auth", "email"],
       },
       {
         ticket_id: "TCK-1003",
@@ -54,8 +54,8 @@ describe("database sources", () => {
         severity: "sev3",
         status: "spam",
         created_at: new Date("2026-05-15T09:00:00.000Z"),
-        tags: ["spam"]
-      }
+        tags: ["spam"],
+      },
     ];
     let queryCount = 0;
 
@@ -69,7 +69,7 @@ describe("database sources", () => {
       idColumn: "ticket_id",
       titleColumn: "subject",
       textColumn: "body",
-      attributeColumns: ["customer", "severity", "status", "created_at", "tags"]
+      attributeColumns: ["customer", "severity", "status", "created_at", "tags"],
     });
 
     const loader = new DataSourceLoader([tickets], { chunkSize: 80, overlap: 0 });
@@ -80,10 +80,12 @@ describe("database sources", () => {
     expect(loaded.documentCount).toBe(2);
     expect(loaded.documents.map((doc) => doc.humanReadableId)).toEqual([
       "support_tickets:TCK-1001",
-      "support_tickets:TCK-1002"
+      "support_tickets:TCK-1002",
     ]);
 
-    const billingDoc = loaded.documents.find((doc) => doc.humanReadableId === "support_tickets:TCK-1001");
+    const billingDoc = loaded.documents.find(
+      (doc) => doc.humanReadableId === "support_tickets:TCK-1001",
+    );
     expect(billingDoc).toBeDefined();
     expect(billingDoc?.title).toBe("Billing export checksum mismatch after migration");
     expect(billingDoc?.text).toContain("checksum mismatch");
@@ -97,12 +99,12 @@ describe("database sources", () => {
       sourceLabel: "Production support tickets",
       sourcePath: "database:support_tickets:TCK-1001",
       sourceRowId: "TCK-1001",
-      sourceTable: "support_tickets"
+      sourceTable: "support_tickets",
     });
     expect(billingDoc?.rawData).toMatchObject({
       ticket_id: "TCK-1001",
       customer: "Acme",
-      created_at: "2026-05-12T10:15:00.000Z"
+      created_at: "2026-05-12T10:15:00.000Z",
     });
 
     const billingChunk = loaded.textUnits.find((unit) => unit.documentId === billingDoc?.id);
@@ -110,19 +112,22 @@ describe("database sources", () => {
       documentTitle: "Billing export checksum mismatch after migration",
       sourcePath: "database:support_tickets:TCK-1001",
       sourceTable: "support_tickets",
-      sourceRowId: "TCK-1001"
+      sourceRowId: "TCK-1001",
     });
 
     const store = new MemoryGraphRagStore();
     await store.upsertGraph({
       documents: loaded.documents,
-      textUnits: loaded.textUnits
+      textUnits: loaded.textUnits,
     });
     const service = createGraphRagService({ store });
 
-    const result = await service.searchGraph("Which customer has a billing export checksum mismatch?", {
-      limit: 4
-    });
+    const result = await service.searchGraph(
+      "Which customer has a billing export checksum mismatch?",
+      {
+        limit: 4,
+      },
+    );
 
     expect(result.hits.length).toBeGreaterThan(0);
     expect(result.hits[0]?.sourcePaths).toContain("database:support_tickets:TCK-1001");
@@ -132,9 +137,9 @@ describe("database sources", () => {
   });
 
   it("rejects ambiguous or missing database row mappings", async () => {
-    await expect(loadDatabaseSource(source.database({ tableName: "support_tickets" }))).rejects.toThrow(
-      /rows or loadRows/
-    );
+    await expect(
+      loadDatabaseSource(source.database({ tableName: "support_tickets" })),
+    ).rejects.toThrow(/rows or loadRows/);
 
     await expect(
       loadDatabaseSource(
@@ -142,9 +147,9 @@ describe("database sources", () => {
           tableName: "support_tickets",
           rows: [{ id: "TCK-1", body: "Ticket body" }],
           textColumn: "body",
-          textColumns: ["body"]
-        })
-      )
+          textColumns: ["body"],
+        }),
+      ),
     ).rejects.toThrow(/either textColumn or textColumns/);
 
     await expect(
@@ -152,9 +157,9 @@ describe("database sources", () => {
         source.database({
           tableName: "support_tickets",
           rows: [{ id: "TCK-1", subject: "Missing body" }] as RelationalRow[],
-          textColumn: "body"
-        })
-      )
+          textColumn: "body",
+        }),
+      ),
     ).rejects.toThrow(/textColumn "body" is missing from row 0/);
   });
 });

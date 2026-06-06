@@ -10,13 +10,13 @@ const grag = createGraphRagService({ store });
 
 ## Which Database Can I Use?
 
-| Storage | Best for | Package surface | Notes |
-| --- | --- | --- | --- |
-| Memory | tests, demos, local prototypes | `MemoryGraphRagStore`, `createMemoryGraphRagService` | No persistence after process exit. |
-| Postgres | production, multi-tenant AI infrastructure | `SqlGraphRagStore` + Kysely | Recommended production default. Add `pgvector` later for native vector indexes. |
-| SQLite | local apps, desktop tools, small teams | `SqlGraphRagStore` + Kysely | Good simple persistent option. |
-| Any `@farming-labs/orm` driver | portable app storage | `OrmGraphRagStore`, `graphRagOrmSchema` | Use when another service already standardizes on Farming Labs ORM. |
-| Custom store | hosted DBs, existing infra, service APIs | implement `GraphRagStore` | Useful for Supabase, Neon, Turso, PlanetScale-style service boundaries, or internal APIs. |
+| Storage                        | Best for                                   | Package surface                                      | Notes                                                                                     |
+| ------------------------------ | ------------------------------------------ | ---------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Memory                         | tests, demos, local prototypes             | `MemoryGraphRagStore`, `createMemoryGraphRagService` | No persistence after process exit.                                                        |
+| Postgres                       | production, multi-tenant AI infrastructure | `SqlGraphRagStore` + Kysely                          | Recommended production default. Add `pgvector` later for native vector indexes.           |
+| SQLite                         | local apps, desktop tools, small teams     | `SqlGraphRagStore` + Kysely                          | Good simple persistent option.                                                            |
+| Any `@farming-labs/orm` driver | portable app storage                       | `OrmGraphRagStore`, `graphRagOrmSchema`              | Use when another service already standardizes on Farming Labs ORM.                        |
+| Custom store                   | hosted DBs, existing infra, service APIs   | implement `GraphRagStore`                            | Useful for Supabase, Neon, Turso, PlanetScale-style service boundaries, or internal APIs. |
 
 The current SQL migration helper has explicit dialect names for:
 
@@ -36,7 +36,7 @@ const grag = createMemoryGraphRagService();
 
 await grag.ingestTextDocuments({
   title: "Storage note",
-  text: "Postgres stores GraphRAG documents, text units, entities, relationships, and communities."
+  text: "Postgres stores GraphRAG documents, text units, entities, relationships, and communities.",
 });
 ```
 
@@ -57,21 +57,21 @@ import {
   applyGraphRagMigrations,
   createGraphRagService,
   SqlGraphRagStore,
-  type GraphRagSqlDatabase
+  type GraphRagSqlDatabase,
 } from "@farming-labs/grag";
 
 const db = new Kysely<GraphRagSqlDatabase>({
   dialect: new PostgresDialect({
     pool: new Pool({
-      connectionString: process.env.DATABASE_URL
-    })
-  })
+      connectionString: process.env.DATABASE_URL,
+    }),
+  }),
 });
 
 await applyGraphRagMigrations(db, "postgres");
 
 const grag = createGraphRagService({
-  store: new SqlGraphRagStore({ db })
+  store: new SqlGraphRagStore({ db }),
 });
 ```
 
@@ -94,19 +94,19 @@ import {
   applyGraphRagMigrations,
   createGraphRagService,
   SqlGraphRagStore,
-  type GraphRagSqlDatabase
+  type GraphRagSqlDatabase,
 } from "@farming-labs/grag";
 
 const db = new Kysely<GraphRagSqlDatabase>({
   dialect: new SqliteDialect({
-    database: new Database("grag.sqlite")
-  })
+    database: new Database("grag.sqlite"),
+  }),
 });
 
 await applyGraphRagMigrations(db, "sqlite");
 
 const grag = createGraphRagService({
-  store: new SqlGraphRagStore({ db })
+  store: new SqlGraphRagStore({ db }),
 });
 ```
 
@@ -119,18 +119,15 @@ Use this when a service already relies on `@farming-labs/orm` and you want GRAG 
 ```ts
 import { createOrm } from "@farming-labs/orm";
 import { createGraphRagService } from "@farming-labs/grag";
-import {
-  graphRagOrmSchema,
-  OrmGraphRagStore
-} from "@farming-labs/grag/orm";
+import { graphRagOrmSchema, OrmGraphRagStore } from "@farming-labs/grag/orm";
 
 const orm = createOrm({
   schema: graphRagOrmSchema,
-  driver
+  driver,
 });
 
 const grag = createGraphRagService({
-  store: new OrmGraphRagStore({ orm })
+  store: new OrmGraphRagStore({ orm }),
 });
 ```
 

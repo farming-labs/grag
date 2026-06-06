@@ -7,7 +7,7 @@ import type {
   Entity,
   GraphRagDocument,
   Relationship,
-  TextUnit
+  TextUnit,
 } from "../model.js";
 import { chunkDocuments } from "../ingest/chunk.js";
 import { mapLimit } from "../utils/concurrency.js";
@@ -17,7 +17,7 @@ import type {
   PipelineStepResult,
   StandardGraphRagIndexOptions,
   StandardGraphRagIndexResult,
-  StandardGraphRagPipelineOptions
+  StandardGraphRagPipelineOptions,
 } from "./types.js";
 
 // Internal results that carry the back-linked collections through the pipeline.
@@ -41,7 +41,7 @@ export class StandardGraphRagPipeline {
 
   async indexDocuments(
     documents: readonly GraphRagDocument[],
-    options: StandardGraphRagIndexOptions = {}
+    options: StandardGraphRagIndexOptions = {},
   ): Promise<StandardGraphRagIndexResult> {
     const steps: PipelineStepResult[] = [];
     const chunkOptions: { chunkSize?: number; overlap?: number } = {};
@@ -51,7 +51,7 @@ export class StandardGraphRagPipeline {
 
     await this.options.store.upsertGraph({
       documents: chunked.documents,
-      textUnits: chunked.textUnits
+      textUnits: chunked.textUnits,
     });
     steps.push({ name: "compose_text_units", status: "success", count: chunked.textUnits.length });
     steps.push({ name: "link_documents", status: "success", count: chunked.documents.length });
@@ -65,32 +65,32 @@ export class StandardGraphRagPipeline {
       covariates,
       graph.textUnits,
       options,
-      steps
+      steps,
     );
     const embeddings = await this.generateEmbeddings(
       graph.textUnits,
       linkedEntities,
       communityReports,
-      steps
+      steps,
     );
 
     return {
       documents: chunked.documents,
-      textUnits: graph.textUnits,       // back-linked with entityIds/relationshipIds
-      entities: linkedEntities,          // with degree, rank, frequency, communityIds
+      textUnits: graph.textUnits, // back-linked with entityIds/relationshipIds
+      entities: linkedEntities, // with degree, rank, frequency, communityIds
       relationships: graph.relationships,
       covariates,
       communities,
       communityReports,
       embeddings,
-      steps
+      steps,
     };
   }
 
   private async extractGraph(
     textUnits: readonly TextUnit[],
     options: StandardGraphRagIndexOptions,
-    steps: PipelineStepResult[]
+    steps: PipelineStepResult[],
   ): Promise<InternalGraphResult> {
     if (!this.options.graphExtractor) {
       steps.push({ name: "extract_graph", status: "skipped" });
@@ -98,10 +98,8 @@ export class StandardGraphRagPipeline {
     }
 
     const concurrency = options.concurrency ?? this.options.concurrency ?? 4;
-    const extracted = await mapLimit(
-      textUnits,
-      concurrency,
-      (textUnit) => this.options.graphExtractor!.extract(textUnit)
+    const extracted = await mapLimit(textUnits, concurrency, (textUnit) =>
+      this.options.graphExtractor!.extract(textUnit),
     );
     const merged = mergeGraphExtraction(extracted);
 
@@ -114,23 +112,27 @@ export class StandardGraphRagPipeline {
     await this.options.store.upsertGraph({
       entities: scoredEntities,
       relationships: merged.relationships,
-      textUnits: linkedTextUnits
+      textUnits: linkedTextUnits,
     });
 
     steps.push({
       name: "extract_graph",
       status: "success",
-      count: scoredEntities.length + merged.relationships.length
+      count: scoredEntities.length + merged.relationships.length,
     });
 
-    return { entities: scoredEntities, relationships: merged.relationships, textUnits: linkedTextUnits };
+    return {
+      entities: scoredEntities,
+      relationships: merged.relationships,
+      textUnits: linkedTextUnits,
+    };
   }
 
   private async extractClaims(
     textUnits: readonly TextUnit[],
     graph: Pick<InternalGraphResult, "entities" | "relationships">,
     options: StandardGraphRagIndexOptions,
-    steps: PipelineStepResult[]
+    steps: PipelineStepResult[],
   ): Promise<Covariate[]> {
     if (!this.options.claimExtractor) {
       steps.push({ name: "extract_claims", status: "skipped" });
@@ -138,11 +140,12 @@ export class StandardGraphRagPipeline {
     }
 
     const concurrency = options.concurrency ?? this.options.concurrency ?? 4;
-    const graphResult: GraphExtractionResult = { entities: graph.entities, relationships: graph.relationships };
-    const nested = await mapLimit(
-      textUnits,
-      concurrency,
-      (textUnit) => this.options.claimExtractor!.extract(textUnit, graphResult)
+    const graphResult: GraphExtractionResult = {
+      entities: graph.entities,
+      relationships: graph.relationships,
+    };
+    const nested = await mapLimit(textUnits, concurrency, (textUnit) =>
+      this.options.claimExtractor!.extract(textUnit, graphResult),
     );
     const covariates = nested.flat();
 
@@ -154,7 +157,7 @@ export class StandardGraphRagPipeline {
 
   private async detectCommunities(
     graph: InternalGraphResult,
-    steps: PipelineStepResult[]
+    steps: PipelineStepResult[],
   ): Promise<InternalCommunityResult> {
     if (!this.options.communityDetector) {
       steps.push({ name: "detect_communities", status: "skipped" });
@@ -164,7 +167,7 @@ export class StandardGraphRagPipeline {
     const communities = await this.options.communityDetector.detect({
       entities: graph.entities,
       relationships: graph.relationships,
-      textUnits: graph.textUnits
+      textUnits: graph.textUnits,
     });
 
     // Update entities with their communityIds so the result and store stay in sync
@@ -185,7 +188,7 @@ export class StandardGraphRagPipeline {
     covariates: readonly Covariate[],
     textUnits: readonly TextUnit[],
     options: StandardGraphRagIndexOptions,
-    steps: PipelineStepResult[]
+    steps: PipelineStepResult[],
   ): Promise<CommunityReport[]> {
     if (!this.options.communityReporter) {
       steps.push({ name: "generate_community_reports", status: "skipped" });
@@ -193,19 +196,14 @@ export class StandardGraphRagPipeline {
     }
 
     const concurrency = options.concurrency ?? this.options.concurrency ?? 4;
-    const reports = await mapLimit(
-      communities,
-      concurrency,
-      (community) =>
-        this.options.communityReporter!.report({
-          community,
-          entities: graph.entities.filter((e) => community.entityIds.includes(e.id)),
-          relationships: graph.relationships.filter((r) =>
-            community.relationshipIds.includes(r.id)
-          ),
-          covariates: covariates.filter((c) => community.covariateIds.includes(c.id)),
-          textUnits: textUnits.filter((t) => community.textUnitIds.includes(t.id))
-        })
+    const reports = await mapLimit(communities, concurrency, (community) =>
+      this.options.communityReporter!.report({
+        community,
+        entities: graph.entities.filter((e) => community.entityIds.includes(e.id)),
+        relationships: graph.relationships.filter((r) => community.relationshipIds.includes(r.id)),
+        covariates: covariates.filter((c) => community.covariateIds.includes(c.id)),
+        textUnits: textUnits.filter((t) => community.textUnitIds.includes(t.id)),
+      }),
     );
 
     await this.options.store.upsertCommunityReports(reports);
@@ -218,7 +216,7 @@ export class StandardGraphRagPipeline {
     textUnits: readonly TextUnit[],
     entities: readonly Entity[],
     communityReports: readonly CommunityReport[],
-    steps: PipelineStepResult[]
+    steps: PipelineStepResult[],
   ): Promise<EmbeddingRecord[]> {
     if (!this.options.embeddingModel) {
       steps.push({ name: "generate_embeddings", status: "skipped" });
@@ -229,7 +227,7 @@ export class StandardGraphRagPipeline {
       embedTextUnits: true,
       embedEntities: true,
       embedCommunityReports: true,
-      ...this.options.embeddings
+      ...this.options.embeddings,
     };
     const targets = [
       ...(config.embedTextUnits
@@ -239,21 +237,21 @@ export class StandardGraphRagPipeline {
         ? entities.map((e) => ({
             kind: "entity" as const,
             id: e.id,
-            text: [e.title, e.description].filter(Boolean).join("\n")
+            text: [e.title, e.description].filter(Boolean).join("\n"),
           }))
         : []),
       ...(config.embedCommunityReports
         ? communityReports.map((r) => ({
             kind: "community_report" as const,
             id: r.id,
-            text: r.fullContent || r.summary
+            text: r.fullContent || r.summary,
           }))
-        : [])
+        : []),
     ];
 
     const vectors = await this.options.embeddingModel.embed(targets.map((t) => t.text));
     const embeddings = targets.map((t, i) =>
-      toEmbeddingRecord(t.kind, t.id, t.text, vectors[i] ?? [], config.model)
+      toEmbeddingRecord(t.kind, t.id, t.text, vectors[i] ?? [], config.model),
     );
 
     await this.options.store.upsertEmbeddings(embeddings);
@@ -280,14 +278,14 @@ function mergeGraphExtraction(results: readonly GraphExtractionResult[]): GraphE
           ? {
               ...current,
               description: mergeDescription(current.description, entity.description),
-              textUnitIds: unique([...(current.textUnitIds ?? []), ...(entity.textUnitIds ?? [])])
+              textUnitIds: unique([...(current.textUnitIds ?? []), ...(entity.textUnitIds ?? [])]),
             }
           : {
               ...entity,
               id: entity.id || createStableId([entity.type ?? "", entity.title], "ent"),
               textUnitIds: entity.textUnitIds ?? [],
-              communityIds: entity.communityIds ?? []
-            }
+              communityIds: entity.communityIds ?? [],
+            },
       );
     }
 
@@ -301,13 +299,18 @@ function mergeGraphExtraction(results: readonly GraphExtractionResult[]): GraphE
               ...current,
               description: mergeDescription(current.description, relationship.description),
               weight: (current.weight ?? 1) + (relationship.weight ?? 1),
-              textUnitIds: unique([...(current.textUnitIds ?? []), ...(relationship.textUnitIds ?? [])])
+              textUnitIds: unique([
+                ...(current.textUnitIds ?? []),
+                ...(relationship.textUnitIds ?? []),
+              ]),
             }
           : {
               ...relationship,
-              id: relationship.id || createStableId([relationship.source, relationship.target], "rel"),
-              textUnitIds: relationship.textUnitIds ?? []
-            }
+              id:
+                relationship.id ||
+                createStableId([relationship.source, relationship.target], "rel"),
+              textUnitIds: relationship.textUnitIds ?? [],
+            },
       );
     }
   }
@@ -318,7 +321,10 @@ function mergeGraphExtraction(results: readonly GraphExtractionResult[]): GraphE
 // ---------------------------------------------------------------------------
 // Entity stats: degree, frequency, rank
 
-function computeEntityStats(entities: readonly Entity[], relationships: readonly Relationship[]): Entity[] {
+function computeEntityStats(
+  entities: readonly Entity[],
+  relationships: readonly Relationship[],
+): Entity[] {
   const degreeByTitle = new Map<string, number>();
   for (const rel of relationships) {
     degreeByTitle.set(rel.source, (degreeByTitle.get(rel.source) ?? 0) + 1);
@@ -332,7 +338,7 @@ function computeEntityStats(entities: readonly Entity[], relationships: readonly
       ...entity,
       degree,
       frequency: entity.textUnitIds.length,
-      rank: degree / maxDegree
+      rank: degree / maxDegree,
     };
   });
 }
@@ -343,7 +349,7 @@ function computeEntityStats(entities: readonly Entity[], relationships: readonly
 function backLinkTextUnits(
   textUnits: readonly TextUnit[],
   entities: readonly Entity[],
-  relationships: readonly Relationship[]
+  relationships: readonly Relationship[],
 ): TextUnit[] {
   const entityIdsByTextUnit = new Map<string, string[]>();
   const relationshipIdsByTextUnit = new Map<string, string[]>();
@@ -367,14 +373,20 @@ function backLinkTextUnits(
   return textUnits.map((tu) => ({
     ...tu,
     entityIds: unique([...tu.entityIds, ...(entityIdsByTextUnit.get(tu.id) ?? [])]),
-    relationshipIds: unique([...tu.relationshipIds, ...(relationshipIdsByTextUnit.get(tu.id) ?? [])])
+    relationshipIds: unique([
+      ...tu.relationshipIds,
+      ...(relationshipIdsByTextUnit.get(tu.id) ?? []),
+    ]),
   }));
 }
 
 // ---------------------------------------------------------------------------
 // Link entity communityIds after community detection
 
-function linkEntitiesToCommunities(entities: readonly Entity[], communities: readonly Community[]): Entity[] {
+function linkEntitiesToCommunities(
+  entities: readonly Entity[],
+  communities: readonly Community[],
+): Entity[] {
   const communityIdsByEntityId = new Map<string, string[]>();
   for (const community of communities) {
     for (const entityId of community.entityIds) {
@@ -388,15 +400,18 @@ function linkEntitiesToCommunities(entities: readonly Entity[], communities: rea
     ...entity,
     communityIds: unique([
       ...entity.communityIds,
-      ...(communityIdsByEntityId.get(entity.id) ?? [])
-    ])
+      ...(communityIdsByEntityId.get(entity.id) ?? []),
+    ]),
   }));
 }
 
 // ---------------------------------------------------------------------------
 // Utilities
 
-function mergeDescription(left: string | null | undefined, right: string | null | undefined): string {
+function mergeDescription(
+  left: string | null | undefined,
+  right: string | null | undefined,
+): string {
   return unique([left, right].filter((v): v is string => Boolean(v))).join("\n");
 }
 
@@ -409,7 +424,7 @@ function toEmbeddingRecord(
   targetId: string,
   text: string,
   vector: number[],
-  model?: string
+  model?: string,
 ): EmbeddingRecord {
   return {
     id: createStableId([targetKind, targetId, model ?? "default"], "emb"),
@@ -418,6 +433,6 @@ function toEmbeddingRecord(
     vector,
     model,
     dimensions: vector.length,
-    text
+    text,
   };
 }

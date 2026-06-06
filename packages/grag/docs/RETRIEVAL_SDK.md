@@ -21,12 +21,12 @@ export async function POST(request: Request, store: GraphRagStore) {
   const grag = createGraphRagService({
     store,
     model: new OpenAiChatModel(),
-    embeddingModel: new OpenAiEmbeddingModel()
+    embeddingModel: new OpenAiEmbeddingModel(),
   });
 
   const result = await grag.ask(query, {
     limit: 12,
-    responseStyle: "short answer, then bullets, always cite sources"
+    responseStyle: "short answer, then bullets, always cite sources",
   });
 
   return Response.json(result);
@@ -88,13 +88,13 @@ Use `searchGraph` when the dashboard should render evidence and let the user dec
 ```ts
 const result = await grag.searchGraph("where is storage configured?", {
   limit: 10,
-  includeTextSearch: true
+  includeTextSearch: true,
 });
 
 return {
   hits: result.hits,
   citations: result.citations,
-  graph: result.graph
+  graph: result.graph,
 };
 ```
 
@@ -122,7 +122,7 @@ If your product requires model synthesis, force that contract:
 
 ```ts
 await grag.ask("what changed in auth?", {
-  requireModel: true
+  requireModel: true,
 });
 ```
 

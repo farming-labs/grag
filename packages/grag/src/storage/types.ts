@@ -9,7 +9,7 @@ import type {
   GraphRagSnapshot,
   PartialGraphRagSnapshot,
   Relationship,
-  TextUnit
+  TextUnit,
 } from "../model.js";
 
 export interface ListOptions {

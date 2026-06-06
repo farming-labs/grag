@@ -189,7 +189,7 @@ const commonStatements = [
   `CREATE INDEX IF NOT EXISTS grag_covariates_subject_idx ON grag_covariates (subject_type, subject_id)`,
   `CREATE INDEX IF NOT EXISTS grag_communities_level_idx ON grag_communities (level)`,
   `CREATE INDEX IF NOT EXISTS grag_community_reports_level_idx ON grag_community_reports (level)`,
-  `CREATE INDEX IF NOT EXISTS grag_embeddings_target_idx ON grag_embeddings (target_kind, target_id)`
+  `CREATE INDEX IF NOT EXISTS grag_embeddings_target_idx ON grag_embeddings (target_kind, target_id)`,
 ] as const;
 
 export function getGraphRagMigrationStatements(_dialect: GraphRagSqlDialect): readonly string[] {
@@ -198,7 +198,7 @@ export function getGraphRagMigrationStatements(_dialect: GraphRagSqlDialect): re
 
 export async function applyGraphRagMigrations<DB extends object>(
   db: Kysely<DB>,
-  dialect: GraphRagSqlDialect
+  dialect: GraphRagSqlDialect,
 ): Promise<void> {
   for (const statement of getGraphRagMigrationStatements(dialect)) {
     await sql.raw(statement).execute(db);

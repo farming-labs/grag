@@ -15,7 +15,7 @@ export interface RelationalRowsToDocumentsOptions<Row extends RelationalRow = Re
 }
 
 export function relationalRowsToDocuments<Row extends RelationalRow>(
-  options: RelationalRowsToDocumentsOptions<Row>
+  options: RelationalRowsToDocumentsOptions<Row>,
 ): GraphRagDocument[] {
   const {
     rows,
@@ -25,15 +25,14 @@ export function relationalRowsToDocuments<Row extends RelationalRow>(
     textColumn,
     textColumns,
     documentType = "relational-row",
-    attributeColumns
+    attributeColumns,
   } = options;
 
   return rows.map((row, index) => {
     const sourceId = stringifyCell(row[idColumn]) || String(index);
     const text = resolveText(row, textColumn, textColumns);
     const title =
-      (titleColumn ? stringifyCell(row[titleColumn]) : undefined) ||
-      `${tableName}:${sourceId}`;
+      (titleColumn ? stringifyCell(row[titleColumn]) : undefined) || `${tableName}:${sourceId}`;
 
     return {
       id: createStableId([tableName, sourceId], "doc"),
@@ -43,7 +42,7 @@ export function relationalRowsToDocuments<Row extends RelationalRow>(
       text,
       textUnitIds: [],
       attributes: collectAttributes(row, attributeColumns, [textColumn, ...(textColumns ?? [])]),
-      rawData: toJsonObject(row)
+      rawData: toJsonObject(row),
     };
   });
 }
@@ -51,7 +50,7 @@ export function relationalRowsToDocuments<Row extends RelationalRow>(
 function resolveText<Row extends RelationalRow>(
   row: Row,
   textColumn?: keyof Row & string,
-  textColumns?: readonly (keyof Row & string)[]
+  textColumns?: readonly (keyof Row & string)[],
 ): string {
   if (textColumns?.length) {
     return textColumns
@@ -72,9 +71,11 @@ function resolveText<Row extends RelationalRow>(
 function collectAttributes<Row extends RelationalRow>(
   row: Row,
   columns: readonly (keyof Row & string)[] | undefined,
-  excluded: readonly ((keyof Row & string) | undefined)[]
+  excluded: readonly ((keyof Row & string) | undefined)[],
 ): JsonObject {
-  const excludedSet = new Set(excluded.filter((value): value is keyof Row & string => Boolean(value)));
+  const excludedSet = new Set(
+    excluded.filter((value): value is keyof Row & string => Boolean(value)),
+  );
   const entries = Object.entries(row).filter(([key]) => {
     if (excludedSet.has(key as keyof Row & string)) return false;
     return !columns || columns.includes(key as keyof Row & string);
@@ -96,14 +97,22 @@ function toJsonObject(row: RelationalRow): JsonObject {
 
 function toJsonValue(value: unknown): JsonValue {
   if (value === undefined) return null;
-  if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+  if (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
     return value;
   }
   if (value instanceof Date) return value.toISOString();
   if (Array.isArray(value)) return value.map(toJsonValue);
   if (typeof value === "object") {
     return Object.fromEntries(
-      Object.entries(value as Record<string, unknown>).map(([key, nested]) => [key, toJsonValue(nested)])
+      Object.entries(value as Record<string, unknown>).map(([key, nested]) => [
+        key,
+        toJsonValue(nested),
+      ]),
     );
   }
 

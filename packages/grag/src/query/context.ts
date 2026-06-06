@@ -20,7 +20,7 @@ const defaultMaxChunkChars = 8_000;
 
 export function buildCommunityContext(
   reports: readonly CommunityReport[],
-  options: BuildCommunityContextOptions = {}
+  options: BuildCommunityContextOptions = {},
 ): ContextChunk<CommunityReport>[] {
   const chunks: ContextChunk<CommunityReport>[] = [];
   let currentText = "";
@@ -48,21 +48,24 @@ export function buildCommunityContext(
 
 export function formatCommunityReport(
   report: CommunityReport,
-  options: BuildCommunityContextOptions = {}
+  options: BuildCommunityContextOptions = {},
 ): string {
   const lines = [
     `# Community ${report.community}: ${report.title}`,
     `Level: ${report.level}`,
     `Rank: ${report.rank}`,
     report.summary ? `Summary: ${report.summary}` : "",
-    report.fullContent ? `Report:\n${report.fullContent}` : ""
+    report.fullContent ? `Report:\n${report.fullContent}` : "",
   ].filter(Boolean);
 
   if (options.includeFindings && report.findings.length > 0) {
     lines.push(
       `Findings:\n${report.findings
-        .map((finding, index) => `${index + 1}. ${finding.summary}${finding.explanation ? ` - ${finding.explanation}` : ""}`)
-        .join("\n")}`
+        .map(
+          (finding, index) =>
+            `${index + 1}. ${finding.summary}${finding.explanation ? ` - ${finding.explanation}` : ""}`,
+        )
+        .join("\n")}`,
     );
   }
 
@@ -76,12 +79,17 @@ export function buildLocalContext(
     relationships: readonly Relationship[];
     textUnits: readonly TextUnit[];
   },
-  options: LocalContextOptions = {}
+  options: LocalContextOptions = {},
 ): string {
   const maxEntities = options.maxEntities ?? 20;
   const maxTextUnits = options.maxTextUnits ?? 8;
   const maxRelationships = options.maxRelationships ?? 12;
-  const entityScores = new Map(input.entities.map((entity) => [entity.id, lexicalScore(query, `${entity.title} ${entity.description ?? ""}`)]));
+  const entityScores = new Map(
+    input.entities.map((entity) => [
+      entity.id,
+      lexicalScore(query, `${entity.title} ${entity.description ?? ""}`),
+    ]),
+  );
   const selectedEntities = input.entities
     .filter((entity) => (entityScores.get(entity.id) ?? 0) > 0)
     .sort((left, right) => (entityScores.get(right.id) ?? 0) - (entityScores.get(left.id) ?? 0))
@@ -93,13 +101,13 @@ export function buildLocalContext(
       (relationship) =>
         selectedTitles.has(relationship.source) ||
         selectedTitles.has(relationship.target) ||
-        lexicalScore(query, relationship.description ?? "") > 0
+        lexicalScore(query, relationship.description ?? "") > 0,
     )
     .slice(0, maxRelationships);
 
   const textUnitIds = new Set([
     ...selectedEntities.flatMap((entity) => entity.textUnitIds),
-    ...relationships.flatMap((relationship) => relationship.textUnitIds)
+    ...relationships.flatMap((relationship) => relationship.textUnitIds),
   ]);
 
   const textUnits = input.textUnits
@@ -115,18 +123,25 @@ export function buildLocalContext(
       ? `Relationships\n${relationships
           .map(
             (relationship) =>
-              `- ${relationship.source} -> ${relationship.target}: ${relationship.description ?? ""} (weight ${relationship.weight})`
+              `- ${relationship.source} -> ${relationship.target}: ${relationship.description ?? ""} (weight ${relationship.weight})`,
           )
           .join("\n")}`
       : "",
-    textUnits.length ? `Sources\n${textUnits.map((textUnit) => `- ${textUnit.text}`).join("\n")}` : ""
+    textUnits.length
+      ? `Sources\n${textUnits.map((textUnit) => `- ${textUnit.text}`).join("\n")}`
+      : "",
   ]
     .filter(Boolean)
     .join("\n\n");
 }
 
 export function lexicalScore(query: string, text: string): number {
-  const terms = new Set(query.toLowerCase().split(/[^a-z0-9]+/).filter((term) => term.length > 2));
+  const terms = new Set(
+    query
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter((term) => term.length > 2),
+  );
   if (terms.size === 0) return 0;
 
   const normalized = text.toLowerCase();

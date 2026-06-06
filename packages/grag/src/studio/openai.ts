@@ -1,9 +1,6 @@
 import { z } from "zod";
 import type { GraphRagSnapshot } from "../model.js";
-import {
-  buildGraphRagSnapshotFromExtraction,
-  type DocumentGraphExtraction
-} from "./document.js";
+import { buildGraphRagSnapshotFromExtraction, type DocumentGraphExtraction } from "./document.js";
 
 export interface OpenAiDocumentGraphInput {
   filename: string;
@@ -28,35 +25,51 @@ const DEFAULT_MODEL = "gpt-5.4-mini";
 const extractionSchema = z.object({
   title: z.string(),
   summary: z.string(),
-  textUnits: z.array(z.object({
-    title: z.string(),
-    text: z.string()
-  })),
-  entities: z.array(z.object({
-    title: z.string(),
-    type: z.string(),
-    description: z.string(),
-    textUnitIndexes: z.array(z.number().int())
-  })),
-  relationships: z.array(z.object({
-    sourceTitle: z.string(),
-    targetTitle: z.string(),
-    description: z.string(),
-    weight: z.number(),
-    textUnitIndexes: z.array(z.number().int())
-  })),
-  communities: z.array(z.object({
-    title: z.string(),
-    summary: z.string(),
-    entityTitles: z.array(z.string())
-  })),
-  suggestedQueries: z.array(z.string())
+  textUnits: z.array(
+    z.object({
+      title: z.string(),
+      text: z.string(),
+    }),
+  ),
+  entities: z.array(
+    z.object({
+      title: z.string(),
+      type: z.string(),
+      description: z.string(),
+      textUnitIndexes: z.array(z.number().int()),
+    }),
+  ),
+  relationships: z.array(
+    z.object({
+      sourceTitle: z.string(),
+      targetTitle: z.string(),
+      description: z.string(),
+      weight: z.number(),
+      textUnitIndexes: z.array(z.number().int()),
+    }),
+  ),
+  communities: z.array(
+    z.object({
+      title: z.string(),
+      summary: z.string(),
+      entityTitles: z.array(z.string()),
+    }),
+  ),
+  suggestedQueries: z.array(z.string()),
 });
 
 const extractionJsonSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["title", "summary", "textUnits", "entities", "relationships", "communities", "suggestedQueries"],
+  required: [
+    "title",
+    "summary",
+    "textUnits",
+    "entities",
+    "relationships",
+    "communities",
+    "suggestedQueries",
+  ],
   properties: {
     title: { type: "string" },
     summary: { type: "string" },
@@ -68,9 +81,9 @@ const extractionJsonSchema = {
         required: ["title", "text"],
         properties: {
           title: { type: "string" },
-          text: { type: "string" }
-        }
-      }
+          text: { type: "string" },
+        },
+      },
     },
     entities: {
       type: "array",
@@ -84,10 +97,10 @@ const extractionJsonSchema = {
           description: { type: "string" },
           textUnitIndexes: {
             type: "array",
-            items: { type: "integer" }
-          }
-        }
-      }
+            items: { type: "integer" },
+          },
+        },
+      },
     },
     relationships: {
       type: "array",
@@ -102,10 +115,10 @@ const extractionJsonSchema = {
           weight: { type: "number" },
           textUnitIndexes: {
             type: "array",
-            items: { type: "integer" }
-          }
-        }
-      }
+            items: { type: "integer" },
+          },
+        },
+      },
     },
     communities: {
       type: "array",
@@ -118,21 +131,21 @@ const extractionJsonSchema = {
           summary: { type: "string" },
           entityTitles: {
             type: "array",
-            items: { type: "string" }
-          }
-        }
-      }
+            items: { type: "string" },
+          },
+        },
+      },
     },
     suggestedQueries: {
       type: "array",
-      items: { type: "string" }
-    }
-  }
+      items: { type: "string" },
+    },
+  },
 } as const;
 
 export async function extractDocumentGraphWithOpenAI(
   input: OpenAiDocumentGraphInput,
-  options: OpenAiDocumentGraphOptions = {}
+  options: OpenAiDocumentGraphOptions = {},
 ): Promise<OpenAiDocumentGraphResult> {
   const apiKey = options.apiKey ?? process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -143,28 +156,30 @@ export async function extractDocumentGraphWithOpenAI(
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
-      "authorization": `Bearer ${apiKey}`,
-      "content-type": "application/json"
+      authorization: `Bearer ${apiKey}`,
+      "content-type": "application/json",
     },
     body: JSON.stringify({
       model,
-      input: [{
-        role: "user",
-        content: buildInputContent(input)
-      }],
+      input: [
+        {
+          role: "user",
+          content: buildInputContent(input),
+        },
+      ],
       text: {
         format: {
           type: "json_schema",
           name: "grag_document_graph",
           strict: true,
-          schema: extractionJsonSchema
-        }
+          schema: extractionJsonSchema,
+        },
       },
-      max_output_tokens: maxOutputTokens()
-    })
+      max_output_tokens: maxOutputTokens(),
+    }),
   });
 
-  const payload = await response.json() as unknown;
+  const payload = (await response.json()) as unknown;
   if (!response.ok) {
     throw new Error(openAiErrorMessage(payload, response.status));
   }
@@ -175,36 +190,38 @@ export async function extractDocumentGraphWithOpenAI(
     title: input.filename,
     sourcePath: input.filename,
     generatedBy: `openai:${model}`,
-    ...(input.text ? { sourceText: input.text } : {})
+    ...(input.text ? { sourceText: input.text } : {}),
   });
 
   return {
     snapshot,
     extraction,
-    model
+    model,
   };
 }
 
 function buildInputContent(input: OpenAiDocumentGraphInput): Record<string, unknown>[] {
-  const content: Record<string, unknown>[] = [{
-    type: "input_text",
-    text: [
-      "Extract a GraphRAG-ready knowledge graph from the attached or pasted document.",
-      "Use concise entity titles, meaningful entity types, source-grounded descriptions, weighted relationships, communities, and practical suggested queries.",
-      "Preserve exact package names, file paths, API names, database table names, column names, CLI flags, environment variables, and function names as entity titles or text-unit evidence when they appear.",
-      "Do not summarize away schema identifiers or code identifiers that would be needed for implementation, retrieval, or debugging.",
-      "For large inputs, keep the graph compact: at most 18 text units, 60 entities, 60 relationships, 8 communities, and 8 suggested queries.",
-      "Treat textUnitIndexes as zero-based indexes into the textUnits array.",
-      "Prefer support, docs, infrastructure, storage, retrieval, API, database, package, people, product, and workflow concepts when present.",
-      `Filename: ${input.filename}`,
-      `MIME type: ${input.mimeType || "unknown"}`
-    ].join("\n")
-  }];
+  const content: Record<string, unknown>[] = [
+    {
+      type: "input_text",
+      text: [
+        "Extract a GraphRAG-ready knowledge graph from the attached or pasted document.",
+        "Use concise entity titles, meaningful entity types, source-grounded descriptions, weighted relationships, communities, and practical suggested queries.",
+        "Preserve exact package names, file paths, API names, database table names, column names, CLI flags, environment variables, and function names as entity titles or text-unit evidence when they appear.",
+        "Do not summarize away schema identifiers or code identifiers that would be needed for implementation, retrieval, or debugging.",
+        "For large inputs, keep the graph compact: at most 18 text units, 60 entities, 60 relationships, 8 communities, and 8 suggested queries.",
+        "Treat textUnitIndexes as zero-based indexes into the textUnits array.",
+        "Prefer support, docs, infrastructure, storage, retrieval, API, database, package, people, product, and workflow concepts when present.",
+        `Filename: ${input.filename}`,
+        `MIME type: ${input.mimeType || "unknown"}`,
+      ].join("\n"),
+    },
+  ];
 
   if (input.text?.trim()) {
     content.push({
       type: "input_text",
-      text: input.text.slice(0, 220_000)
+      text: input.text.slice(0, 220_000),
     });
     return content;
   }
@@ -217,7 +234,7 @@ function buildInputContent(input: OpenAiDocumentGraphInput): Record<string, unkn
     content.push({
       type: "input_image",
       image_url: input.dataUrl,
-      detail: "auto"
+      detail: "auto",
     });
     return content;
   }
@@ -225,7 +242,7 @@ function buildInputContent(input: OpenAiDocumentGraphInput): Record<string, unkn
   content.push({
     type: "input_file",
     filename: input.filename,
-    file_data: input.dataUrl
+    file_data: input.dataUrl,
   });
   return content;
 }
@@ -263,7 +280,7 @@ function extractOutputText(payload: unknown): string {
         continue;
       }
       const content = Array.isArray((item as Record<string, unknown>).content)
-        ? (item as Record<string, unknown>).content as unknown[]
+        ? ((item as Record<string, unknown>).content as unknown[])
         : [];
       for (const contentItem of content) {
         if (!contentItem || typeof contentItem !== "object" || Array.isArray(contentItem)) {

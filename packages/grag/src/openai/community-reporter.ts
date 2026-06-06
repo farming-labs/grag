@@ -15,10 +15,10 @@ const reportSchema = z.object({
   findings: z.array(
     z.object({
       summary: z.string(),
-      explanation: z.string().optional()
-    })
+      explanation: z.string().optional(),
+    }),
   ),
-  rank: z.number()
+  rank: z.number(),
 });
 
 export class OpenAiCommunityReporter implements CommunityReporter {
@@ -30,21 +30,25 @@ export class OpenAiCommunityReporter implements CommunityReporter {
     this.maxSourceChunks = options.maxSourceChunks ?? 4;
   }
 
-  async report(
-    input: Parameters<CommunityReporter["report"]>[0]
-  ): Promise<CommunityReport> {
+  async report(input: Parameters<CommunityReporter["report"]>[0]): Promise<CommunityReport> {
     const { community, entities, relationships, textUnits } = input;
 
-    const context = buildContext(community, entities, relationships, textUnits, this.maxSourceChunks);
+    const context = buildContext(
+      community,
+      entities,
+      relationships,
+      textUnits,
+      this.maxSourceChunks,
+    );
 
     let parsed: z.infer<typeof reportSchema> | undefined;
     try {
       const completion = await this.model.complete(
         [
           { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: context }
+          { role: "user", content: context },
         ],
-        { responseFormat: "json", temperature: 0 }
+        { responseFormat: "json", temperature: 0 },
       );
       const raw = JSON.parse(completionContent(completion));
       const result = reportSchema.safeParse(raw);
@@ -63,7 +67,7 @@ export class OpenAiCommunityReporter implements CommunityReporter {
         ? findings
             .map((f, i) => `${i + 1}. ${f.summary}${f.explanation ? ` — ${f.explanation}` : ""}`)
             .join("\n")
-        : ""
+        : "",
     ]
       .filter(Boolean)
       .join("\n\n");
@@ -82,9 +86,9 @@ export class OpenAiCommunityReporter implements CommunityReporter {
       ratingExplanation: null,
       findings: findings.map((f) => ({
         summary: f.summary,
-        explanation: f.explanation ?? null
+        explanation: f.explanation ?? null,
       })),
-      size: community.size
+      size: community.size,
     };
   }
 }
@@ -94,7 +98,7 @@ function buildContext(
   entities: Parameters<CommunityReporter["report"]>[0]["entities"],
   relationships: Parameters<CommunityReporter["report"]>[0]["relationships"],
   textUnits: Parameters<CommunityReporter["report"]>[0]["textUnits"],
-  maxSourceChunks: number
+  maxSourceChunks: number,
 ): string {
   const parts: string[] = [`Community: ${community.title}`];
 
@@ -102,18 +106,15 @@ function buildContext(
     parts.push(
       `Entities:\n${entities
         .map((e) => `- ${e.title}${e.type ? ` (${e.type})` : ""}: ${e.description ?? ""}`)
-        .join("\n")}`
+        .join("\n")}`,
     );
   }
 
   if (relationships.length > 0) {
     parts.push(
       `Relationships:\n${relationships
-        .map(
-          (r) =>
-            `- ${r.source} → ${r.target}: ${r.description ?? ""} (weight ${r.weight})`
-        )
-        .join("\n")}`
+        .map((r) => `- ${r.source} → ${r.target}: ${r.description ?? ""} (weight ${r.weight})`)
+        .join("\n")}`,
     );
   }
 
@@ -122,7 +123,7 @@ function buildContext(
       `Source text:\n${textUnits
         .slice(0, maxSourceChunks)
         .map((t) => t.text)
-        .join("\n\n")}`
+        .join("\n\n")}`,
     );
   }
 
@@ -132,7 +133,7 @@ function buildContext(
 const SYSTEM_PROMPT = [
   "Generate a structured community report from the supplied knowledge-graph data.",
   "",
-  'Return JSON with this exact shape:',
+  "Return JSON with this exact shape:",
   '{ "title": string, "summary": string,',
   '  "findings": [{ "summary": string, "explanation": string }],',
   '  "rank": number }',
@@ -141,5 +142,5 @@ const SYSTEM_PROMPT = [
   "- title: concise label for the community (can refine the one provided)",
   "- summary: 2–3 sentences describing main themes and significance",
   "- findings: 3–6 key insights, each with a one-line summary and one-sentence explanation",
-  "- rank: importance score 1–10 (10 = critical)"
+  "- rank: importance score 1–10 (10 = critical)",
 ].join("\n");

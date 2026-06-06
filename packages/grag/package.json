@@ -2,16 +2,20 @@
   "name": "@farming-labs/grag",
   "version": "0.1.5",
   "description": "TypeScript GraphRAG primitives with relational database storage.",
-  "type": "module",
+  "keywords": [
+    "graph-rag",
+    "graphrag",
+    "knowledge-graph",
+    "kysely",
+    "rag",
+    "retrieval",
+    "typescript"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/farming-labs/grag.git",
     "directory": "packages/grag"
-  },
-  "sideEffects": false,
-  "publishConfig": {
-    "access": "public"
   },
   "bin": {
     "grag": "./dist/cli.js"
@@ -22,6 +26,10 @@
     "README.md",
     "LICENSE"
   ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -40,8 +48,9 @@
       "import": "./dist/anthropic/index.js"
     }
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup && node scripts/build-studio.mjs",
     "build:studio": "node scripts/build-studio.mjs",
@@ -49,15 +58,6 @@
     "pack:dry-run": "npm pack --dry-run",
     "test": "vitest run"
   },
-  "keywords": [
-    "graphrag",
-    "rag",
-    "knowledge-graph",
-    "graph-rag",
-    "retrieval",
-    "kysely",
-    "typescript"
-  ],
   "dependencies": {
     "kysely": "^0.29.2",
     "zod": "^4.4.3"

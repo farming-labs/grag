@@ -30,10 +30,13 @@ export class AnthropicChatModel implements ChatModel {
     this.defaultMaxTokens = options.maxTokens ?? 4096;
   }
 
-  async complete(messages: readonly ChatMessage[], options: ChatOptions = {}): Promise<ChatCompletion> {
+  async complete(
+    messages: readonly ChatMessage[],
+    options: ChatOptions = {},
+  ): Promise<ChatCompletion> {
     if (!this.apiKey) {
       throw new Error(
-        "Anthropic API key is required. Set ANTHROPIC_API_KEY or pass apiKey to AnthropicChatModel."
+        "Anthropic API key is required. Set ANTHROPIC_API_KEY or pass apiKey to AnthropicChatModel.",
       );
     }
 
@@ -44,7 +47,7 @@ export class AnthropicChatModel implements ChatModel {
     const body: Record<string, unknown> = {
       model: this.model,
       max_tokens: options.maxTokens ?? this.defaultMaxTokens,
-      messages: userAssistantMessages.map((m) => ({ role: m.role, content: m.content }))
+      messages: userAssistantMessages.map((m) => ({ role: m.role, content: m.content })),
     };
 
     if (systemMessages.length > 0) {
@@ -63,9 +66,9 @@ export class AnthropicChatModel implements ChatModel {
       headers: {
         "x-api-key": this.apiKey,
         "anthropic-version": "2023-06-01",
-        "content-type": "application/json"
+        "content-type": "application/json",
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
 
     const payload = (await response.json()) as Record<string, unknown>;
@@ -83,14 +86,14 @@ export class AnthropicChatModel implements ChatModel {
     const usageObj = usage
       ? {
           ...(usage.input_tokens !== undefined ? { inputTokens: usage.input_tokens } : {}),
-          ...(usage.output_tokens !== undefined ? { outputTokens: usage.output_tokens } : {})
+          ...(usage.output_tokens !== undefined ? { outputTokens: usage.output_tokens } : {}),
         }
       : undefined;
 
     return {
       content,
       raw: payload,
-      ...(usageObj !== undefined ? { usage: usageObj } : {})
+      ...(usageObj !== undefined ? { usage: usageObj } : {}),
     };
   }
 }

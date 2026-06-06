@@ -5,7 +5,7 @@
 export async function mapLimit<T, R>(
   values: readonly T[],
   concurrency: number,
-  mapper: (value: T, index: number) => Promise<R>
+  mapper: (value: T, index: number) => Promise<R>,
 ): Promise<R[]> {
   const results: R[] = new Array(values.length);
   let nextIndex = 0;

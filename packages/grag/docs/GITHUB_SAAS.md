@@ -13,15 +13,15 @@ const indexed = await indexRepository({
   source: `${owner}/${repo}`,
   provider: "github",
   remote: {
-    ref: "main"
+    ref: "main",
   },
   scan: {
     maxFiles: "all",
-    maxFileBytes: 64_000
+    maxFileBytes: 64_000,
   },
   extraction: {
-    provider: "local"
-  }
+    provider: "local",
+  },
 });
 ```
 
@@ -33,15 +33,15 @@ const indexed = await indexRepository({
   provider: "github",
   remote: {
     ref: defaultBranch,
-    token: githubInstallationToken
+    token: githubInstallationToken,
   },
   scan: {
     maxFiles: "all",
-    maxFileBytes: 64_000
+    maxFileBytes: 64_000,
   },
   extraction: {
-    provider: "local"
-  }
+    provider: "local",
+  },
 });
 ```
 
@@ -64,7 +64,7 @@ import {
   AnthropicChatModel,
   createGraphRagService,
   indexRepository,
-  type GraphRagStore
+  type GraphRagStore,
 } from "@farming-labs/grag";
 
 export async function indexGitHubRepo(input: {
@@ -79,15 +79,15 @@ export async function indexGitHubRepo(input: {
     provider: "github",
     remote: {
       ref: input.ref,
-      token: input.installationToken
+      token: input.installationToken,
     },
     scan: {
       maxFiles: "all",
-      maxFileBytes: 64_000
+      maxFileBytes: 64_000,
     },
     extraction: {
-      provider: "local"
-    }
+      provider: "local",
+    },
   });
 
   const grag = createGraphRagService({ store: input.store });
@@ -97,25 +97,23 @@ export async function indexGitHubRepo(input: {
     provider: indexed.provider,
     clonedFrom: indexed.clonedFrom,
     files: indexed.files.map((file) => file.path),
-    stats: await grag.stats()
+    stats: await grag.stats(),
   };
 }
 
-export async function askGitHubRepo(input: {
-  question: string;
-  store: GraphRagStore;
-}) {
+export async function askGitHubRepo(input: { question: string; store: GraphRagStore }) {
   const grag = createGraphRagService({
     store: input.store,
     model: new AnthropicChatModel({
-      model: process.env.ANTHROPIC_MODEL ?? "claude-haiku-4-5-20251001"
-    })
+      model: process.env.ANTHROPIC_MODEL ?? "claude-haiku-4-5-20251001",
+    }),
   });
 
   return grag.ask(input.question, {
     limit: 10,
     maxContextChars: 16_000,
-    responseStyle: "answer with file citations and mention uncertainty when the repo context is missing"
+    responseStyle:
+      "answer with file citations and mention uncertainty when the repo context is missing",
   });
 }
 ```
@@ -142,7 +140,7 @@ const indexKey = {
   owner,
   repo,
   ref,
-  installationId
+  installationId,
 };
 ```
 

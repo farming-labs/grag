@@ -6,7 +6,7 @@ import type {
   Entity,
   GraphRagDocument,
   Relationship,
-  TextUnit
+  TextUnit,
 } from "../model.js";
 import type { EmbeddingModel } from "../llm.js";
 import type { GraphRagStore } from "../storage/types.js";
@@ -25,7 +25,11 @@ export interface ClaimExtractor {
 }
 
 export interface CommunityDetector {
-  detect(input: { entities: Entity[]; relationships: Relationship[]; textUnits: TextUnit[] }): Promise<Community[]>;
+  detect(input: {
+    entities: Entity[];
+    relationships: Relationship[];
+    textUnits: TextUnit[];
+  }): Promise<Community[]>;
 }
 
 export interface CommunityReporter {

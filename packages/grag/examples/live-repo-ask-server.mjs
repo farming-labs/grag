@@ -9,7 +9,7 @@ import {
   createMemoryGraphRagService,
   createStableId,
   indexRepository,
-  summarizeGraphRagQueryPlan
+  summarizeGraphRagQueryPlan,
 } from "../dist/index.js";
 
 const port = Number(process.env.PORT ?? 4477);
@@ -38,8 +38,8 @@ const state = {
   provider: {
     answer: answerProvider,
     claude: Boolean(process.env.ANTHROPIC_API_KEY),
-    openAiEmbeddings: Boolean(process.env.OPENAI_API_KEY)
-  }
+    openAiEmbeddings: Boolean(process.env.OPENAI_API_KEY),
+  },
 };
 
 function log(message) {
@@ -47,8 +47,8 @@ function log(message) {
     ...state.logs.slice(-80),
     {
       at: new Date().toISOString(),
-      message
-    }
+      message,
+    },
   ];
   console.log(message);
 }
@@ -59,7 +59,7 @@ function jsonResponse(response, status, payload) {
     "content-type": "application/json; charset=utf-8",
     "access-control-allow-origin": "*",
     "access-control-allow-methods": "GET,POST,OPTIONS",
-    "access-control-allow-headers": "content-type"
+    "access-control-allow-headers": "content-type",
   });
   response.end(body);
 }
@@ -68,15 +68,15 @@ function htmlResponse(response, body) {
   response.writeHead(200, {
     "content-type": "text/html; charset=utf-8",
     "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-    "pragma": "no-cache",
-    "expires": "0"
+    pragma: "no-cache",
+    expires: "0",
   });
   response.end(body);
 }
 
 function textResponse(response, status, body) {
   response.writeHead(status, {
-    "content-type": "text/plain; charset=utf-8"
+    "content-type": "text/plain; charset=utf-8",
   });
   response.end(body);
 }
@@ -105,13 +105,13 @@ function createAnswerModel() {
   if (process.env.ANTHROPIC_API_KEY) {
     return new AnthropicChatModel({
       model: process.env.ANTHROPIC_MODEL ?? "claude-haiku-4-5-20251001",
-      maxTokens: Number(process.env.GRAG_LIVE_MAX_TOKENS ?? 1400)
+      maxTokens: Number(process.env.GRAG_LIVE_MAX_TOKENS ?? 1400),
     });
   }
 
   if (process.env.OPENAI_API_KEY) {
     return new OpenAiChatModel({
-      model: process.env.OPENAI_MODEL ?? process.env.GRAG_OPENAI_ANSWER_MODEL ?? "gpt-4o-mini"
+      model: process.env.OPENAI_MODEL ?? process.env.GRAG_OPENAI_ANSWER_MODEL ?? "gpt-4o-mini",
     });
   }
 
@@ -120,14 +120,15 @@ function createAnswerModel() {
 
 function sourcePathForTextUnit(textUnit) {
   const sourcePath = textUnit.attributes?.sourcePath;
-  return typeof sourcePath === "string" ? sourcePath : textUnit.humanReadableId?.toString() ?? textUnit.id;
+  return typeof sourcePath === "string"
+    ? sourcePath
+    : (textUnit.humanReadableId?.toString() ?? textUnit.id);
 }
 
 function embeddingTextForTextUnit(textUnit) {
-  return [
-    `Source path: ${sourcePathForTextUnit(textUnit)}`,
-    textUnit.text.slice(0, 8_000)
-  ].join("\n\n");
+  return [`Source path: ${sourcePathForTextUnit(textUnit)}`, textUnit.text.slice(0, 8_000)].join(
+    "\n\n",
+  );
 }
 
 async function embedTextUnits(service, embeddingModel) {
@@ -137,16 +138,18 @@ async function embedTextUnits(service, embeddingModel) {
   const records = textUnits.flatMap((textUnit, index) => {
     const vector = vectors[index];
     if (!vector) return [];
-    return [{
-      id: createStableId(["text_unit", textUnit.id, embeddingModelName], "emb"),
-      targetKind: "text_unit",
-      targetId: textUnit.id,
-      vector,
-      model: embeddingModelName,
-      dimensions: vector.length,
-      text: inputs[index],
-      metadata: { sourcePath: sourcePathForTextUnit(textUnit) }
-    }];
+    return [
+      {
+        id: createStableId(["text_unit", textUnit.id, embeddingModelName], "emb"),
+        targetKind: "text_unit",
+        targetId: textUnit.id,
+        vector,
+        model: embeddingModelName,
+        dimensions: vector.length,
+        text: inputs[index],
+        metadata: { sourcePath: sourcePathForTextUnit(textUnit) },
+      },
+    ];
   });
 
   await service.store.upsertEmbeddings(records);
@@ -174,18 +177,18 @@ async function indexRepo(repoPath, options = {}) {
       log(`Indexing repo: ${state.repoPath}${state.remoteRef ? ` @ ${state.remoteRef}` : ""}`);
       const remoteOptions = {
         ...(state.remoteRef ? { ref: state.remoteRef } : {}),
-        ...(process.env.GITHUB_TOKEN ? { token: process.env.GITHUB_TOKEN } : {})
+        ...(process.env.GITHUB_TOKEN ? { token: process.env.GITHUB_TOKEN } : {}),
       };
       const indexed = await indexRepository({
         source: state.repoPath,
         provider: options.provider ?? "auto",
         ...(Object.keys(remoteOptions).length > 0 ? { remote: remoteOptions } : {}),
         scan: {
-          maxFiles: "all"
+          maxFiles: "all",
         },
         extraction: {
-          provider: "local"
-        }
+          provider: "local",
+        },
       });
       const selectedFiles = indexed.files;
       const snapshot = indexed.snapshot;
@@ -193,19 +196,22 @@ async function indexRepo(repoPath, options = {}) {
       state.indexedRepoPath = indexed.repoPath;
       state.sourceProvider = indexed.provider;
       state.selectedFileCount = selectedFiles.length;
-      log(`Scanned ${selectedFiles.length} non-ignored text/source files from ${indexed.provider}.`);
+      log(
+        `Scanned ${selectedFiles.length} non-ignored text/source files from ${indexed.provider}.`,
+      );
       log(`Built ${mode} graph snapshot.`);
 
       const answerModel = createAnswerModel();
-      const embeddingModel = options.useEmbeddings && process.env.OPENAI_API_KEY
-        ? new OpenAiEmbeddingModel({
-            model: embeddingModelName,
-            batchSize: Number(process.env.GRAG_LIVE_EMBED_BATCH_SIZE ?? 128)
-          })
-        : undefined;
+      const embeddingModel =
+        options.useEmbeddings && process.env.OPENAI_API_KEY
+          ? new OpenAiEmbeddingModel({
+              model: embeddingModelName,
+              batchSize: Number(process.env.GRAG_LIVE_EMBED_BATCH_SIZE ?? 128),
+            })
+          : undefined;
       const service = createMemoryGraphRagService({
         ...(answerModel ? { model: answerModel } : {}),
-        ...(embeddingModel ? { embeddingModel } : {})
+        ...(embeddingModel ? { embeddingModel } : {}),
       });
 
       await service.ingestSnapshot(snapshot);
@@ -221,7 +227,9 @@ async function indexRepo(repoPath, options = {}) {
       state.stats = await service.stats();
       state.indexedAt = new Date().toISOString();
       state.status = "ready";
-      log(`Ready: ${state.stats.documents} documents, ${state.stats.entities} entities, ${state.stats.relationships} relationships.`);
+      log(
+        `Ready: ${state.stats.documents} documents, ${state.stats.entities} entities, ${state.stats.relationships} relationships.`,
+      );
       return snapshot;
     } catch (error) {
       state.status = "error";
@@ -252,7 +260,7 @@ function shapeHit(hit) {
     channels: hit.channels,
     sourcePaths: hit.sourcePaths,
     citationIds: hit.citationIds,
-    text: compact(hit.text).slice(0, 900)
+    text: compact(hit.text).slice(0, 900),
   };
 }
 
@@ -270,7 +278,7 @@ function shapeGraphResult(result) {
     trace: result.trace,
     stats: result.stats,
     timings: result.timings,
-    graph: result.graph
+    graph: result.graph,
   };
 }
 
@@ -288,7 +296,7 @@ function buildSearchSummary(query, hits) {
     `Search found ${hits.length} hit${hits.length === 1 ? "" : "s"} for "${query}".`,
     "",
     "Top files:",
-    ...topFiles
+    ...topFiles,
   ].join("\n");
 }
 
@@ -297,76 +305,76 @@ function shapeDatabase(snapshot, limit = 5) {
   const table = (name, rows, mapper) => ({
     name,
     count: rows.length,
-    rows: rows.slice(0, boundedLimit).map(mapper)
+    rows: rows.slice(0, boundedLimit).map(mapper),
   });
   const joinTable = (name, rows) => ({
     name,
     count: rows.length,
-    rows: rows.slice(0, boundedLimit)
+    rows: rows.slice(0, boundedLimit),
   });
 
   const documentTextUnitRows = snapshot.documents.flatMap((document) =>
     document.textUnitIds.map((textUnitId, position) => ({
       document_id: document.id,
       text_unit_id: textUnitId,
-      position
-    }))
+      position,
+    })),
   );
   const textUnitEntityRows = snapshot.textUnits.flatMap((textUnit) =>
     textUnit.entityIds.map((entityId, position) => ({
       text_unit_id: textUnit.id,
       entity_id: entityId,
-      position
-    }))
+      position,
+    })),
   );
   const textUnitRelationshipRows = snapshot.textUnits.flatMap((textUnit) =>
     textUnit.relationshipIds.map((relationshipId, position) => ({
       text_unit_id: textUnit.id,
       relationship_id: relationshipId,
-      position
-    }))
+      position,
+    })),
   );
   const entityCommunityRows = snapshot.entities.flatMap((entity) =>
     entity.communityIds.map((communityId, position) => ({
       entity_id: entity.id,
       community_id: communityId,
-      position
-    }))
+      position,
+    })),
   );
   const entityTextUnitRows = snapshot.entities.flatMap((entity) =>
     entity.textUnitIds.map((textUnitId, position) => ({
       entity_id: entity.id,
       text_unit_id: textUnitId,
-      position
-    }))
+      position,
+    })),
   );
   const relationshipTextUnitRows = snapshot.relationships.flatMap((relationship) =>
     relationship.textUnitIds.map((textUnitId, position) => ({
       relationship_id: relationship.id,
       text_unit_id: textUnitId,
-      position
-    }))
+      position,
+    })),
   );
   const communityEntityRows = snapshot.communities.flatMap((community) =>
     community.entityIds.map((entityId, position) => ({
       community_id: community.id,
       entity_id: entityId,
-      position
-    }))
+      position,
+    })),
   );
   const communityRelationshipRows = snapshot.communities.flatMap((community) =>
     community.relationshipIds.map((relationshipId, position) => ({
       community_id: community.id,
       relationship_id: relationshipId,
-      position
-    }))
+      position,
+    })),
   );
   const communityTextUnitRows = snapshot.communities.flatMap((community) =>
     community.textUnitIds.map((textUnitId, position) => ({
       community_id: community.id,
       text_unit_id: textUnitId,
-      position
-    }))
+      position,
+    })),
   );
 
   return {
@@ -381,25 +389,27 @@ function shapeDatabase(snapshot, limit = 5) {
       relationships: snapshot.relationships.length,
       communities: snapshot.communities.length,
       communityReports: snapshot.communityReports.length,
-      embeddings: snapshot.embeddings.length
+      embeddings: snapshot.embeddings.length,
     },
     tables: [
       table("grag_documents", snapshot.documents, (document) => ({
         id: document.id,
         title: document.title,
-        source_path: sourcePathFromAttributes(document.attributes) ?? document.humanReadableId ?? "",
+        source_path:
+          sourcePathFromAttributes(document.attributes) ?? document.humanReadableId ?? "",
         type: document.type,
         text_chars: document.text.length,
-        text_units: document.textUnitIds.length
+        text_units: document.textUnitIds.length,
       })),
       table("grag_text_units", snapshot.textUnits, (textUnit) => ({
         id: textUnit.id,
         document_id: textUnit.documentId ?? "",
-        source_path: sourcePathFromAttributes(textUnit.attributes) ?? textUnit.humanReadableId ?? "",
+        source_path:
+          sourcePathFromAttributes(textUnit.attributes) ?? textUnit.humanReadableId ?? "",
         text_chars: textUnit.text.length,
         entities: textUnit.entityIds.length,
         relationships: textUnit.relationshipIds.length,
-        preview: compact(textUnit.text).slice(0, 180)
+        preview: compact(textUnit.text).slice(0, 180),
       })),
       table("grag_entities", snapshot.entities, (entity) => ({
         id: entity.id,
@@ -410,7 +420,7 @@ function shapeDatabase(snapshot, limit = 5) {
         rank: entity.rank ?? "",
         text_units: entity.textUnitIds.length,
         communities: entity.communityIds.length,
-        description: compact(entity.description ?? "").slice(0, 180)
+        description: compact(entity.description ?? "").slice(0, 180),
       })),
       table("grag_relationships", snapshot.relationships, (relationship) => ({
         id: relationship.id,
@@ -419,7 +429,7 @@ function shapeDatabase(snapshot, limit = 5) {
         weight: relationship.weight,
         rank: relationship.rank ?? "",
         text_units: relationship.textUnitIds.length,
-        description: compact(relationship.description ?? "").slice(0, 180)
+        description: compact(relationship.description ?? "").slice(0, 180),
       })),
       table("grag_communities", snapshot.communities, (community) => ({
         id: community.id,
@@ -429,7 +439,7 @@ function shapeDatabase(snapshot, limit = 5) {
         size: community.size ?? "",
         entities: community.entityIds.length,
         relationships: community.relationshipIds.length,
-        text_units: community.textUnitIds.length
+        text_units: community.textUnitIds.length,
       })),
       table("grag_community_reports", snapshot.communityReports, (report) => ({
         id: report.id,
@@ -437,7 +447,7 @@ function shapeDatabase(snapshot, limit = 5) {
         community: report.community,
         level: report.level,
         rank: report.rank,
-        summary: compact(report.summary).slice(0, 220)
+        summary: compact(report.summary).slice(0, 220),
       })),
       table("grag_embeddings", snapshot.embeddings, (embedding) => ({
         id: embedding.id,
@@ -445,7 +455,7 @@ function shapeDatabase(snapshot, limit = 5) {
         target_id: embedding.targetId,
         model: embedding.model ?? "",
         dimensions: embedding.dimensions ?? embedding.vector.length,
-        text: compact(embedding.text ?? "").slice(0, 180)
+        text: compact(embedding.text ?? "").slice(0, 180),
       })),
       joinTable("grag_document_text_units", documentTextUnitRows),
       joinTable("grag_text_unit_entities", textUnitEntityRows),
@@ -455,13 +465,15 @@ function shapeDatabase(snapshot, limit = 5) {
       joinTable("grag_relationship_text_units", relationshipTextUnitRows),
       joinTable("grag_community_entities", communityEntityRows),
       joinTable("grag_community_relationships", communityRelationshipRows),
-      joinTable("grag_community_text_units", communityTextUnitRows)
-    ]
+      joinTable("grag_community_text_units", communityTextUnitRows),
+    ],
   };
 }
 
 function compact(value) {
-  return String(value ?? "").replace(/\s+/g, " ").trim();
+  return String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function sourcePathFromAttributes(attributes) {
@@ -481,7 +493,7 @@ function publicState() {
     stats: state.stats,
     error: state.error,
     logs: state.logs,
-    provider: state.provider
+    provider: state.provider,
   };
 }
 
@@ -514,7 +526,7 @@ async function handleApi(request, response, url) {
       void indexRepo(body.repoPath ?? defaultRepoPath, {
         provider: body.provider ?? "auto",
         remoteRef: body.remoteRef ?? "",
-        useEmbeddings: Boolean(body.useEmbeddings)
+        useEmbeddings: Boolean(body.useEmbeddings),
       }).catch(() => {});
       jsonResponse(response, 202, publicState());
       return;
@@ -528,7 +540,7 @@ async function handleApi(request, response, url) {
       const result = await service.searchGraph(query, {
         limit: Number(body.limit ?? 8),
         basicSearch: { limit: Number(body.textLimit ?? 12) },
-        maxContextChars: Number(body.maxContextChars ?? 16_000)
+        maxContextChars: Number(body.maxContextChars ?? 16_000),
       });
       jsonResponse(response, 200, shapeGraphResult(result));
       return;
@@ -546,7 +558,7 @@ async function handleApi(request, response, url) {
         responseStyle: "concise engineering answer with source file citations",
         systemPrompt: `Only answer from the indexed repo at ${state.repoPath}. Do not use outside knowledge.`,
         temperature: 0,
-        maxTokens: Number(process.env.GRAG_LIVE_MAX_TOKENS ?? 1400)
+        maxTokens: Number(process.env.GRAG_LIVE_MAX_TOKENS ?? 1400),
       });
       jsonResponse(response, 200, shapeGraphResult(result));
       return;
@@ -556,7 +568,7 @@ async function handleApi(request, response, url) {
   } catch (error) {
     jsonResponse(response, 400, {
       error: error instanceof Error ? error.message : String(error),
-      state: publicState()
+      state: publicState(),
     });
   }
 }
@@ -568,11 +580,7 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
-  if (
-    url.pathname === "/" ||
-    url.pathname === "/repo-search.html" ||
-    url.pathname === "/live"
-  ) {
+  if (url.pathname === "/" || url.pathname === "/repo-search.html" || url.pathname === "/live") {
     htmlResponse(response, appHtml);
     return;
   }
@@ -582,7 +590,9 @@ const server = http.createServer(async (request, response) => {
 
 server.listen(port, host, () => {
   log(`GRAG live repo app listening at http://${host}:${port}/repo-search.html`);
-  log(`Answer provider: ${answerProvider}; OpenAI embeddings: ${process.env.OPENAI_API_KEY ? "available" : "unavailable"}.`);
+  log(
+    `Answer provider: ${answerProvider}; OpenAI embeddings: ${process.env.OPENAI_API_KEY ? "available" : "unavailable"}.`,
+  );
   if (process.env.GRAG_AUTO_INDEX !== "0") {
     void indexRepo(defaultRepoPath).catch(() => {});
   }

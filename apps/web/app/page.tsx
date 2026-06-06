@@ -17,7 +17,7 @@ const chipStyle: CSSProperties = {
   letterSpacing: "0.14em",
   fontFamily: "var(--fd-font-mono, var(--font-geist-mono, monospace))",
   textTransform: "uppercase",
-  opacity: 0.74
+  opacity: 0.74,
 };
 
 const buttonBase: CSSProperties = {
@@ -33,7 +33,7 @@ const buttonBase: CSSProperties = {
   fontSize: "0.72rem",
   fontWeight: 700,
   letterSpacing: "0.14em",
-  textTransform: "uppercase"
+  textTransform: "uppercase",
 };
 
 export default function Home() {
@@ -54,7 +54,7 @@ export default function Home() {
       className="relative isolate flex min-h-screen flex-col overflow-hidden px-4 supports-[overflow:clip]:overflow-clip"
       style={{
         background: "var(--color-fd-background, #050506)",
-        color: "var(--color-fd-foreground, #f7f7f7)"
+        color: "var(--color-fd-foreground, #f7f7f7)",
       }}
     >
       <PixelSnow
@@ -73,7 +73,7 @@ export default function Home() {
         style={{
           backgroundImage:
             "linear-gradient(var(--color-fd-border, rgba(255,255,255,0.16)) 1px, transparent 1px), linear-gradient(90deg, var(--color-fd-border, rgba(255,255,255,0.16)) 1px, transparent 1px)",
-          backgroundSize: "56px 56px"
+          backgroundSize: "56px 56px",
         }}
       />
       <div
@@ -86,7 +86,7 @@ export default function Home() {
         className="pointer-events-none absolute inset-x-0 top-0 z-0 h-28 border-b border-dashed border-white/10 opacity-80"
         style={{
           backgroundImage:
-            "repeating-linear-gradient(-45deg, color-mix(in srgb, var(--color-fd-border) 10%, transparent), color-mix(in srgb, var(--color-fd-foreground) 10%, transparent) 1px, transparent 1px, transparent 7px)"
+            "repeating-linear-gradient(-45deg, color-mix(in srgb, var(--color-fd-border) 10%, transparent), color-mix(in srgb, var(--color-fd-foreground) 10%, transparent) 1px, transparent 1px, transparent 7px)",
         }}
       />
       <main className="relative z-10 mx-auto grid h-[100dvh] w-full max-w-4xl grow place-items-center overflow-hidden px-4 py-5 text-center before:absolute before:-inset-y-14 before:-left-px before:z-10 before:w-px before:bg-white/10 after:absolute after:-inset-y-14 after:-right-px after:z-10 after:w-px after:bg-white/10 sm:px-8">
@@ -113,19 +113,18 @@ export default function Home() {
               className="m-0 max-w-[820px] text-[2rem] font-normal uppercase leading-[1.08] tracking-tighter sm:text-[2.5rem] lg:text-[3rem]"
               style={{ fontFamily: "var(--font-mono)" }}
             >
-              Graph-backed retrieval{" "}
-              <br />
+              Graph-backed retrieval <br />
               for your own data
             </p>
             <p
               className="m-0 max-w-[720px] text-[0.98rem] leading-7 sm:text-[1.02rem] sm:leading-8"
               style={{
-                color: "var(--color-fd-muted-foreground, rgba(255,255,255,0.68))"
+                color: "var(--color-fd-muted-foreground, rgba(255,255,255,0.68))",
               }}
             >
-              @farming-labs/grag gives you TypeScript primitives for graph-shaped retrieval:
-              ingest sources, store entities and relationships, search with context,
-              and return cited answers from the database you control.
+              @farming-labs/grag gives you TypeScript primitives for graph-shaped retrieval: ingest
+              sources, store entities and relationships, search with context, and return cited
+              answers from the database you control.
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-3">
@@ -139,24 +138,24 @@ export default function Home() {
             <span
               className="justify-self-start font-mono text-[0.7rem] uppercase tracking-[0.14em]"
               style={{
-                color: "var(--color-fd-muted-foreground, rgba(255,255,255,0.56))"
+                color: "var(--color-fd-muted-foreground, rgba(255,255,255,0.56))",
               }}
             >
-              Install via: 
+              Install via:
             </span>
 
             <div
               className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-stretch sm:grid-cols-[auto_minmax(0,1fr)_auto]"
               style={{
                 border: "1px solid var(--color-fd-border, rgba(255,255,255,0.14))",
-                background: "color-mix(in srgb, var(--color-fd-card, #111) 92%, transparent)"
+                background: "color-mix(in srgb, var(--color-fd-card, #111) 92%, transparent)",
               }}
             >
               <span
                 className="hidden place-items-center border-r px-4 font-mono text-base sm:grid"
                 style={{
                   borderColor: "var(--color-fd-border, rgba(255,255,255,0.14))",
-                  color: "var(--color-fd-muted-foreground, rgba(255,255,255,0.58))"
+                  color: "var(--color-fd-muted-foreground, rgba(255,255,255,0.58))",
                 }}
               >
                 &gt;
@@ -169,7 +168,7 @@ export default function Home() {
                 onClick={copyCommand}
                 className="min-w-full cursor-pointer text-white/50 border-0 border-l flex justify-center items-center px-2 font-mono text-[0.68rem] uppercase tracking-[0.14em] sm:min-w-[88px] sm:px-2"
                 style={{
-                  borderColor: "var(--color-fd-border, rgba(255,255,255,0.14))"
+                  borderColor: "var(--color-fd-border, rgba(255,255,255,0.14))",
                 }}
               >
                 {copied ? <CheckIcon className="w-4 h-4" /> : <CopyIcon className="w-4 h-4" />}
@@ -183,7 +182,7 @@ export default function Home() {
               style={{
                 ...buttonBase,
                 background: "var(--color-fd-foreground, #fff)",
-                color: "var(--color-fd-background, #050506)"
+                color: "var(--color-fd-background, #050506)",
               }}
             >
               Get Started
@@ -193,7 +192,7 @@ export default function Home() {
               style={{
                 ...buttonBase,
                 // border: "1px solid var(--color-fd-border, rgba(255,255,255,0.14))",
-                color: "var(--color-fd-foreground, #fff)"
+                color: "var(--color-fd-foreground, #fff)",
               }}
             >
               Read Docs <ArrowRightIcon className="w-4 h-4 ml-2" />
@@ -202,7 +201,7 @@ export default function Home() {
           <p
             className="m-0 hidden font-mono text-[0.78rem] uppercase tracking-normal sm:block"
             style={{
-              color: "var(--color-fd-muted-foreground, rgba(255,255,255,0.52))"
+              color: "var(--color-fd-muted-foreground, rgba(255,255,255,0.52))",
             }}
           >
             // Build a graph snapshot, retrieve grounded context, and ship cited answers.

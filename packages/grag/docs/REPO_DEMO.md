@@ -51,14 +51,14 @@ const indexed = await indexRepository({
   source: "microsoft/graphrag",
   provider: "github",
   remote: {
-    ref: "main"
+    ref: "main",
   },
   scan: {
-    maxFiles: "all"
+    maxFiles: "all",
   },
   extraction: {
-    provider: "local"
-  }
+    provider: "local",
+  },
 });
 ```
 

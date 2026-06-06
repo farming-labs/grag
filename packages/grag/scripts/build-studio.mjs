@@ -19,7 +19,7 @@ await esbuild.build({
   target: "es2022",
   outfile: resolve(assetsDir, "index.js"),
   sourcemap: true,
-  logLevel: "info"
+  logLevel: "info",
 });
 
 const template = await readFile(resolve(root, "studio/index.html"), "utf8");
@@ -27,8 +27,8 @@ const html = template.replace(
   /<script type="module" src="\/src\/main\.ts"><\/script>/,
   [
     '<script type="module" crossorigin src="./assets/index.js"></script>',
-    '<link rel="stylesheet" crossorigin href="./assets/index.css">'
-  ].join("\n    ")
+    '<link rel="stylesheet" crossorigin href="./assets/index.css">',
+  ].join("\n    "),
 );
 
 await writeFile(resolve(outDir, "index.html"), html, "utf8");

@@ -17,7 +17,7 @@ export default function PixelSnow(props: PixelSnowOptions) {
     gamma,
     density,
     variant,
-    direction
+    direction,
   } = props;
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function PixelSnow(props: PixelSnowOptions) {
       gamma,
       density,
       variant,
-      direction
+      direction,
     });
   }, [
     color,
@@ -49,7 +49,7 @@ export default function PixelSnow(props: PixelSnowOptions) {
     gamma,
     density,
     variant,
-    direction
+    direction,
   ]);
 
   return (
@@ -60,7 +60,7 @@ export default function PixelSnow(props: PixelSnowOptions) {
         inset: 0,
         width: "100%",
         height: "100%",
-        pointerEvents: "none"
+        pointerEvents: "none",
       }}
     />
   );

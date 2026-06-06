@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import type { ChatCompletion, ChatMessage, ChatModel } from "../src/llm.js";
 import { MemoryGraphRagStore } from "../src/storage/memory.js";
 import { StandardGraphRagPipeline } from "../src/pipeline/standard.js";
-import type { GraphExtractor, CommunityDetector, CommunityReporter } from "../src/pipeline/types.js";
+import type {
+  GraphExtractor,
+  CommunityDetector,
+  CommunityReporter,
+} from "../src/pipeline/types.js";
 import type { GraphRagDocument } from "../src/model.js";
 
 // --------------------------------------------------------------------------
@@ -12,7 +16,7 @@ function stubChatModel(fn: (messages: readonly ChatMessage[]) => unknown): ChatM
   return {
     async complete(messages): Promise<ChatCompletion> {
       return { content: JSON.stringify(fn(messages)) };
-    }
+    },
   };
 }
 
@@ -22,8 +26,8 @@ const DOCS: GraphRagDocument[] = [
     title: "Storage guide",
     type: "text",
     text: "Postgres stores GraphRAG text units, entities, and relationships. Kysely is the query builder.",
-    textUnitIds: []
-  }
+    textUnitIds: [],
+  },
 ];
 
 // Extractor that returns deterministic entities for the text in DOCS
@@ -31,8 +35,22 @@ const GRAPH_EXTRACTOR: GraphExtractor = {
   async extract(textUnit) {
     return {
       entities: [
-        { id: "ent_pg", title: "Postgres", type: "TECHNOLOGY", description: "Relational DB.", textUnitIds: [textUnit.id], communityIds: [] },
-        { id: "ent_ky", title: "Kysely", type: "TECHNOLOGY", description: "Query builder.", textUnitIds: [textUnit.id], communityIds: [] }
+        {
+          id: "ent_pg",
+          title: "Postgres",
+          type: "TECHNOLOGY",
+          description: "Relational DB.",
+          textUnitIds: [textUnit.id],
+          communityIds: [],
+        },
+        {
+          id: "ent_ky",
+          title: "Kysely",
+          type: "TECHNOLOGY",
+          description: "Query builder.",
+          textUnitIds: [textUnit.id],
+          communityIds: [],
+        },
       ],
       relationships: [
         {
@@ -41,29 +59,31 @@ const GRAPH_EXTRACTOR: GraphExtractor = {
           target: "Kysely",
           description: "Kysely queries Postgres.",
           weight: 4,
-          textUnitIds: [textUnit.id]
-        }
-      ]
+          textUnitIds: [textUnit.id],
+        },
+      ],
     };
-  }
+  },
 };
 
 const COMMUNITY_DETECTOR: CommunityDetector = {
   async detect({ entities }) {
-    return [{
-      id: "com_0",
-      title: "Storage",
-      community: 0,
-      level: 0,
-      parent: null,
-      children: [],
-      entityIds: entities.map((e) => e.id),
-      relationshipIds: ["rel_pk"],
-      textUnitIds: [],
-      covariateIds: [],
-      size: entities.length
-    }];
-  }
+    return [
+      {
+        id: "com_0",
+        title: "Storage",
+        community: 0,
+        level: 0,
+        parent: null,
+        children: [],
+        entityIds: entities.map((e) => e.id),
+        relationshipIds: ["rel_pk"],
+        textUnitIds: [],
+        covariateIds: [],
+        size: entities.length,
+      },
+    ];
+  },
 };
 
 const COMMUNITY_REPORTER: CommunityReporter = {
@@ -77,9 +97,9 @@ const COMMUNITY_REPORTER: CommunityReporter = {
       summary: "Storage layer community.",
       fullContent: "Postgres and Kysely form the storage layer.",
       rank: 8,
-      findings: [{ summary: "Postgres is central", explanation: "All data flows through it." }]
+      findings: [{ summary: "Postgres is central", explanation: "All data flows through it." }],
     };
-  }
+  },
 };
 
 // --------------------------------------------------------------------------
@@ -91,7 +111,7 @@ describe("Pipeline storage correctness", () => {
       store,
       graphExtractor: GRAPH_EXTRACTOR,
       communityDetector: COMMUNITY_DETECTOR,
-      communityReporter: COMMUNITY_REPORTER
+      communityReporter: COMMUNITY_REPORTER,
     });
 
     const result = await pipeline.indexDocuments(DOCS, { chunkSize: 50, chunkOverlap: 0 });
@@ -114,7 +134,7 @@ describe("Pipeline storage correctness", () => {
     const store = new MemoryGraphRagStore();
     const pipeline = new StandardGraphRagPipeline({
       store,
-      graphExtractor: GRAPH_EXTRACTOR
+      graphExtractor: GRAPH_EXTRACTOR,
     });
 
     const result = await pipeline.indexDocuments(DOCS, { chunkSize: 50, chunkOverlap: 0 });
@@ -126,7 +146,7 @@ describe("Pipeline storage correctness", () => {
       // Each entity in our test graph has degree 1 (one relationship each)
       expect(entity.degree).toBe(1);
       expect(entity.rank).toBe(1); // 1/maxDegree = 1/1
-      expect((entity.frequency ?? 0)).toBeGreaterThan(0);
+      expect(entity.frequency ?? 0).toBeGreaterThan(0);
     }
   });
 
@@ -136,7 +156,7 @@ describe("Pipeline storage correctness", () => {
       store,
       graphExtractor: GRAPH_EXTRACTOR,
       communityDetector: COMMUNITY_DETECTOR,
-      communityReporter: COMMUNITY_REPORTER
+      communityReporter: COMMUNITY_REPORTER,
     });
 
     const result = await pipeline.indexDocuments(DOCS, { chunkSize: 50, chunkOverlap: 0 });
@@ -160,7 +180,11 @@ describe("Pipeline storage correctness", () => {
       graphExtractor: GRAPH_EXTRACTOR,
       communityDetector: COMMUNITY_DETECTOR,
       communityReporter: COMMUNITY_REPORTER,
-      embeddingModel: { async embed(texts) { return texts.map(() => [0.1, 0.2, 0.3]); } }
+      embeddingModel: {
+        async embed(texts) {
+          return texts.map(() => [0.1, 0.2, 0.3]);
+        },
+      },
     });
 
     const result = await pipeline.indexDocuments(DOCS, { chunkSize: 50, chunkOverlap: 0 });
@@ -189,18 +213,25 @@ describe("Pipeline storage correctness", () => {
         callOrder.push(i);
         return {
           entities: [
-            { id: `ent_${i}`, title: `Entity${i}`, type: "CONCEPT", description: "desc", textUnitIds: [textUnit.id], communityIds: [] }
+            {
+              id: `ent_${i}`,
+              title: `Entity${i}`,
+              type: "CONCEPT",
+              description: "desc",
+              textUnitIds: [textUnit.id],
+              communityIds: [],
+            },
           ],
-          relationships: []
+          relationships: [],
         };
-      }
+      },
     };
 
     const store = new MemoryGraphRagStore();
     const pipeline = new StandardGraphRagPipeline({
       store,
       graphExtractor: extractor,
-      concurrency: 2
+      concurrency: 2,
     });
 
     const longDoc: GraphRagDocument = {
@@ -208,7 +239,7 @@ describe("Pipeline storage correctness", () => {
       title: "Long doc",
       type: "text",
       text: Array(6).fill("Some text about entity concepts and relationships here.").join(" "),
-      textUnitIds: []
+      textUnitIds: [],
     };
 
     const result = await pipeline.indexDocuments([longDoc], { chunkSize: 10, chunkOverlap: 0 });
@@ -226,7 +257,7 @@ describe("GraphRagService.indexWithPipeline", () => {
     const result = await service.indexWithPipeline(DOCS, {
       graphExtractor: GRAPH_EXTRACTOR,
       communityDetector: COMMUNITY_DETECTOR,
-      communityReporter: COMMUNITY_REPORTER
+      communityReporter: COMMUNITY_REPORTER,
     });
 
     expect(result.entities.length).toBeGreaterThan(0);

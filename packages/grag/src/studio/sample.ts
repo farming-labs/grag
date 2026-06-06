@@ -26,6 +26,6 @@ export function createSampleGraphRagSnapshot(): GraphRagSnapshot {
     title: "Repository knowledge graph sample",
     sourcePath: "examples/repository-knowledge-graph.md",
     maxEntities: 72,
-    maxRelationships: 110
+    maxRelationships: 110,
   });
 }

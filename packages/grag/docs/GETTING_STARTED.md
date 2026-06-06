@@ -27,12 +27,12 @@ Use memory when you are learning or testing:
 import {
   MemoryGraphRagStore,
   basicSearch,
-  buildDocumentGraphRagSnapshot
+  buildDocumentGraphRagSnapshot,
 } from "@farming-labs/grag";
 
 const snapshot = buildDocumentGraphRagSnapshot(markdownText, {
   title: "Support playbook",
-  sourcePath: "docs/support.md"
+  sourcePath: "docs/support.md",
 });
 
 const store = new MemoryGraphRagStore();
@@ -52,11 +52,11 @@ const grag = createMemoryGraphRagService();
 await grag.ingestTextDocuments({
   title: "Support playbook",
   sourcePath: "docs/support.md",
-  text: markdownText
+  text: markdownText,
 });
 
 const result = await grag.retrieve("how does pgvector help retrieval?", {
-  useBasicSearch: true
+  useBasicSearch: true,
 });
 ```
 
@@ -65,14 +65,14 @@ For a dashboard or API route, use the polished retrieval surface:
 ```ts
 const result = await grag.ask("how does pgvector help retrieval?", {
   limit: 10,
-  responseStyle: "short answer with citations"
+  responseStyle: "short answer with citations",
 });
 
 return {
   answer: result.answer,
   citations: result.citations,
   graph: result.graph,
-  timings: result.timings
+  timings: result.timings,
 };
 ```
 
@@ -86,19 +86,19 @@ import {
   DataSourceLoader,
   MemoryGraphRagStore,
   createGraphRagService,
-  source
+  source,
 } from "@farming-labs/grag";
 
 const loader = new DataSourceLoader([
   source.repo({
     url: "https://github.com/farming-labs/grag",
     maxFiles: 80,
-    label: "grag repo"
+    label: "grag repo",
   }),
   source.document({
     files: ["./docs/design.md"],
-    label: "design notes"
-  })
+    label: "design notes",
+  }),
 ]);
 
 const { documents, textUnits } = await loader.load();
@@ -108,7 +108,7 @@ await store.upsertGraph({ documents, textUnits });
 
 const grag = createGraphRagService({ store });
 const answer = await grag.ask("How does the retrieval layer work?", {
-  limit: 12
+  limit: 12,
 });
 ```
 
@@ -131,13 +131,13 @@ import { Pool } from "pg";
 import {
   SqlGraphRagStore,
   applyGraphRagMigrations,
-  type GraphRagSqlDatabase
+  type GraphRagSqlDatabase,
 } from "@farming-labs/grag";
 
 const db = new Kysely<GraphRagSqlDatabase>({
   dialect: new PostgresDialect({
-    pool: new Pool({ connectionString: process.env.DATABASE_URL })
-  })
+    pool: new Pool({ connectionString: process.env.DATABASE_URL }),
+  }),
 });
 
 await applyGraphRagMigrations(db, "postgres");
@@ -174,14 +174,14 @@ import { createMemoryDriver, createOrm } from "@farming-labs/orm";
 import {
   OrmGraphRagStore,
   graphRagOrmSchema,
-  getGraphRagOrmMigrationSql
+  getGraphRagOrmMigrationSql,
 } from "@farming-labs/grag/orm";
 
 console.log(getGraphRagOrmMigrationSql("postgres"));
 
 const orm = createOrm({
   schema: graphRagOrmSchema,
-  driver: createMemoryDriver<typeof graphRagOrmSchema>()
+  driver: createMemoryDriver<typeof graphRagOrmSchema>(),
 });
 
 const store = new OrmGraphRagStore({ orm });
@@ -193,7 +193,7 @@ For production Postgres, use the same `graphRagOrmSchema` and pass a Postgres-ca
 ```ts
 const orm = createOrm({
   schema: graphRagOrmSchema,
-  driver: postgresDriver
+  driver: postgresDriver,
 });
 
 const store = new OrmGraphRagStore({ orm });
@@ -219,7 +219,7 @@ Drop down to primitives when you need a specific layer:
 import { basicSearch } from "@farming-labs/grag";
 
 const hits = await basicSearch(store, "billing migration workaround", {
-  limit: 5
+  limit: 5,
 });
 ```
 

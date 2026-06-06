@@ -4,7 +4,7 @@ import {
   StandardGraphRagPipeline,
   type CommunityDetector,
   type CommunityReporter,
-  type GraphExtractor
+  type GraphExtractor,
 } from "../src/index.js";
 
 describe("StandardGraphRagPipeline", () => {
@@ -19,12 +19,12 @@ describe("StandardGraphRagPipeline", () => {
               title: "Billing",
               description: "Billing subsystem",
               textUnitIds: [textUnit.id],
-              communityIds: []
-            }
+              communityIds: [],
+            },
           ],
-          relationships: []
+          relationships: [],
         };
-      }
+      },
     };
     const communityDetector: CommunityDetector = {
       async detect({ entities, textUnits }) {
@@ -38,10 +38,10 @@ describe("StandardGraphRagPipeline", () => {
             entityIds: entities.map((entity) => entity.id),
             relationshipIds: [],
             textUnitIds: textUnits.map((textUnit) => textUnit.id),
-            covariateIds: []
-          }
+            covariateIds: [],
+          },
         ];
-      }
+      },
     };
     const communityReporter: CommunityReporter = {
       async report({ community }) {
@@ -54,9 +54,9 @@ describe("StandardGraphRagPipeline", () => {
           summary: "Billing issues are present.",
           fullContent: "Billing issues are present in support tickets.",
           rank: 1,
-          findings: []
+          findings: [],
         };
-      }
+      },
     };
     const pipeline = new StandardGraphRagPipeline({
       store,
@@ -66,8 +66,8 @@ describe("StandardGraphRagPipeline", () => {
       embeddingModel: {
         async embed(texts) {
           return texts.map(() => [1, 0, 0]);
-        }
-      }
+        },
+      },
     });
 
     const result = await pipeline.indexDocuments(
@@ -77,10 +77,10 @@ describe("StandardGraphRagPipeline", () => {
           title: "Ticket",
           type: "ticket",
           text: "The billing export failed for Acme.",
-          textUnitIds: []
-        }
+          textUnitIds: [],
+        },
       ],
-      { chunkSize: 20, chunkOverlap: 0 }
+      { chunkSize: 20, chunkOverlap: 0 },
     );
 
     expect(result.steps.map((step) => step.name)).toEqual([
@@ -90,7 +90,7 @@ describe("StandardGraphRagPipeline", () => {
       "extract_claims",
       "detect_communities",
       "generate_community_reports",
-      "generate_embeddings"
+      "generate_embeddings",
     ]);
     expect(result.entities).toHaveLength(1);
     expect(result.communityReports).toHaveLength(1);

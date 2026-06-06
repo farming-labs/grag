@@ -114,14 +114,14 @@ const SKIP_DIRECTORIES = new Set([
   "out",
   "target",
   "tmp",
-  "vendor"
+  "vendor",
 ]);
 const SKIP_FILENAMES = new Set([
   "bun.lock",
   "bun.lockb",
   "package-lock.json",
   "pnpm-lock.yaml",
-  "yarn.lock"
+  "yarn.lock",
 ]);
 const TEXT_EXTENSIONS = new Set([
   ".astro",
@@ -150,14 +150,20 @@ const TEXT_EXTENSIONS = new Set([
   ".vue",
   ".xml",
   ".yaml",
-  ".yml"
+  ".yml",
 ]);
 
-export async function scanRepository(options: RepositoryScanOptions): Promise<RepositoryScanResult> {
-  const prepared = await prepareRepository(options.source, options.provider ?? "auto", options.remote);
+export async function scanRepository(
+  options: RepositoryScanOptions,
+): Promise<RepositoryScanResult> {
+  const prepared = await prepareRepository(
+    options.source,
+    options.provider ?? "auto",
+    options.remote,
+  );
   const files = await scanRepositorySourceFiles(prepared.repoPath, {
     ...(options.maxFiles === undefined ? {} : { maxFiles: options.maxFiles }),
-    maxFileBytes: options.maxFileBytes ?? DEFAULT_MAX_FILE_BYTES
+    maxFileBytes: options.maxFileBytes ?? DEFAULT_MAX_FILE_BYTES,
   });
 
   return {
@@ -170,18 +176,22 @@ export async function scanRepository(options: RepositoryScanOptions): Promise<Re
       if (prepared.tempDir && !options.keepClone) {
         await rm(prepared.tempDir, { recursive: true, force: true });
       }
-    }
+    },
   };
 }
 
-export async function indexRepository(options: IndexRepositoryOptions): Promise<IndexRepositoryResult> {
+export async function indexRepository(
+  options: IndexRepositoryOptions,
+): Promise<IndexRepositoryResult> {
   const scanned = await scanRepository({
     source: options.source,
     provider: options.provider ?? "auto",
     ...(options.remote ? { remote: options.remote } : {}),
     ...(options.scan?.maxFiles === undefined ? {} : { maxFiles: options.scan.maxFiles }),
-    ...(options.scan?.maxFileBytes === undefined ? {} : { maxFileBytes: options.scan.maxFileBytes }),
-    ...(options.scan?.keepClone === undefined ? {} : { keepClone: options.scan.keepClone })
+    ...(options.scan?.maxFileBytes === undefined
+      ? {}
+      : { maxFileBytes: options.scan.maxFileBytes }),
+    ...(options.scan?.keepClone === undefined ? {} : { keepClone: options.scan.keepClone }),
   });
 
   try {
@@ -189,7 +199,7 @@ export async function indexRepository(options: IndexRepositoryOptions): Promise<
       repoName: options.repoName ?? repositoryNameFromInput(options.source, scanned.repoPath),
       repoPath: scanned.repoPath,
       files: scanned.files,
-      ...(options.extraction ? { extraction: options.extraction } : {})
+      ...(options.extraction ? { extraction: options.extraction } : {}),
     });
 
     return {
@@ -198,7 +208,7 @@ export async function indexRepository(options: IndexRepositoryOptions): Promise<
       provider: scanned.provider,
       repoPath: scanned.repoPath,
       ...(scanned.clonedFrom ? { clonedFrom: scanned.clonedFrom } : {}),
-      files: scanned.files
+      files: scanned.files,
     };
   } finally {
     await scanned.cleanup();
@@ -210,7 +220,7 @@ async function scanRepositorySourceFiles(
   options: {
     maxFiles?: RepositoryFileLimit;
     maxFileBytes?: number;
-  } = {}
+  } = {},
 ): Promise<RepositorySourceFile[]> {
   const root = resolve(repoPath);
   const candidates: string[] = [];
@@ -218,9 +228,12 @@ async function scanRepositorySourceFiles(
 
   const maxFiles = normalizeRepositoryFileLimit(options.maxFiles);
   const maxFileBytes = Math.max(1_000, options.maxFileBytes ?? DEFAULT_MAX_FILE_BYTES);
-  const selected = maxFiles === "all"
-    ? [...candidates].sort((left, right) => filePriority(left) - filePriority(right) || left.localeCompare(right))
-    : selectRepositoryCandidates(candidates, maxFiles * 3, maxFiles);
+  const selected =
+    maxFiles === "all"
+      ? [...candidates].sort(
+          (left, right) => filePriority(left) - filePriority(right) || left.localeCompare(right),
+        )
+      : selectRepositoryCandidates(candidates, maxFiles * 3, maxFiles);
   const files: RepositorySourceFile[] = [];
 
   for (const path of selected) {
@@ -245,7 +258,7 @@ async function scanRepositorySourceFiles(
       absolutePath,
       kind: classifyRepositoryFile(path),
       bytes: info.size,
-      text
+      text,
     });
   }
 
@@ -261,38 +274,42 @@ function normalizeRepositoryFileLimit(limit: RepositoryFileLimit | undefined): R
 }
 
 export async function buildRepositoryIndexSnapshot(
-  options: BuildRepositoryIndexSnapshotOptions
+  options: BuildRepositoryIndexSnapshotOptions,
 ): Promise<BuildRepositoryIndexSnapshotResult> {
   const repoName = options.repoName ?? basename(options.repoPath);
   const corpus = buildRepositoryCorpus({
     repoName,
     repoPath: options.repoPath,
     files: options.files,
-    maxCorpusChars: options.extraction?.maxCorpusChars ?? DEFAULT_MAX_CORPUS_CHARS
+    maxCorpusChars: options.extraction?.maxCorpusChars ?? DEFAULT_MAX_CORPUS_CHARS,
   });
   const extractionProvider = options.extraction?.provider ?? "auto";
   const apiKey = options.extraction?.apiKey ?? process.env.OPENAI_API_KEY;
-  const shouldUseOpenAI = extractionProvider === "openai" || (extractionProvider === "auto" && Boolean(apiKey));
+  const shouldUseOpenAI =
+    extractionProvider === "openai" || (extractionProvider === "auto" && Boolean(apiKey));
 
   if (shouldUseOpenAI && apiKey) {
-    const result = await extractDocumentGraphWithOpenAI({
-      filename: `${repoName}-repository-corpus.txt`,
-      mimeType: "text/plain",
-      text: corpus
-    }, {
-      apiKey,
-      model: options.extraction?.model ?? process.env.GRAG_OPENAI_MODEL ?? DEFAULT_OPENAI_MODEL
-    });
+    const result = await extractDocumentGraphWithOpenAI(
+      {
+        filename: `${repoName}-repository-corpus.txt`,
+        mimeType: "text/plain",
+        text: corpus,
+      },
+      {
+        apiKey,
+        model: options.extraction?.model ?? process.env.GRAG_OPENAI_MODEL ?? DEFAULT_OPENAI_MODEL,
+      },
+    );
 
     return {
       snapshot: annotateRepositorySnapshot(result.snapshot, {
         repoName,
         repoPath: options.repoPath,
         files: options.files,
-        generatedBy: `openai:${result.model}`
+        generatedBy: `openai:${result.model}`,
       }),
       mode: "openai",
-      extractionModel: result.model
+      extractionModel: result.model,
     };
   }
 
@@ -301,16 +318,16 @@ export async function buildRepositoryIndexSnapshot(
       buildLocalRepositoryGraphRagSnapshot({
         repoName,
         repoPath: options.repoPath,
-        selectedFiles: options.files
+        selectedFiles: options.files,
       }),
       {
         repoName,
         repoPath: options.repoPath,
         files: options.files,
-        generatedBy: "@farming-labs/grag/repository-index"
-      }
+        generatedBy: "@farming-labs/grag/repository-index",
+      },
     ),
-    mode: "local"
+    mode: "local",
   };
 }
 
@@ -327,7 +344,7 @@ export function buildRepositoryCorpus(options: {
     `Selected files: ${options.files.length}`,
     "",
     "Each section below is one source file. Preserve the File path as source provenance when extracting entities, relationships, communities, and retrieval evidence.",
-    "Keep exact package names, table names, column names, function names, CLI flags, and environment variables in the extracted graph. These identifiers are core source evidence."
+    "Keep exact package names, table names, column names, function names, CLI flags, and environment variables in the extracted graph. These identifiers are core source evidence.",
   ].join("\n");
   const blocks: string[] = [header];
   let used = header.length;
@@ -340,7 +357,7 @@ export function buildRepositoryCorpus(options: {
       `Kind: ${file.kind}`,
       "```" + extension,
       file.text,
-      "```"
+      "```",
     ].join("\n");
     if (used + block.length > maxChars) {
       break;
@@ -355,13 +372,13 @@ export function buildRepositoryCorpus(options: {
 async function prepareRepository(
   repo: string,
   provider: RepositorySourceProvider = "auto",
-  remote: RepositoryRemoteOptions = {}
+  remote: RepositoryRemoteOptions = {},
 ): Promise<PreparedRepository> {
   const resolvedProvider = resolveRepositoryProvider(repo, provider);
   if (resolvedProvider === "local") {
     return {
       repoPath: resolve(repo),
-      provider: "local"
+      provider: "local",
     };
   }
 
@@ -372,25 +389,25 @@ async function prepareRepository(
     "--depth=1",
     ...(remote.ref ? ["--branch", remote.ref, "--single-branch"] : []),
     cloneUrl,
-    tempDir
+    tempDir,
   ];
   await runCommand("git", cloneArgs, {
-    env: gitRemoteEnvironment(resolvedProvider, remote)
+    env: gitRemoteEnvironment(resolvedProvider, remote),
   });
   return {
     repoPath: tempDir,
     clonedFrom: cloneUrl,
     tempDir,
-    provider: resolvedProvider
+    provider: resolvedProvider,
   };
 }
 
 function gitRemoteEnvironment(
   provider: Exclude<RepositorySourceProvider, "auto">,
-  remote: RepositoryRemoteOptions
+  remote: RepositoryRemoteOptions,
 ): Record<string, string> {
   const env: Record<string, string> = {
-    GIT_TERMINAL_PROMPT: "0"
+    GIT_TERMINAL_PROMPT: "0",
   };
 
   if (provider === "github" && remote.token) {
@@ -404,7 +421,7 @@ function gitRemoteEnvironment(
 
 function resolveRepositoryProvider(
   source: string,
-  provider: RepositorySourceProvider
+  provider: RepositorySourceProvider,
 ): Exclude<RepositorySourceProvider, "auto"> {
   if (provider !== "auto") {
     return provider;
@@ -442,7 +459,10 @@ async function walkRepository(root: string, current: string, output: string[]): 
 
   for (const entry of entries) {
     if (entry.isDirectory()) {
-      if (SKIP_DIRECTORIES.has(entry.name) || entry.name.startsWith(".") && entry.name !== ".github") {
+      if (
+        SKIP_DIRECTORIES.has(entry.name) ||
+        (entry.name.startsWith(".") && entry.name !== ".github")
+      ) {
         continue;
       }
       await walkRepository(root, join(current, entry.name), output);
@@ -497,8 +517,14 @@ function isTextRepositoryFile(path: string): boolean {
   return TEXT_EXTENSIONS.has(extname(path).toLowerCase());
 }
 
-function selectRepositoryCandidates(candidates: readonly string[], candidateLimit: number, targetFiles: number): string[] {
-  const ranked = [...candidates].sort((left, right) => filePriority(left) - filePriority(right) || left.localeCompare(right));
+function selectRepositoryCandidates(
+  candidates: readonly string[],
+  candidateLimit: number,
+  targetFiles: number,
+): string[] {
+  const ranked = [...candidates].sort(
+    (left, right) => filePriority(left) - filePriority(right) || left.localeCompare(right),
+  );
   const selected: string[] = [];
   const seen = new Set<string>();
   const groupCounts = new Map<string, number>();
@@ -541,7 +567,11 @@ function selectRepositoryCandidates(candidates: readonly string[], candidateLimi
       const rightCount = groupCounts.get(right[0]) ?? 0;
       const leftNext = left[1][0] ?? "";
       const rightNext = right[1][0] ?? "";
-      return leftCount - rightCount || filePriority(leftNext) - filePriority(rightNext) || left[0].localeCompare(right[0]);
+      return (
+        leftCount - rightCount ||
+        filePriority(leftNext) - filePriority(rightNext) ||
+        left[0].localeCompare(right[0])
+      );
     });
 
     for (const [group, queue] of groups) {
@@ -594,22 +624,30 @@ function isEssentialRepositoryFile(path: string): boolean {
   const lower = path.toLowerCase();
   const name = basename(lower);
 
-  return [
-    "readme.md",
-    "package.json",
-    "pnpm-workspace.yaml",
-    "turbo.json",
-    "tsconfig.json",
-    "biome.json",
-    "eslint.config.js",
-    "eslint.config.mjs"
-  ].includes(name)
-    || /^packages\/[^/]+\/package\.json$/.test(lower)
-    || /^packages\/[^/]+\/src\/(?:index|main|server|client|handler|api|auth|plugin|adapter)\.(?:ts|tsx|js|jsx|mjs|cjs)$/.test(lower)
-    || /^packages\/[^/]+\/src\/(?:adapters|api|cookies|db|oauth2|social-providers|types|utils)\//.test(lower)
-    || /^packages\/[^/]+\/src\/(?:commands|generators)\//.test(lower)
-    || /^packages\/[^/]+\/src\/client\/plugins\//.test(lower)
-    || /^packages\/[^/]+\/src\/plugins\/(?:generic-oauth|jwt|magic-link|multi-session|oauth-proxy|oidc-provider|organization|passkey|sso|two-factor)\//.test(lower);
+  return (
+    [
+      "readme.md",
+      "package.json",
+      "pnpm-workspace.yaml",
+      "turbo.json",
+      "tsconfig.json",
+      "biome.json",
+      "eslint.config.js",
+      "eslint.config.mjs",
+    ].includes(name) ||
+    /^packages\/[^/]+\/package\.json$/.test(lower) ||
+    /^packages\/[^/]+\/src\/(?:index|main|server|client|handler|api|auth|plugin|adapter)\.(?:ts|tsx|js|jsx|mjs|cjs)$/.test(
+      lower,
+    ) ||
+    /^packages\/[^/]+\/src\/(?:adapters|api|cookies|db|oauth2|social-providers|types|utils)\//.test(
+      lower,
+    ) ||
+    /^packages\/[^/]+\/src\/(?:commands|generators)\//.test(lower) ||
+    /^packages\/[^/]+\/src\/client\/plugins\//.test(lower) ||
+    /^packages\/[^/]+\/src\/plugins\/(?:generic-oauth|jwt|magic-link|multi-session|oauth-proxy|oidc-provider|organization|passkey|sso|two-factor)\//.test(
+      lower,
+    )
+  );
 }
 
 function repositorySelectionGroup(path: string): string {
@@ -670,8 +708,16 @@ function classifyRepositoryFile(path: string): string {
   if (basename(lower) === "package.json") return "package-manifest";
   if (lower.startsWith("docs/") || lower.includes("/docs/")) return "docs";
   if (lower.startsWith("examples/") || lower.includes("/examples/")) return "example";
-  if (lower.includes(".test.") || lower.includes(".spec.") || lower.startsWith("test")) return "test";
-  if (lower.includes("config") || lower.endsWith(".json") || lower.endsWith(".yaml") || lower.endsWith(".yml") || lower.endsWith(".toml")) return "config";
+  if (lower.includes(".test.") || lower.includes(".spec.") || lower.startsWith("test"))
+    return "test";
+  if (
+    lower.includes("config") ||
+    lower.endsWith(".json") ||
+    lower.endsWith(".yaml") ||
+    lower.endsWith(".yml") ||
+    lower.endsWith(".toml")
+  )
+    return "config";
   return "source";
 }
 
@@ -690,7 +736,7 @@ function looksBinary(value: string): boolean {
   const sample = value.slice(0, 2_000);
   const suspicious = [...sample].filter((char) => {
     const code = char.charCodeAt(0);
-    return code > 0 && code < 7 || code > 14 && code < 32;
+    return (code > 0 && code < 7) || (code > 14 && code < 32);
   }).length;
   return suspicious / sample.length > 0.08;
 }
@@ -702,13 +748,13 @@ function annotateRepositorySnapshot(
     repoPath: string;
     files: readonly RepositorySourceFile[];
     generatedBy: string;
-  }
+  },
 ): GraphRagSnapshot {
   const indexedFiles = metadata.files.map((file) => file.path);
   const baseAttributes: JsonObject = {
     repositoryName: metadata.repoName,
     repositoryPath: metadata.repoPath,
-    generatedBy: metadata.generatedBy
+    generatedBy: metadata.generatedBy,
   };
 
   return {
@@ -716,46 +762,46 @@ function annotateRepositorySnapshot(
     documents: snapshot.documents.map((document) => ({
       ...document,
       attributes: {
-        ...(document.attributes ?? {}),
+        ...document.attributes,
         ...baseAttributes,
-        indexedFiles
-      }
+        indexedFiles,
+      },
     })),
     textUnits: snapshot.textUnits.map((textUnit) => ({
       ...textUnit,
       attributes: {
-        ...(textUnit.attributes ?? {}),
-        ...baseAttributes
-      }
+        ...textUnit.attributes,
+        ...baseAttributes,
+      },
     })),
     entities: snapshot.entities.map((entity) => ({
       ...entity,
       attributes: {
-        ...(entity.attributes ?? {}),
-        ...baseAttributes
-      }
+        ...entity.attributes,
+        ...baseAttributes,
+      },
     })),
     relationships: snapshot.relationships.map((relationship) => ({
       ...relationship,
       attributes: {
-        ...(relationship.attributes ?? {}),
-        ...baseAttributes
-      }
+        ...relationship.attributes,
+        ...baseAttributes,
+      },
     })),
     communities: snapshot.communities.map((community) => ({
       ...community,
       attributes: {
-        ...(community.attributes ?? {}),
-        ...baseAttributes
-      }
+        ...community.attributes,
+        ...baseAttributes,
+      },
     })),
     communityReports: snapshot.communityReports.map((report) => ({
       ...report,
       attributes: {
-        ...(report.attributes ?? {}),
-        ...baseAttributes
-      }
-    }))
+        ...report.attributes,
+        ...baseAttributes,
+      },
+    })),
   };
 }
 
@@ -764,15 +810,15 @@ async function runCommand(
   args: readonly string[],
   options: {
     env?: Record<string, string>;
-  } = {}
+  } = {},
 ): Promise<void> {
   await new Promise<void>((resolveCommand, rejectCommand) => {
     const child = spawn(command, args, {
       env: {
         ...process.env,
-        ...(options.env ?? {})
+        ...options.env,
       },
-      stdio: ["ignore", "pipe", "pipe"]
+      stdio: ["ignore", "pipe", "pipe"],
     });
     const stderr: Buffer[] = [];
     child.stderr.on("data", (chunk) => {
@@ -784,7 +830,11 @@ async function runCommand(
         resolveCommand();
         return;
       }
-      rejectCommand(new Error(`${command} ${args.join(" ")} failed with exit code ${code ?? "unknown"}.\n${Buffer.concat(stderr).toString("utf8").trim()}`));
+      rejectCommand(
+        new Error(
+          `${command} ${args.join(" ")} failed with exit code ${code ?? "unknown"}.\n${Buffer.concat(stderr).toString("utf8").trim()}`,
+        ),
+      );
     });
   });
 }

@@ -86,14 +86,14 @@ export class LabelPropagationCommunityDetector implements CommunityDetector {
     const communities: Community[] = sortedGroups.map((groupEntities, idx) => {
       const entityTitleSet = new Set(groupEntities.map((e) => e.title));
       const groupRelationships = relationships.filter(
-        (r) => entityTitleSet.has(r.source) && entityTitleSet.has(r.target)
+        (r) => entityTitleSet.has(r.source) && entityTitleSet.has(r.target),
       );
 
       const entityIds = groupEntities.map((e) => e.id);
       const relationshipIds = groupRelationships.map((r) => r.id);
       const textUnitIds = uniqueArray([
         ...groupEntities.flatMap((e) => e.textUnitIds),
-        ...groupRelationships.flatMap((r) => r.textUnitIds)
+        ...groupRelationships.flatMap((r) => r.textUnitIds),
       ]);
       const title = groupEntities[0]?.title ?? `Community ${idx}`;
 
@@ -109,7 +109,7 @@ export class LabelPropagationCommunityDetector implements CommunityDetector {
         relationshipIds,
         textUnitIds,
         covariateIds: [],
-        size: groupEntities.length
+        size: groupEntities.length,
       };
     });
 
