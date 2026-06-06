@@ -1,6 +1,6 @@
 {
   "name": "@farming-labs/grag",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "TypeScript GraphRAG primitives with relational database storage.",
   "keywords": [
     "graph-rag",
