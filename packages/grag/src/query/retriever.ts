@@ -1004,7 +1004,7 @@ function sourceKindBoost(sourcePaths: readonly string[], plan: GraphRagQueryPlan
     score -= 4.5;
   }
   if (
-    joined.endsWith('package.json') &&
+    joined.endsWith("package.json") &&
     (plan.scope === "flow" || plan.intent === "impact" || plan.intent === "why")
   ) {
     score -= 2.2;
