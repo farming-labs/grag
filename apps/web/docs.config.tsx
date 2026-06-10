@@ -56,7 +56,7 @@ export default defineDocs({
   github: {
     url: "https://github.com/farming-labs/grag",
     branch: "main",
-    directory: "packages/grag/docs",
+    directory: "apps/web",
   },
   sidebar: {
     flat: true,
