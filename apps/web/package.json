@@ -20,7 +20,7 @@
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
     "remark-mdx-frontmatter": "^5.0.0",
-    "three": "^0.184.0",
+    "three": "^0.185.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -29,7 +29,7 @@
     "@types/node": "^26.0.1",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "@types/three": "^0.184.1",
+    "@types/three": "^0.185.0",
     "postcss": "^8.5.6",
     "tailwindcss": "4.1.18",
     "typescript": "^5.8.3"
