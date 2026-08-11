@@ -13,7 +13,7 @@
     "@farming-labs/docs": "0.2.103",
     "@farming-labs/next": "0.2.103",
     "@farming-labs/theme": "0.2.103",
-    "lucide-react": "^1.23.0",
+    "lucide-react": "^1.30.0",
     "next": "^16.0.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
