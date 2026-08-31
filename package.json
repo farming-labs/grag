@@ -29,7 +29,7 @@
     "test": "pnpm --filter @farming-labs/grag test"
   },
   "devDependencies": {
-    "bumpp": "^11.1.0",
+    "bumpp": "^12.2.2",
     "oxfmt": "^0.64.0",
     "oxlint": "1.79.0"
   },
