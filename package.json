@@ -30,8 +30,8 @@
   },
   "devDependencies": {
     "bumpp": "^11.1.0",
-    "oxfmt": "^0.64.0",
-    "oxlint": "1.79.0"
+    "oxfmt": "^0.65.0",
+    "oxlint": "1.80.0"
   },
   "packageManager": "pnpm@10.9.0",
   "pnpm": {
