@@ -63,7 +63,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@farming-labs/orm": "^0.0.62",
+    "@farming-labs/orm": "^0.0.64",
     "@types/node": "^26.0.1",
     "esbuild": "^0.28.0",
     "tsup": "^8.5.1",
